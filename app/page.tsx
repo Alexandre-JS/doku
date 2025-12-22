@@ -1,65 +1,114 @@
-import Image from "next/image";
+import { Search, Briefcase, Landmark, TrendingUp, Scale } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white font-bold">
+              D
+            </div>
+            <span className="text-xl font-bold tracking-tight">DOKU</span>
+          </div>
+          <button className="rounded-full px-6 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 min-h-[48px]">
+            Entrar
+          </button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-6 py-12 sm:py-24">
+        {/* Hero Section */}
+        <section className="flex flex-col items-center text-center">
+          <div className="mb-6 inline-flex items-center rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-medium text-emerald-700">
+            <span className="mr-2 flex h-2 w-2 rounded-full bg-emerald-500"></span>
+            +5.000 documentos gerados hoje
+          </div>
+          
+          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
+            Seu documento oficial pronto em 2 minutos
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          
+          <p className="mt-6 max-w-2xl text-lg text-slate-600">
+            A plataforma mais rápida e segura para emitir, validar e gerenciar seus documentos oficiais sem burocracia.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+          {/* Search Bar */}
+          <div className="mt-10 w-full max-w-[600px]">
+            <div className="relative flex items-center rounded-full bg-white p-2 shadow-lg ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-slate-400">
+              <div className="flex items-center pl-4 text-slate-400">
+                <Search size={20} />
+              </div>
+              <input
+                type="text"
+                placeholder="O que você precisa hoje?"
+                className="w-full border-none bg-transparent px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0"
+              />
+              <Link href="/templates" className="rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 active:scale-95 min-h-[48px] flex items-center">
+                Buscar
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Categories Grid */}
+        <section className="mt-24">
+          <h2 className="mb-10 text-center text-2xl font-semibold text-slate-900">
+            Explore por categorias
+          </h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+            <Link href="/templates">
+              <CategoryCard 
+                icon={<Briefcase className="text-blue-600" />} 
+                title="Emprego" 
+                description="Contratos e declarações"
+              />
+            </Link>
+            <Link href="/templates">
+              <CategoryCard 
+                icon={<Landmark className="text-amber-600" />} 
+                title="Estado" 
+                description="Certidões e impostos"
+              />
+            </Link>
+            <Link href="/templates">
+              <CategoryCard 
+                icon={<TrendingUp className="text-emerald-600" />} 
+                title="Negócios" 
+                description="Abertura e gestão"
+              />
+            </Link>
+            <Link href="/templates">
+              <CategoryCard 
+                icon={<Scale className="text-purple-600" />} 
+                title="Legal" 
+                description="Procurações e termos"
+              />
+            </Link>
+          </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="mt-24 border-t border-slate-200 bg-white py-12">
+        <div className="mx-auto max-w-7xl px-6 text-center text-slate-500">
+          <p>© 2025 DOKU. Todos os direitos reservados.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function CategoryCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+  return (
+    <div className="group flex flex-col items-start rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:shadow-md hover:border-slate-300 cursor-pointer">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 transition-colors group-hover:bg-white">
+        {icon}
+      </div>
+      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+      <p className="mt-1 text-sm text-slate-500">{description}</p>
     </div>
   );
 }
