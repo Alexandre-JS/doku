@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
+import { createBrowserSupabase } from "../../src/lib/supabase";
 
 const STEPS = ["Identidade", "Detalhes", "Revisão"];
 
-export default function FormPage() {
+function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
@@ -21,9 +22,37 @@ export default function FormPage() {
     positionName: "",
   });
   const [errors, setErrors] = useState<string[]>([]);
+  const [templateData, setTemplateData] = useState<{ content: string; price: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("template");
 
-  const sampleTemplate = `Exmo Senhor {{targetAuthority}},\n\nEu, {{name}}, titular do BI nº {{biNumber}} e NUIT {{nuit}}, venho por este meio solicitar ...\n\nAtenciosamente,\n{{name}}`;
+  useEffect(() => {
+    async function fetchTemplate() {
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
+
+      const supabase = createBrowserSupabase();
+      const { data, error } = await supabase
+        .from("templates")
+        .select("content, price")
+        .eq("slug", slug)
+        .single();
+
+      if (error) {
+        console.error("Erro ao buscar modelo:", error.message, error.details, error.hint);
+      } else {
+        setTemplateData(data);
+      }
+      setLoading(false);
+    }
+
+    fetchTemplate();
+  }, [slug]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -59,6 +88,31 @@ export default function FormPage() {
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-blue-600" size={40} />
+          <p className="text-sm font-medium text-slate-500">Carregando modelo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!templateData && slug) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center">
+        <h2 className="text-xl font-bold text-slate-900">Modelo não encontrado</h2>
+        <p className="mt-2 text-slate-600">O modelo solicitado não existe ou foi removido.</p>
+        <Link href="/templates" className="mt-6 rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white">
+          Voltar aos modelos
+        </Link>
+      </div>
+    );
+  }
+
+  const currentTemplate = templateData?.content || `Exmo Senhor {{targetAuthority}},\n\nEu, {{name}}, titular do BI nº {{biNumber}} e NUIT {{nuit}}, venho por este meio solicitar ...\n\nAtenciosamente,\n{{name}}`;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -219,13 +273,25 @@ export default function FormPage() {
       ) : (
         <DocumentPreview
           userData={formData}
-          template={sampleTemplate}
-          price={"100 MT"}
+          template={currentTemplate}
+          price={templateData?.price || "100 MT"}
           onBack={() => setCurrentStep(1)}
           onConfirm={() => router.push("/checkout")}
         />
       )}
     </div>
+  );
+}
+
+export default function FormPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-blue-600" size={40} />
+      </div>
+    }>
+      <FormContent />
+    </Suspense>
   );
 }
 
@@ -249,15 +315,6 @@ function InputField({ label, name, value, onChange, error, placeholder }: any) {
         }`}
       />
       {error && <span className="text-xs font-medium text-red-500">Este campo é obrigatório</span>}
-    </div>
-  );
-}
-
-function ReviewItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-semibold text-slate-900">{value || "Não preenchido"}</span>
     </div>
   );
 }

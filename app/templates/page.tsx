@@ -1,25 +1,47 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Search, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { createBrowserSupabase } from "../../src/lib/supabase";
 
 const CATEGORIES = ["Todos", "Emprego", "Estado", "Legal"];
 
-const TEMPLATES = [
-  { id: 1, title: "Carta de Pedido de Emprego", category: "Emprego", price: "75 MT", popular: true },
-  { id: 2, title: "Declaração de Residência", category: "Estado", price: "50 MT", popular: false },
-  { id: 3, title: "Contrato de Arrendamento", category: "Legal", price: "150 MT", popular: true },
-  { id: 4, title: "Procuração Simples", category: "Legal", price: "100 MT", popular: false },
-  { id: 5, title: "Curriculum Vitae Moderno", category: "Emprego", price: "120 MT", popular: true },
-  { id: 6, title: "Requerimento Geral", category: "Estado", price: "40 MT", popular: false },
-];
+interface Template {
+  id: string;
+  title: string;
+  category: string;
+  price: string;
+  popular: boolean;
+  slug: string;
+}
 
 export default function TemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredTemplates = TEMPLATES.filter((template) => {
+  useEffect(() => {
+    async function fetchTemplates() {
+      const supabase = createBrowserSupabase();
+      const { data, error } = await supabase
+        .from("templates")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erro ao buscar modelos:", error.message, error.details, error.hint);
+      } else {
+        setTemplates(data || []);
+      }
+      setLoading(false);
+    }
+
+    fetchTemplates();
+  }, []);
+
+  const filteredTemplates = templates.filter((template) => {
     const matchesCategory = selectedCategory === "Todos" || template.category === selectedCategory;
     const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
@@ -71,10 +93,15 @@ export default function TemplatesPage() {
         </div>
 
         {/* Grid */}
-        {filteredTemplates.length > 0 ? (
+        {loading ? (
+          <div className="mt-20 flex flex-col items-center justify-center text-slate-400">
+            <Loader2 className="animate-spin mb-4" size={40} />
+            <p className="text-sm font-medium">Carregando modelos...</p>
+          </div>
+        ) : filteredTemplates.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {filteredTemplates.map((template) => (
-              <Link key={template.id} href="/form">
+              <Link key={template.id} href={`/form?template=${template.slug}`}>
                 <TemplateCard {...template} />
               </Link>
             ))}
