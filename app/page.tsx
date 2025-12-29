@@ -1,5 +1,6 @@
 import { Search, Briefcase, Landmark, TrendingUp, Scale } from "lucide-react";
 import Link from "next/link";
+import UserNav from "../components/UserNav";
 
 export default function Home() {
   return (
@@ -13,9 +14,7 @@ export default function Home() {
             </div>
             <span className="text-xl font-bold tracking-tight">DOKU</span>
           </div>
-          <button className="rounded-full px-6 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 min-h-[48px]">
-            Entrar
-          </button>
+          <UserNav />
         </div>
       </header>
 

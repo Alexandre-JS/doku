@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createBrowserSupabase } from "../../src/lib/supabase";
+import UserNav from "../../components/UserNav";
 
 const CATEGORIES = ["Todos", "Emprego", "Estado", "Legal"];
 
@@ -62,15 +63,18 @@ export default function TemplatesPage() {
             </Link>
             <h1 className="text-xl font-bold tracking-tight">Modelos Disponíveis</h1>
           </div>
-          <div className="hidden sm:block relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar modelo..."
-              className="w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm focus:border-slate-400 focus:outline-none"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:block relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar modelo..."
+                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm focus:border-slate-400 focus:outline-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <UserNav />
           </div>
         </div>
       </header>
