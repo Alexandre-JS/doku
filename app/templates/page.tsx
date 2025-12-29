@@ -26,8 +26,9 @@ export default function TemplatesPage() {
     async function fetchTemplates() {
       const supabase = createBrowserSupabase();
       const { data, error } = await supabase
-        .from("templates")
+        .from("document_templates")
         .select("*")
+        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
       if (error) {

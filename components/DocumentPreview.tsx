@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, Lock, CreditCard } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 
 interface DocumentPreviewProps {
   userData: Record<string, string>;
@@ -9,6 +9,7 @@ interface DocumentPreviewProps {
   price: string;
   onBack: () => void;
   onConfirm: () => void;
+  hideControls?: boolean;
 }
 
 export default function DocumentPreview({
@@ -17,104 +18,133 @@ export default function DocumentPreview({
   price,
   onBack,
   onConfirm,
+  hideControls = false,
 }: DocumentPreviewProps) {
   
-  // Função para processar o template e destacar dados do usuário
+  // Função para processar o template e destacar dados do usuário com formatação
   const renderPreview = (template: string, userData: Record<string, string>) => {
-    // Divide a string nos placeholders {{key}}
+    if (!template) return null;
+    
+    // Divide o template nos placeholders {{key}}
     const parts = template.split(/(\{\{[^{}]+\}\})/g);
     
     return parts.map((part, index) => {
-      // Verifica se a parte atual é um placeholder
       if (part.startsWith("{{") && part.endsWith("}}")) {
         const key = part.slice(2, -2).trim();
-        // Retorna o valor do usuário ou o placeholder original se não encontrado
+        
+        // Tenta encontrar o valor, suportando variações de camelCase e snake_case
+        const value = userData[key] || 
+                      userData[key.toLowerCase()] || 
+                      userData[key.replace(/([A-Z])/g, "_$1").toLowerCase()] || // biNumber -> bi_number
+                      userData[key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())]; // bi_number -> biNumber
+
+        // Pulo do Gato: Se for request_details, aplicamos uma formatação mais formal
+        if (key === 'request_details' || key === 'requestDetails') {
+          return (
+            <span key={index} className="text-blue-800 font-medium italic whitespace-pre-wrap">
+              {value || `[${key.toUpperCase()}]`}
+            </span>
+          );
+        }
+
         return (
-          <span key={index} className="text-blue-700 font-bold">
-            {userData[key] || part}
+          <span key={index} className="text-blue-800 font-bold border-b border-blue-200">
+            {value || `[${key.toUpperCase()}]`}
           </span>
         );
       }
-      // Retorna o texto normal
       return part;
     });
   };
 
+  const getValue = (key: string) => {
+    return userData[key] || 
+           userData[key.toLowerCase()] || 
+           userData[key.replace(/([A-Z])/g, "_$1").toLowerCase()] || 
+           userData[key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())];
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 p-4 pb-32">
-      {/* Top Message */}
-      <div className="mx-auto mb-6 max-w-4xl text-center">
-        <h2 className="text-xl font-bold text-slate-900">Revise seu documento antes de finalizar</h2>
-        <p className="text-sm text-slate-500">Verifique se todas as informações destacadas em azul estão corretas.</p>
-      </div>
+    <div className={`flex flex-col items-center ${hideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-8 pb-32 min-h-screen'}`}>
+      {!hideControls && (
+        <div className="mb-6 text-center">
+          <h2 className="text-xl font-bold text-slate-800">Revisão do Documento</h2>
+          <p className="text-sm text-slate-500">Verifique se as margens e os dados estão corretos.</p>
+        </div>
+      )}
 
-      {/* Document Container */}
-      <div className="relative mx-auto max-w-4xl">
-        <div className="relative aspect-[1/1.414] w-full overflow-hidden rounded-sm bg-white p-12 shadow-lg sm:p-20">
-          
-          {/* Watermark Layer */}
-          <div className="pointer-events-none absolute inset-0 z-10 grid grid-cols-2 grid-rows-5 gap-20 opacity-10 select-none">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-center whitespace-nowrap text-lg font-black rotate-[-35deg] text-slate-400"
-              >
-                DOKU - PRÉ-VISUALIZAÇÃO
-              </div>
-            ))}
-          </div>
+      {/* Simulador de Papel A4 */}
+      <div 
+        className="bg-white shadow-2xl relative overflow-hidden mx-auto"
+        style={{
+          width: '210mm',
+          minHeight: '297mm',
+          padding: '30mm 20mm 20mm 30mm', // Margens oficiais
+          fontFamily: '"Times New Roman", Times, serif',
+          lineHeight: '1.5',
+          color: '#1e293b' // slate-800
+        }}
+      >
+        {/* Marca de Água */}
+        <div className="absolute inset-0 flex flex-wrap justify-center items-center opacity-[0.04] pointer-events-none rotate-[-45deg] select-none text-6xl font-black z-10">
+           {Array(20).fill("DOKU PREVIEW ").join(" ")}
+        </div>
 
-          {/* Document Content Area */}
-          <div 
-            className="relative z-0 h-full w-full select-none pointer-events-none text-slate-800 leading-relaxed"
-            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-          >
-            <div className="mb-10 text-center">
-              <h1 className="text-xl font-bold uppercase tracking-widest border-b-2 border-slate-900 inline-block pb-1">
-                Documento Oficial
-              </h1>
-            </div>
+        {/* Cabeçalho de Endereçamento */}
+        <div className="mb-12 text-[12pt] relative z-0">
+           <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
+           <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
+           <p className="underline">{getValue('target_location') || getValue('address') || '________________'}</p>
+        </div>
 
-            <div className="whitespace-pre-wrap font-serif text-base sm:text-lg">
-              {renderPreview(template, userData)}
-            </div>
+        {/* Assunto */}
+        <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
+          Assunto: {getValue('subject') || "Requerimento Geral"}
+        </div>
 
-            <div className="mt-24 flex flex-col items-end opacity-50">
-              <div className="h-[1px] w-40 bg-slate-400"></div>
-              <p className="mt-1 text-[10px] uppercase tracking-tighter">Assinado Digitalmente via DOKU</p>
-            </div>
-          </div>
+        {/* Corpo do Texto */}
+        <div className="text-[12pt] text-justify whitespace-pre-line indent-12 relative z-0">
+          {renderPreview(template, userData)}
+        </div>
+
+        {/* Local e Data */}
+        <div className="mt-16 text-[12pt] text-right relative z-0">
+          {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
+        </div>
+
+        {/* Linha de Assinatura */}
+        <div className="mt-20 flex flex-col items-center relative z-0">
+          <div className="w-64 border-t border-black mb-2"></div>
+          <p className="text-[12pt] font-bold uppercase">{getValue('full_name') || '________________'}</p>
+          <p className="text-[10pt] text-slate-500">(Assinatura do Requerente)</p>
         </div>
       </div>
 
-      {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/90 p-4 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="flex h-12 items-center gap-2 rounded-xl px-4 font-semibold text-slate-600 transition-colors hover:bg-slate-100"
-            >
-              <ArrowLeft size={20} />
-              <span className="hidden sm:inline">Voltar para editar</span>
-              <span className="sm:hidden">Voltar</span>
-            </button>
-            <div className="h-8 w-[1px] bg-slate-200"></div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total a pagar</span>
-              <span className="text-xl font-black text-slate-900">{price}</span>
-            </div>
+      {/* Botões de Ação Fixos na Base */}
+      {!hideControls && (
+        <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-center items-center gap-6 shadow-inner z-50">
+          <div className="flex flex-col items-end mr-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total a pagar</span>
+            <span className="text-xl font-black text-slate-900">{price} MT</span>
           </div>
-
-          <button
-            onClick={onConfirm}
-            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 font-bold text-white shadow-xl shadow-blue-200 transition-all hover:bg-blue-700 active:scale-[0.98] sm:w-auto"
+          
+          <button 
+            onClick={onBack}
+            className="px-8 py-3 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-all flex items-center gap-2"
           >
-            <Lock size={20} />
-            Pagar para Desbloquear PDF
+            <ArrowLeft size={18} />
+            Voltar a Editar
+          </button>
+          
+          <button 
+            onClick={onConfirm}
+            className="px-12 py-3 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 transition-all flex items-center gap-2"
+          >
+            <Lock size={18} />
+            Confirmar e Gerar
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
