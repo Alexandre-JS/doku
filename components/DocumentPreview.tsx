@@ -10,6 +10,7 @@ interface DocumentPreviewProps {
   onBack: () => void;
   onConfirm: () => void;
   hideControls?: boolean;
+  title?: string;
 }
 
 export default function DocumentPreview({
@@ -19,6 +20,7 @@ export default function DocumentPreview({
   onBack,
   onConfirm,
   hideControls = false,
+  title,
 }: DocumentPreviewProps) {
   
   // Função para processar o template e destacar dados do usuário com formatação
@@ -57,6 +59,10 @@ export default function DocumentPreview({
     });
   };
 
+  // Detecta se o template já inclui placeholders para cabeçalho/rodapé
+  const templateHasHeaderPlaceholders = typeof template === 'string' && /\{\{\s*(target_authority|destinatary_role|institution_name|target_location|address|subject)\s*\}\}/i.test(template);
+  const templateHasFooterPlaceholders = typeof template === 'string' && /\{\{\s*(current_city|current_date|target_location)\s*\}\}/i.test(template);
+
   const getValue = (key: string) => {
     return userData[key] || 
            userData[key.toLowerCase()] || 
@@ -68,7 +74,12 @@ export default function DocumentPreview({
     <div className={`flex flex-col items-center ${hideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-8 pb-32 min-h-screen'}`}>
       {!hideControls && (
         <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold text-slate-800">Revisão do Documento</h2>
+          <h2 className="text-xl font-bold text-slate-800">
+            Revisão do Documento
+            {title && (
+              <span className="ml-2 text-slate-500 font-semibold">— {title}</span>
+            )}
+          </h2>
           <p className="text-sm text-slate-500">Verifique se as margens e os dados estão corretos.</p>
         </div>
       )}
@@ -90,12 +101,14 @@ export default function DocumentPreview({
            {Array(20).fill("DOKU PREVIEW ").join(" ")}
         </div>
 
-        {/* Cabeçalho de Endereçamento */}
-        <div className="mb-12 text-[12pt] relative z-0">
-           <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
-           <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
-           <p className="underline">{getValue('target_location') || getValue('address') || '________________'}</p>
-        </div>
+          {/* Cabeçalho de Endereçamento (só renderiza se o template não já contiver esses placeholders) */}
+          {!templateHasHeaderPlaceholders && (
+            <div className="mb-12 text-[12pt] relative z-0">
+              <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
+              <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
+              <p className="underline">{getValue('target_location') || getValue('address') || '________________'}</p>
+            </div>
+          )}
 
         {/* Assunto */}
         <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
@@ -107,10 +120,12 @@ export default function DocumentPreview({
           {renderPreview(template, userData)}
         </div>
 
-        {/* Local e Data */}
-        <div className="mt-16 text-[12pt] text-right relative z-0">
-          {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
-        </div>
+        {/* Local e Data (só renderiza se o template não já contiver esses placeholders) */}
+        {!templateHasFooterPlaceholders && (
+          <div className="mt-16 text-[12pt] text-right relative z-0">
+            {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
+          </div>
+        )}
 
         {/* Linha de Assinatura */}
         <div className="mt-20 flex flex-col items-center relative z-0">

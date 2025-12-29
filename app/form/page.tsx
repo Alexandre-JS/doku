@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
@@ -9,7 +9,7 @@ import DynamicForm from "../../components/DynamicForm";
 import { createBrowserSupabase } from "../../src/lib/supabase";
 import { FormField, FormSection } from "../../src/types";
 
-const STEPS = ["Identidade", "Detalhes", "Revisão"];
+const STEPS = ["Revisão"]; // Mantido apenas para compatibilidade mínima
 
 function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -26,7 +26,7 @@ function FormContent() {
     date: new Date().toLocaleDateString('pt-PT'),
   });
   const [errors, setErrors] = useState<string[]>([]);
-  const [templateData, setTemplateData] = useState<{ content: string; price: string; form_schema?: FormSection[] } | null>(null);
+  const [templateData, setTemplateData] = useState<{ content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   
   const router = useRouter();
@@ -43,7 +43,7 @@ function FormContent() {
       const supabase = createBrowserSupabase();
       const { data, error } = await supabase
         .from("document_templates")
-        .select("content_html, price, form_schema")
+        .select("content_html, price, form_schema, title")
         .eq("slug", slug)
         .eq("is_active", true)
         .single();
@@ -55,7 +55,8 @@ function FormContent() {
         setTemplateData({
           content: data.content_html,
           price: data.price?.toString() || "0",
-          form_schema: data.form_schema
+          form_schema: data.form_schema,
+          title: data.title || undefined
         });
       }
       setLoading(false);
@@ -63,6 +64,8 @@ function FormContent() {
 
     fetchTemplate();
   }, [slug]);
+
+  // Removido: prefill de perfil (perfil ainda não implementado)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -151,7 +154,12 @@ function FormContent() {
             {templateData?.form_schema ? (
               <div className="space-y-8">
                 <div className="text-center">
-                  <h1 className="text-3xl font-bold text-slate-900">Preencha os dados</h1>
+                  <h1 className="text-3xl font-bold text-slate-900">
+                    Preencha os dados
+                    {templateData?.title && (
+                      <span className="ml-2 text-slate-500 font-semibold">— {templateData.title}</span>
+                    )}
+                  </h1>
                   <p className="text-slate-500 mt-2">Insira as informações necessárias para gerar seu documento.</p>
                 </div>
                 <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
@@ -163,154 +171,11 @@ function FormContent() {
                 </div>
               </div>
             ) : (
-              <>
-                {/* Stepper */}
-                <div className="mb-12">
-                  <div className="relative flex justify-between">
-                    {STEPS.map((step, index) => (
-                      <div key={step} className="relative z-10 flex flex-col items-center">
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                            index <= currentStep
-                              ? "border-blue-600 bg-blue-600 text-white"
-                              : "border-slate-200 bg-white text-slate-400"
-                          }`}
-                        >
-                          {index < currentStep ? <Check size={20} /> : index + 1}
-                        </div>
-                        <span
-                          className={`mt-2 text-xs font-semibold uppercase tracking-wider ${
-                            index <= currentStep ? "text-blue-600" : "text-slate-400"
-                          }`}
-                        >
-                          {step}
-                        </span>
-                      </div>
-                    ))}
-                    {/* Progress Line */}
-                    <div className="absolute top-5 left-0 h-[2px] w-full bg-slate-200 -z-0">
-                      <div
-                        className="h-full bg-blue-600 transition-all duration-500"
-                        style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form Container */}
-                <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-                  {currentStep === 0 && (
-                    <div className="space-y-6">
-                      <h2 className="text-xl font-bold text-slate-900">Informações de Identidade</h2>
-                      <div className="grid gap-6">
-                        <InputField
-                          label="Nome Completo"
-                          name="full_name"
-                          value={formData.full_name}
-                          onChange={handleInputChange}
-                          error={errors.includes("full_name")}
-                          placeholder="Ex: João Alberto"
-                        />
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <InputField
-                            label="Número do BI"
-                            name="bi_number"
-                            value={formData.bi_number}
-                            onChange={handleInputChange}
-                            error={errors.includes("bi_number")}
-                            placeholder="000000000A"
-                          />
-                          <InputField
-                            label="NUIT"
-                            name="nuit"
-                            value={formData.nuit}
-                            onChange={handleInputChange}
-                            error={errors.includes("nuit")}
-                            placeholder="123456789"
-                          />
-                        </div>
-                        <InputField
-                          label="Nome do Pai"
-                          name="father_name"
-                          value={formData.father_name}
-                          onChange={handleInputChange}
-                          error={errors.includes("father_name")}
-                          placeholder="Nome completo do pai"
-                        />
-                        <InputField
-                          label="Nome da Mãe"
-                          name="mother_name"
-                          value={formData.mother_name}
-                          onChange={handleInputChange}
-                          error={errors.includes("mother_name")}
-                          placeholder="Nome completo da mãe"
-                        />
-                        <InputField
-                          label="Endereço Residencial"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          error={errors.includes("address")}
-                          placeholder="Bairro, Rua, Casa nº"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {currentStep === 1 && (
-                    <div className="space-y-6">
-                      <h2 className="text-xl font-bold text-slate-900">Detalhes do Destinatário</h2>
-                      <div className="grid gap-6">
-                        <InputField
-                          label="Autoridade de Destino"
-                          name="target_authority"
-                          value={formData.target_authority}
-                          onChange={handleInputChange}
-                          error={errors.includes("target_authority")}
-                          placeholder="Ex: Exmo. Senhor Director"
-                        />
-                        <InputField
-                          label="Nome da Instituição"
-                          name="institution_name"
-                          value={formData.institution_name}
-                          onChange={handleInputChange}
-                          error={errors.includes("institution_name")}
-                          placeholder="Ex: Ministério da Educação"
-                        />
-                        <InputField
-                          label="Vaga / Cargo Pretendido"
-                          name="position_name"
-                          value={formData.position_name}
-                          onChange={handleInputChange}
-                          error={errors.includes("position_name")}
-                          placeholder="Ex: Técnico de Informática"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <div className="mt-10 flex items-center justify-between border-t border-slate-100 pt-8">
-                    <button
-                      onClick={handleBack}
-                      disabled={currentStep === 0}
-                      className={`rounded-full px-8 py-3 text-sm font-semibold transition-all min-h-[48px] ${
-                        currentStep === 0
-                          ? "invisible"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
-                    >
-                      Voltar
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      className="rounded-full bg-blue-600 px-10 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-95 min-h-[48px]"
-                    >
-                      Continuar
-                    </button>
-                  </div>
-                </div>
-              </>
+              <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 text-center">
+                <h2 className="text-xl font-bold text-slate-900">Modelo sem form_schema</h2>
+                <p className="text-slate-600 mt-2">Para usar formulários 100% dinâmicos, defina o campo <span className="font-mono">form_schema</span> neste template.</p>
+                <Link href="/templates" className="mt-6 inline-block rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white">Voltar aos modelos</Link>
+              </div>
             )}
           </main>
         </>
@@ -319,6 +184,7 @@ function FormContent() {
           userData={formData}
           template={currentTemplate}
           price={templateData?.price || "100 MT"}
+          title={templateData?.title}
           onBack={() => setCurrentStep(templateData?.form_schema ? 0 : 1)}
           onConfirm={() => router.push("/checkout")}
         />

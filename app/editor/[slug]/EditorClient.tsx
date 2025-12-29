@@ -71,6 +71,7 @@ export default function EditorClient({ template, profileData }: EditorClientProp
                   userData={formData}
                   template={template.content_html}
                   price={template.price.toString()}
+                  title={template.title}
                   onBack={() => {}} 
                   onConfirm={handleConfirm}
                   hideControls={true}

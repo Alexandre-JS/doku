@@ -16,18 +16,8 @@ export default async function EditorPage({ params }: { params: Promise<{ slug: s
 
   if (tError || !template) notFound();
 
-  // 2. Buscar o Perfil do utilizador (se logado)
-  const { data: { user } } = await supabase.auth.getUser();
-  let profileData = {};
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    profileData = profile || {};
-  }
+  // 2. Perfil ainda não é funcional: não buscar nem injetar dados de perfil
+  const profileData = {};
 
   return (
     <div className="min-h-screen bg-slate-50">
