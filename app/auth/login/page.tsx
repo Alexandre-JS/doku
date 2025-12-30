@@ -19,8 +19,8 @@ function LoginForm() {
     setError(null);
     try {
       const supabase = createBrowserSupabase();
-      const redirectUrl = typeof window !== "undefined"
-        ? `${window.location.origin}${redirectTo}`
+          const redirectUrl = typeof window !== "undefined"
+            ? window.location.origin + redirectTo
         : redirectTo;
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -165,63 +165,6 @@ export default function LoginPage() {
       <Suspense fallback={<div className="text-slate-400">Carregando...</div>}>
         <LoginForm />
       </Suspense>
-    </div>
-  );
-}
-
-        <div className="mb-4 flex items-center gap-3 text-xs text-slate-500">
-          <div className="h-px flex-1 bg-slate-800" />
-          <span>ou use seu e-mail</span>
-          <div className="h-px flex-1 bg-slate-800" />
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-200" htmlFor="email">
-              E-mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm text-slate-50 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              placeholder="voce@exemplo.com"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-200" htmlFor="password">
-              Senha
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm text-slate-50 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              placeholder="Sua senha"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? "Entrando..." : "Entrar"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Ainda não tem conta?{" "}
-          <Link href="/auth/signup" className="font-medium text-blue-400 hover:text-blue-300">
-            Criar conta
-          </Link>
-        </p>
-      </div>
     </div>
   );
 }
