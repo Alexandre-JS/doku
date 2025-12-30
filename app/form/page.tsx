@@ -187,6 +187,7 @@ function FormContent() {
           template={currentTemplate}
           price={templateData?.price || "100 MT"}
           title={templateData?.title}
+          layoutType={(templateData?.form_schema as any)?.layout_type}
           onBack={() => setCurrentStep(templateData?.form_schema ? 0 : 1)}
           onConfirm={() => router.push("/checkout")}
         />

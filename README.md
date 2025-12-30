@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DOKU - Gerador de Documentos Oficiais
 
-## Getting Started
+DOKU é uma plataforma inteligente para geração de documentos oficiais em Moçambique, permitindo criar requerimentos, declarações e cartas formais de forma rápida e profissional.
 
-First, run the development server:
+## 🚀 Tecnologias
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework:** Next.js 16 (App Router)
+- **Estilização:** Tailwind CSS 4
+- **Backend:** Supabase (Auth & Database)
+- **Animações:** Framer Motion
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Configuração Local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone o repositório
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Configure as variáveis de ambiente:
+   - Copie o arquivo `.env.example` para `.env.local`
+   - Preencha com suas credenciais do Supabase
+4. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🌐 Deploy na Vercel
 
-## Learn More
+Para publicar o projeto na Vercel:
 
-To learn more about Next.js, take a look at the following resources:
+1. Conecte seu repositório GitHub à Vercel.
+2. Configure as seguintes **Environment Variables** no painel da Vercel:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. O comando de build padrão (`npm run build`) será executado automaticamente.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📝 Scripts Úteis
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run build`: Gera a versão de produção.
+- `node scripts/generate-form-schema.js <slug>`: Gera o esquema de formulário para um novo template.

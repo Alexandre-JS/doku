@@ -11,6 +11,7 @@ interface DocumentPreviewProps {
   onConfirm: () => void;
   hideControls?: boolean;
   title?: string;
+  layoutType?: 'OFFICIAL' | 'DECLARATION' | 'LETTER';
 }
 
 export default function DocumentPreview({
@@ -21,8 +22,17 @@ export default function DocumentPreview({
   onConfirm,
   hideControls = false,
   title,
+  layoutType: propLayoutType,
 }: DocumentPreviewProps) {
   
+  // Inferir o layout se não for passado explicitamente
+  const layoutType = propLayoutType || (
+    title?.toLowerCase().includes('requerimento') ? 'OFFICIAL' :
+    (title?.toLowerCase().includes('declaração') || title?.toLowerCase().includes('compromisso')) ? 'DECLARATION' :
+    (title?.toLowerCase().includes('carta') || title?.toLowerCase().includes('manifestação')) ? 'LETTER' :
+    'OFFICIAL' // Default
+  );
+
   // Função para processar o template e destacar dados do usuário com formatação
   const renderPreview = (template: string, userData: Record<string, string>) => {
     if (!template) return null;
@@ -111,36 +121,64 @@ export default function DocumentPreview({
            {Array(20).fill("DOKU PREVIEW ").join(" ")}
         </div>
 
-          {/* Cabeçalho de Endereçamento (só renderiza se o template não já contiver esses placeholders e não for declaração) */}
-          {!templateHasHeaderPlaceholders && !isDeclarationOrContract && (
-            <div className="mb-12 text-[12pt] relative z-0">
-              <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
-              <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
-              <p className="underline">{getValue('target_location') || getValue('address') || '________________'}</p>
-            </div>
-          )}
+        {/* LAYOUT: LETTER - Data no Topo Direito */}
+        {layoutType === 'LETTER' && (
+          <div className="mb-8 text-right text-[12pt]">
+            {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
+          </div>
+        )}
 
-        {/* Assunto (só renderiza se não for declaração e se o template não tiver título próprio) */}
-        {!isDeclarationOrContract && !hasTitleInContent && (
+        {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
+        {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && (
+          <div className="mb-12 text-[12pt] relative z-0">
+            <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
+            <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
+            <p className="underline">{getValue('target_location') || getValue('address') || '________________'}</p>
+          </div>
+        )}
+
+        {/* LAYOUT: LETTER - Saudação */}
+        {layoutType === 'LETTER' && (
+          <div className="mb-6 text-[12pt]">
+            Exmo. Senhor,
+          </div>
+        )}
+
+        {/* Assunto (Só OFFICIAL) */}
+        {layoutType === 'OFFICIAL' && !templateHasHeaderPlaceholders && !hasTitleInContent && (
           <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
             Assunto: {getValue('subject') || "Requerimento Geral"}
           </div>
         )}
 
-        {/* Título para Declarações/Compromissos que não têm título no conteúdo */}
-        {isDeclarationOrContract && !hasTitleInContent && title && (
-          <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
-            {title}
+        {/* Título para DECLARATION */}
+        {layoutType === 'DECLARATION' && (
+          <div className="mb-12 text-center text-[14pt] font-bold uppercase underline relative z-0">
+            {title || "DECLARAÇÃO"}
           </div>
         )}
 
         {/* Corpo do Texto */}
-        <div className="text-[12pt] text-justify whitespace-pre-line indent-12 relative z-0">
+        <div className={`text-[12pt] text-justify whitespace-pre-line relative z-0 ${layoutType === 'OFFICIAL' ? 'indent-12' : ''}`}>
           {renderPreview(template, userData)}
         </div>
 
-        {/* Local e Data (só renderiza se o template não já contiver esses placeholders) */}
-        {!templateHasFooterPlaceholders && (
+        {/* Fecho: Pede Deferimento (Só OFFICIAL) */}
+        {layoutType === 'OFFICIAL' && (
+          <div className="mt-12 text-center text-[12pt] font-bold italic">
+            Pede Deferimento.
+          </div>
+        )}
+
+        {/* Fecho: Atenciosamente (Só LETTER) */}
+        {layoutType === 'LETTER' && (
+          <div className="mt-12 text-[12pt]">
+            Com os melhores cumprimentos,
+          </div>
+        )}
+
+        {/* Local e Data (OFFICIAL e DECLARATION) */}
+        {(layoutType === 'OFFICIAL' || layoutType === 'DECLARATION') && !templateHasFooterPlaceholders && (
           <div className="mt-16 text-[12pt] text-center relative z-0">
             {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
           </div>
@@ -150,7 +188,9 @@ export default function DocumentPreview({
         <div className="mt-20 flex flex-col items-center relative z-0">
           <div className="w-64 border-t border-black mb-2"></div>
           <p className="text-[12pt] font-bold uppercase">{getValue('full_name') || '________________'}</p>
-          <p className="text-[10pt] text-slate-500">(Assinatura do Requerente)</p>
+          <p className="text-[10pt] text-slate-500">
+            {layoutType === 'DECLARATION' ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)'}
+          </p>
         </div>
       </div>
 

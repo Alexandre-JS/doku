@@ -60,7 +60,16 @@ const grouped = [
   }
 ].filter(s => s.fields && s.fields.length);
 
-const json = JSON.stringify(grouped, null, 2);
+// Determina o layout baseado no slug
+const layoutType = slug.includes('declaracao') || slug.includes('compromisso') ? 'DECLARATION' : 
+                   slug.includes('carta') ? 'LETTER' : 'OFFICIAL';
+
+const finalSchema = {
+  layout_type: layoutType,
+  sections: grouped
+};
+
+const json = JSON.stringify(finalSchema, null, 2);
 console.log('Generated form_schema:', json);
 
 // Optional: if --apply and you have DB connection configured, update the DB
@@ -80,7 +89,7 @@ if (process.argv.includes('--apply')) {
     try {
       await client.connect();
       const query = `UPDATE public.document_templates SET form_schema = $1 WHERE slug = $2 RETURNING id, slug`;
-      const values = [grouped, slug];
+      const values = [finalSchema, slug];
       const res = await client.query(query, values);
       if (res.rowCount === 0) {
         console.error('No template updated. Check that the slug exists:', slug);
