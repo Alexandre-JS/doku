@@ -146,7 +146,9 @@ function FormContent() {
                 <ArrowLeft size={20} />
                 <span className="text-sm font-medium">Voltar aos modelos</span>
               </Link>
-              <span className="text-sm font-bold tracking-tight">DOKU</span>
+              <Link href="/">
+                <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto" />
+              </Link>
             </div>
           </header>
 
@@ -185,6 +187,7 @@ function FormContent() {
           template={currentTemplate}
           price={templateData?.price || "100 MT"}
           title={templateData?.title}
+          layoutType={(templateData?.form_schema as any)?.layout_type}
           onBack={() => setCurrentStep(templateData?.form_schema ? 0 : 1)}
           onConfirm={() => router.push("/checkout")}
         />

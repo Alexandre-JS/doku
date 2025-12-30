@@ -76,6 +76,7 @@ export default function CheckoutPage() {
               <PaymentCard
                 id="mpesa"
                 name="M-Pesa"
+                image="/m-pesa.png"
                 active={paymentMethod === "mpesa"}
                 onClick={() => setPaymentMethod("mpesa")}
                 color="bg-red-600"
@@ -83,6 +84,7 @@ export default function CheckoutPage() {
               <PaymentCard
                 id="emola"
                 name="e-Mola"
+                image="/e-mola.png"
                 active={paymentMethod === "emola"}
                 onClick={() => setPaymentMethod("emola")}
                 color="bg-orange-500"
@@ -134,7 +136,7 @@ export default function CheckoutPage() {
   );
 }
 
-function PaymentCard({ id, name, active, onClick, color }: any) {
+function PaymentCard({ id, name, active, onClick, color, image }: any) {
   return (
     <button
       onClick={onClick}
@@ -142,8 +144,14 @@ function PaymentCard({ id, name, active, onClick, color }: any) {
         active ? "border-blue-600 bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300"
       }`}
     >
-      <div className={`mb-3 h-10 w-10 rounded-full ${color} flex items-center justify-center text-white font-black text-xs`}>
-        {name[0]}
+      <div className={`mb-3 flex h-12 w-full items-center justify-center overflow-hidden`}>
+        {image ? (
+          <img src={image} alt={name} className="h-full w-auto object-contain" />
+        ) : (
+          <div className={`h-10 w-10 rounded-full ${color} flex items-center justify-center text-white font-black text-xs`}>
+            {name[0]}
+          </div>
+        )}
       </div>
       <span className={`text-sm font-bold ${active ? "text-blue-600" : "text-slate-600"}`}>{name}</span>
       {active && (

@@ -1,113 +1,121 @@
-import { Search, Briefcase, Landmark, TrendingUp, Scale } from "lucide-react";
+import { Suspense } from "react";
 import Link from "next/link";
 import UserNav from "../components/UserNav";
+import TemplatesGrid from "../components/TemplatesGrid";
+import TypingText from "../components/TypingText";
+import SearchBar from "../components/SearchBar";
+import Footer from "../components/Footer";
+import DocumentTypingSim from "../components/DocumentTypingSim";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-doku-bg font-sans text-doku-blue">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white font-bold">
-              D
-            </div>
-            <span className="text-xl font-bold tracking-tight">DOKU</span>
+          <div className="flex items-center gap-8 flex-1">
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/logo-tra.png" alt="DOKU" className="h-10 w-auto" />
+            </Link>
+            
+            <Suspense fallback={<div className="h-10 w-full max-w-sm animate-pulse rounded-full bg-slate-100" />}>
+              <SearchBar className="max-w-sm" />
+            </Suspense>
           </div>
           <UserNav />
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-12 sm:py-24">
+      <main className="mx-auto max-w-7xl px-6 py-12 sm:py-20">
         {/* Hero Section */}
-        <section className="flex flex-col items-center text-center">
-          <div className="mb-6 inline-flex items-center rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-medium text-emerald-700">
-            <span className="mr-2 flex h-2 w-2 rounded-full bg-emerald-500"></span>
-            +5.000 documentos gerados hoje
-          </div>
-          
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
-            Seu documento oficial pronto em 2 minutos
-          </h1>
-          
-          <p className="mt-6 max-w-2xl text-lg text-slate-600">
-            A plataforma mais rápida e segura para emitir, validar e gerenciar seus documentos oficiais sem burocracia.
-          </p>
+        <section className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[3.5fr_6.5fr]">
+          {/* Lado Esquerdo: Texto */}
+          <div className="flex flex-col items-start text-left">
+            <div className="mb-6 inline-flex items-center rounded-full bg-doku-green/10 px-4 py-1.5 text-sm font-medium text-doku-green ring-1 ring-doku-green/20">
+              <span className="relative mr-2 flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-doku-green opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-doku-green"></span>
+              </span>
+              +5.000 documentos gerados hoje
+            </div>
 
-          {/* Search Bar */}
-          <div className="mt-10 w-full max-w-[600px]">
-            <div className="relative flex items-center rounded-full bg-white p-2 shadow-lg ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-slate-400">
-              <div className="flex items-center pl-4 text-slate-400">
-                <Search size={20} />
-              </div>
-              <input
-                type="text"
-                placeholder="O que você precisa hoje?"
-                className="w-full border-none bg-transparent px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0"
-              />
-              <Link href="/templates" className="rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 active:scale-95 min-h-[48px] flex items-center">
-                Buscar
+            <h1 className="text-3xl font-black tracking-tight text-doku-blue sm:text-5xl lg:text-5xl">
+              DOKU: Documentos Oficiais em <span className="text-doku-green">Segundos.</span>
+            </h1>
+            
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-doku-blue/70 sm:text-lg">
+              Diga adeus às filas e às papelarias. Gere o seu requerimento pronto a imprimir agora mesmo.
+            </p>
+
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <Link 
+                href="/templates" 
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-doku-green px-6 text-sm font-bold text-white transition-all hover:bg-doku-green/90 hover:shadow-lg active:scale-95"
+              >
+                Começar Agora — Grátis
               </Link>
+              <Link 
+                href="/faq" 
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold text-doku-blue/60 transition-all hover:bg-slate-50 active:scale-95"
+              >
+                Como funciona?
+              </Link>
+            </div>
+          </div>
+
+          {/* Lado Direito: A Animação */}
+          <div className="relative hidden lg:block w-full">
+            <div className="relative mx-auto w-full max-w-[700px] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200/50">
+              {/* Browser Mockup Header */}
+              <div className="mb-4 flex items-center gap-2 px-2 border-b border-slate-100 pb-4">
+                <div className="flex gap-1.5">
+                  <div className="h-3 w-3 rounded-full bg-red-400/80" />
+                  <div className="h-3 w-3 rounded-full bg-amber-400/80" />
+                  <div className="h-3 w-3 rounded-full bg-emerald-400/80" />
+                </div>
+                <div className="ml-4 h-6 w-full max-w-[250px] rounded-md bg-doku-bg px-3 text-[10px] flex items-center text-slate-400">
+                  doku.co.mz/gerador-inteligente
+                </div>
+              </div>
+              <div className="scale-110 py-8">
+                <DocumentTypingSim />
+              </div>
+            </div>
+            
+            {/* Floating Badge */}
+            <div className="absolute -bottom-4 -left-4 rounded-xl bg-white p-3 shadow-lg ring-1 ring-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-doku-green/10 text-doku-green">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-doku-blue">Pronto a Imprimir</p>
+                  <p className="text-[9px] text-slate-500">PDF Oficial</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Categories Grid */}
-        <section className="mt-24">
-          <h2 className="mb-10 text-center text-2xl font-semibold text-slate-900">
-            Explore por categorias
-          </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-            <Link href="/templates">
-              <CategoryCard 
-                icon={<Briefcase className="text-blue-600" />} 
-                title="Emprego" 
-                description="Contratos e declarações"
-              />
-            </Link>
-            <Link href="/templates">
-              <CategoryCard 
-                icon={<Landmark className="text-amber-600" />} 
-                title="Estado" 
-                description="Certidões e impostos"
-              />
-            </Link>
-            <Link href="/templates">
-              <CategoryCard 
-                icon={<TrendingUp className="text-emerald-600" />} 
-                title="Negócios" 
-                description="Abertura e gestão"
-              />
-            </Link>
-            <Link href="/templates">
-              <CategoryCard 
-                icon={<Scale className="text-purple-600" />} 
-                title="Legal" 
-                description="Procurações e termos"
-              />
-            </Link>
+        {/* Catálogo de Modelos */}
+        <section className="mt-32">
+          <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-doku-green">Explore Nossas Minutas</p>
+            <h2 className="text-3xl font-black tracking-tight text-doku-blue">Modelos Disponíveis</h2>
+            <p className="mt-2 max-w-2xl text-sm text-doku-blue/60">
+              Escolha entre nossa variedade de modelos oficiais prontos para uso imediato.
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <TemplatesGrid limit={4} />
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="mt-24 border-t border-slate-200 bg-white py-12">
-        <div className="mx-auto max-w-7xl px-6 text-center text-slate-500">
-          <p>© 2025 DOKU. Todos os direitos reservados.</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function CategoryCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <div className="group flex flex-col items-start rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:shadow-md hover:border-slate-300 cursor-pointer">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 transition-colors group-hover:bg-white">
-        {icon}
-      </div>
-      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+      <Footer />
     </div>
   );
 }
