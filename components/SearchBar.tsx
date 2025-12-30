@@ -92,13 +92,13 @@ export default function SearchBar({
   };
 
   const inputClasses = variant === "hero" 
-    ? "w-full border-none bg-transparent px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0"
-    : "w-full border-none bg-transparent px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0";
+    ? "w-full border-none bg-transparent px-4 py-3 text-doku-blue placeholder-slate-400 focus:outline-none focus:ring-0"
+    : "w-full border-none bg-transparent px-3 py-1.5 text-sm text-doku-blue placeholder-slate-400 focus:outline-none focus:ring-0";
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <form onSubmit={handleSearch} className="w-full">
-        <div className={`relative flex items-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-slate-400 transition-all ${variant === "nav" ? "p-1 bg-slate-50" : "p-2"}`}>
+        <div className={`relative flex items-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-doku-blue/30 transition-all ${variant === "nav" ? "p-1 bg-doku-bg" : "p-2"}`}>
           <div className={`flex items-center text-slate-400 ${variant === "nav" ? "pl-3" : "pl-4"}`}>
             {loading ? <Loader2 size={variant === "nav" ? 18 : 20} className="animate-spin" /> : <Search size={variant === "nav" ? 18 : 20} />}
           </div>
@@ -115,7 +115,7 @@ export default function SearchBar({
           />
           <button 
             type="submit" 
-            className={`rounded-full bg-slate-900 font-semibold text-white transition-all hover:bg-slate-800 active:scale-95 flex items-center justify-center ${variant === "nav" ? "px-4 py-1.5 text-xs" : "px-8 py-3 text-sm min-h-[48px]"}`}
+            className={`rounded-full bg-doku-blue font-semibold text-white transition-all hover:bg-doku-blue/90 active:scale-95 flex items-center justify-center ${variant === "nav" ? "px-4 py-1.5 text-xs" : "px-8 py-3 text-sm min-h-[48px]"}`}
           >
             Buscar
           </button>
@@ -130,7 +130,7 @@ export default function SearchBar({
               <button
                 key={idx}
                 onClick={() => handleSuggestionClick(item.slug, item.title)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-doku-blue/80 transition-colors hover:bg-doku-bg hover:text-doku-blue"
               >
                 <Search size={14} className="text-slate-400" />
                 <span className="font-medium">{item.title}</span>

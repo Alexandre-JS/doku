@@ -2,12 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #143361;
+  --doku-blue: #143361;
+  --doku-green: #00A86B;
+  --doku-bg: #F4F7F9;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-doku-blue: var(--doku-blue);
+  --color-doku-green: var(--doku-green);
+  --color-doku-bg: var(--doku-bg);
   --font-sans: var(--font-inter);
 }
 
