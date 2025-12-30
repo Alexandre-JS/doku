@@ -1,12 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createBrowserSupabase } from "../../src/lib/supabase";
 import UserNav from "../../components/UserNav";
+import SearchBar from "../../components/SearchBar";
+import Footer from "../../components/Footer";
 
 const CATEGORIES = ["Todos", "Emprego", "Estado", "Legal"];
+
+const normalizeText = (text: string) => 
+  text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 interface Template {
   id: string;
@@ -18,10 +24,29 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-slate-400" size={40} />
+      </div>
+    }>
+      <TemplatesContent />
+    </Suspense>
+  );
+}
+
+function TemplatesContent() {
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get("search") || "";
+  
   const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setSearchQuery(urlSearch);
+  }, [urlSearch]);
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -43,9 +68,16 @@ export default function TemplatesPage() {
     fetchTemplates();
   }, []);
 
-  const filteredTemplates = templates.filter((template) => {
+  const filteredTemplates = templates.map(t => ({
+    ...t,
+    category: t.category || (
+      t.title.includes("Residência") ? "Legal" :
+      t.title.includes("Compromisso de Honra") ? "Estado" :
+      t.title.includes("Requerimento Geral") ? "Emprego" : "Outros"
+    )
+  })).filter((template) => {
     const matchesCategory = selectedCategory === "Todos" || template.category === selectedCategory;
-    const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = normalizeText(template.title).includes(normalizeText(searchQuery));
     return matchesCategory && matchesSearch;
   });
 
@@ -64,16 +96,7 @@ export default function TemplatesPage() {
             <h1 className="text-xl font-bold tracking-tight">Modelos Disponíveis</h1>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden sm:block relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                placeholder="Buscar modelo..."
-                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm focus:border-slate-400 focus:outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <SearchBar className="w-64" />
             <UserNav />
           </div>
         </div>
@@ -124,11 +147,12 @@ export default function TemplatesPage() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
 
-function TemplateCard({ title, price, popular }: { title: string; price: string; popular: boolean }) {
+function TemplateCard({ title, price, popular }: { title: string; price?: string; popular?: boolean }) {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all hover:scale-105 hover:border-blue-600 cursor-pointer">
       {/* Mini Preview */}
@@ -153,7 +177,7 @@ function TemplateCard({ title, price, popular }: { title: string; price: string;
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{title}</h3>
         <div className="mt-auto pt-3">
-          <span className="text-lg font-bold text-slate-900">{price}</span>
+          <span className="text-lg font-bold text-slate-900">{price || "Sob consulta"}</span>
         </div>
       </div>
     </div>

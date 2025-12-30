@@ -31,7 +31,9 @@ export default function EditorClient({ template, profileData }: EditorClientProp
             <span className="text-sm font-medium">Voltar aos modelos</span>
           </Link>
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold tracking-tight">DOKU EDITOR</span>
+            <Link href="/">
+              <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto" />
+            </Link>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest">{template.title}</span>
           </div>
           <div className="w-20"></div> {/* Spacer */}
