@@ -63,6 +63,16 @@ export default function DocumentPreview({
   const templateHasHeaderPlaceholders = typeof template === 'string' && /\{\{\s*(target_authority|destinatary_role|institution_name|target_location|address|subject)\s*\}\}/i.test(template);
   const templateHasFooterPlaceholders = typeof template === 'string' && /\{\{\s*(current_city|current_date|target_location)\s*\}\}/i.test(template);
 
+  // Verifica se o template já começa com um título (ex: REQUERIMENTO, DECLARAÇÃO)
+  const hasTitleInContent = typeof template === 'string' && 
+    /^\s*(REQUERIMENTO|DECLARAÇÃO|COMPROMISSO|CONTRATO|CERTIDÃO|GUIA|EDITAL)/i.test(template.trim());
+
+  // Verifica se é uma declaração ou contrato (que não levam "Exmo Senhor" ou "Assunto" automático)
+  const isDeclarationOrContract = hasTitleInContent && !template.trim().toUpperCase().startsWith('REQUERIMENTO') ||
+    title?.toLowerCase().includes('declaração') || 
+    title?.toLowerCase().includes('compromisso') ||
+    title?.toLowerCase().includes('contrato');
+
   const getValue = (key: string) => {
     return userData[key] || 
            userData[key.toLowerCase()] || 
@@ -101,8 +111,8 @@ export default function DocumentPreview({
            {Array(20).fill("DOKU PREVIEW ").join(" ")}
         </div>
 
-          {/* Cabeçalho de Endereçamento (só renderiza se o template não já contiver esses placeholders) */}
-          {!templateHasHeaderPlaceholders && (
+          {/* Cabeçalho de Endereçamento (só renderiza se o template não já contiver esses placeholders e não for declaração) */}
+          {!templateHasHeaderPlaceholders && !isDeclarationOrContract && (
             <div className="mb-12 text-[12pt] relative z-0">
               <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
               <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
@@ -110,10 +120,19 @@ export default function DocumentPreview({
             </div>
           )}
 
-        {/* Assunto */}
-        <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
-          Assunto: {getValue('subject') || "Requerimento Geral"}
-        </div>
+        {/* Assunto (só renderiza se não for declaração e se o template não tiver título próprio) */}
+        {!isDeclarationOrContract && !hasTitleInContent && (
+          <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
+            Assunto: {getValue('subject') || "Requerimento Geral"}
+          </div>
+        )}
+
+        {/* Título para Declarações/Compromissos que não têm título no conteúdo */}
+        {isDeclarationOrContract && !hasTitleInContent && title && (
+          <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
+            {title}
+          </div>
+        )}
 
         {/* Corpo do Texto */}
         <div className="text-[12pt] text-justify whitespace-pre-line indent-12 relative z-0">
@@ -122,7 +141,7 @@ export default function DocumentPreview({
 
         {/* Local e Data (só renderiza se o template não já contiver esses placeholders) */}
         {!templateHasFooterPlaceholders && (
-          <div className="mt-16 text-[12pt] text-right relative z-0">
+          <div className="mt-16 text-[12pt] text-center relative z-0">
             {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
           </div>
         )}
