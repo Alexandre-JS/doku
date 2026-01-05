@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Search, FileText } from "lucide-react";
+import { Search, FileText } from "lucide-react";
 import Link from "next/link";
 import { createBrowserSupabase } from "../src/lib/supabase";
 import LogoLoading from "./LogoLoading";
@@ -40,9 +40,9 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
         } else {
           setTemplates(data || []);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Erro inesperado:", err);
-        setError(err.message);
+        setError(err instanceof Error ? err.message : "Erro desconhecido");
       } finally {
         setLoading(false);
       }

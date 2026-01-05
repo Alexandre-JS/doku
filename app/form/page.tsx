@@ -1,20 +1,39 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
 import DynamicForm from "../../components/DynamicForm";
 import { createBrowserSupabase } from "../../src/lib/supabase";
-import { FormField, FormSection } from "../../src/types";
+import { FormSection } from "../../src/types";
 import LogoLoading from "../../components/LogoLoading";
+import { motion, AnimatePresence } from "framer-motion";
 
-const STEPS = ["Revisão"]; // Mantido apenas para compatibilidade mínima
+const STEPS = [
+  { id: "data", title: "Dados", icon: FileText },
+  { id: "review", title: "Revisão", icon: Layout },
+  { id: "payment", title: "Pagamento", icon: ShieldCheck },
+];
+
+interface DocumentFormData {
+  full_name: string;
+  bi_number: string;
+  nuit: string;
+  father_name: string;
+  mother_name: string;
+  target_authority: string;
+  institution_name: string;
+  position_name: string;
+  address: string;
+  date: string;
+  [key: string]: string;
+}
 
 function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<DocumentFormData>({
     full_name: "",
     bi_number: "",
     nuit: "",
@@ -26,13 +45,30 @@ function FormContent() {
     address: "",
     date: new Date().toLocaleDateString('pt-PT'),
   });
-  const [errors, setErrors] = useState<string[]>([]);
   const [templateData, setTemplateData] = useState<{ content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   
   const router = useRouter();
   const searchParams = useSearchParams();
   const slug = searchParams.get("template");
+
+  // Carregar dados do localStorage ao iniciar
+  useEffect(() => {
+    const savedData = localStorage.getItem("doku_form_data");
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setFormData(prev => ({ ...prev, ...parsed }));
+      } catch (e) {
+        console.error("Erro ao carregar dados salvos:", e);
+      }
+    }
+  }, []);
+
+  // Salvar dados no localStorage sempre que mudarem (persistência)
+  useEffect(() => {
+    localStorage.setItem("doku_form_data", JSON.stringify(formData));
+  }, [formData]);
 
   useEffect(() => {
     async function fetchTemplate() {
@@ -50,15 +86,19 @@ function FormContent() {
         .single();
 
       if (error) {
-        console.error("Erro ao buscar modelo:", error.message, error.details, error.hint);
+        console.error("Erro ao buscar modelo:", error.message);
       } else {
-        // Mapeia content_html para content para manter compatibilidade com o resto do código
         setTemplateData({
           content: data.content_html,
           price: data.price?.toString() || "0",
           form_schema: data.form_schema,
           title: data.title || undefined
         });
+        
+        // Salvar título no localStorage para uso em outras páginas
+        if (data.title) {
+          localStorage.setItem("doku_current_doc_title", data.title);
+        }
       }
       setLoading(false);
     }
@@ -66,42 +106,14 @@ function FormContent() {
     fetchTemplate();
   }, [slug]);
 
-  // Removido: prefill de perfil (perfil ainda não implementado)
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-    if (errors.includes(name)) {
-      setErrors((prev: string[]) => prev.filter((err) => err !== name));
-    }
+  const handleFormChange = (newData: DocumentFormData) => {
+    setFormData(newData);
   };
 
-  const validateStep = () => {
-    const newErrors: string[] = [];
-    if (currentStep === 0) {
-      if (!formData.full_name) newErrors.push("full_name");
-      if (!formData.bi_number) newErrors.push("bi_number");
-      if (!formData.nuit) newErrors.push("nuit");
-      if (!formData.father_name) newErrors.push("father_name");
-      if (!formData.mother_name) newErrors.push("mother_name");
-      if (!formData.address) newErrors.push("address");
-    } else if (currentStep === 1) {
-      if (!formData.target_authority) newErrors.push("target_authority");
-      if (!formData.institution_name) newErrors.push("institution_name");
-      if (!formData.position_name) newErrors.push("position_name");
-    }
-    setErrors(newErrors);
-    return newErrors.length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  const handleFormSubmit = (data: DocumentFormData) => {
+    setFormData(data);
+    setCurrentStep(1); // Vai para a revisão
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) {
@@ -124,72 +136,142 @@ function FormContent() {
     );
   }
 
-  const currentTemplate = templateData?.content || `REQUERIMENTO DE EMPREGO\n\nExmo Senhor {{target_authority}},\n\nEu, {{full_name}}, titular do BI nº {{bi_number}} e NUIT {{nuit}}, residente em {{address}}, venho por este meio mui respeitosamente solicitar a V. Excia que se digne autorizar a minha admissão ao concurso para a vaga de {{position_name}} nesta prestigiada instituição.\n\nMais informo que reuni todos os requisitos necessários para o desempenho das funções, conforme atestam os documentos em anexo.\n\nNestes termos, pede deferimento.\n\nMaputo, {{date}}`;
-
-  const handleDynamicSubmit = (data: any) => {
-    setFormData(data);
-    // Aqui os dados poderiam ser passados pelo parseDocument(currentTemplate, data) 
-    // para gerar o texto final, mas o DocumentPreview já faz isso com destaque (highlight)
-    setCurrentStep(2); // Pula para a revisão
-  };
+  const currentTemplate = templateData?.content || "";
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {currentStep < 2 ? (
-        <>
-          {/* Header */}
-          <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-            <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
-              <Link href="/templates" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
-                <ArrowLeft size={20} />
-                <span className="text-sm font-medium">Voltar aos modelos</span>
-              </Link>
-              <Link href="/">
-                <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto" />
-              </Link>
-            </div>
-          </header>
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <div className="flex items-center gap-8">
+            <Link href="/templates" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
+              <ArrowLeft size={20} />
+              <span className="hidden text-sm font-medium sm:inline">Voltar</span>
+            </Link>
+            <Link href="/">
+              <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto" />
+            </Link>
+          </div>
 
-          <main className="mx-auto max-w-3xl px-6 py-12">
-            {templateData?.form_schema ? (
-              <div className="space-y-8">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-slate-900">
-                    Preencha os dados
-                    {templateData?.title && (
-                      <span className="ml-2 text-slate-500 font-semibold">— {templateData.title}</span>
-                    )}
-                  </h1>
-                  <p className="text-slate-500 mt-2">Insira as informações necessárias para gerar seu documento.</p>
+          {/* Stepper Desktop */}
+          <nav className="hidden md:flex items-center gap-4">
+            {STEPS.map((step, idx) => {
+              const Icon = step.icon;
+              const isActive = currentStep === idx;
+              const isCompleted = currentStep > idx;
+              
+              return (
+                <div key={step.id} className="flex items-center gap-4">
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+                    isActive ? "bg-slate-900 text-white shadow-lg shadow-slate-200" : 
+                    isCompleted ? "bg-green-50 text-green-600" : "text-slate-400"
+                  }`}>
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                      isActive ? "border-white/20 bg-white/10" : 
+                      isCompleted ? "border-green-200 bg-green-100" : "border-slate-200"
+                    }`}>
+                      {isCompleted ? <Check size={12} /> : <Icon size={12} />}
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider">{step.title}</span>
+                  </div>
+                  {idx < STEPS.length - 1 && <ChevronRight size={14} className="text-slate-300" />}
                 </div>
-                <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-                  <DynamicForm 
-                    schema={templateData.form_schema} 
-                    initialData={formData} 
-                    onNext={handleDynamicSubmit} 
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total a pagar</p>
+              <p className="text-sm font-black text-slate-900">{templateData?.price || "0"} MT</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-6 py-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+          {/* Coluna da Esquerda: Formulário */}
+          <div className={`lg:col-span-5 ${currentStep === 1 ? 'hidden lg:block' : ''}`}>
+            <div className="sticky top-24 space-y-8">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {templateData?.title || "Preencher Documento"}
+                </h1>
+                <p className="mt-2 text-sm text-slate-500">
+                  Preencha os campos abaixo. O documento será atualizado em tempo real ao lado.
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <DynamicForm 
+                  schema={templateData?.form_schema || []} 
+                  initialData={formData} 
+                  onChange={handleFormChange}
+                  onNext={handleFormSubmit} 
+                />
+              </div>
+
+              <div className="flex items-center gap-4 rounded-2xl bg-blue-50 p-4 text-blue-700">
+                <ShieldCheck size={20} className="shrink-0" />
+                <p className="text-xs font-medium leading-relaxed">
+                  Seus dados estão seguros e serão usados apenas para gerar este documento. Não armazenamos informações sensíveis permanentemente.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna da Direita: Preview */}
+          <div className={`lg:col-span-7 ${currentStep === 0 ? 'hidden lg:block' : ''}`}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="h-full"
+              >
+                {currentStep === 0 ? (
+                  <div className="relative">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-slate-900 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-xl">
+                      Visualização em Tempo Real
+                    </div>
+                    <div className="pointer-events-none opacity-80 scale-[0.95] origin-top transition-all duration-500">
+                      <DocumentPreview
+                        userData={formData}
+                        template={currentTemplate}
+                        price={templateData?.price || "0 MT"}
+                        title={templateData?.title}
+                        onBack={() => {}}
+                        onConfirm={() => {}}
+                        isReadOnly={true}
+                      />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-transparent to-slate-50/80">
+                      <button 
+                        onClick={() => handleFormSubmit(formData)}
+                        className="group flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-2xl ring-1 ring-slate-200 transition-all hover:scale-105 active:scale-95"
+                      >
+                        Revisar Documento Completo
+                        <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <DocumentPreview
+                    userData={formData}
+                    template={currentTemplate}
+                    price={templateData?.price || "0 MT"}
+                    title={templateData?.title}
+                    onBack={() => setCurrentStep(0)}
+                    onConfirm={() => router.push("/checkout")}
                   />
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 text-center">
-                <h2 className="text-xl font-bold text-slate-900">Modelo sem form_schema</h2>
-                <p className="text-slate-600 mt-2">Para usar formulários 100% dinâmicos, defina o campo <span className="font-mono">form_schema</span> neste template.</p>
-                <Link href="/templates" className="mt-6 inline-block rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white">Voltar aos modelos</Link>
-              </div>
-            )}
-          </main>
-        </>
-      ) : (
-        <DocumentPreview
-          userData={formData}
-          template={currentTemplate}
-          price={templateData?.price || "100 MT"}
-          title={templateData?.title}
-          layoutType={(templateData?.form_schema as any)?.layout_type}
-          onBack={() => setCurrentStep(templateData?.form_schema ? 0 : 1)}
-          onConfirm={() => router.push("/checkout")}
-        />
-      )}
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
@@ -206,26 +288,3 @@ export default function FormPage() {
   );
 }
 
-function InputField({ label, name, value, onChange, error, placeholder }: any) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={name} className="text-sm font-medium text-slate-600">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type="text"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`rounded-xl border bg-white px-4 py-3 text-slate-900 transition-all placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
-          error
-            ? "border-red-500 ring-1 ring-red-500"
-            : "border-slate-200 focus:border-blue-600 focus:ring-blue-600"
-        }`}
-      />
-      {error && <span className="text-xs font-medium text-red-500">Este campo é obrigatório</span>}
-    </div>
-  );
-}

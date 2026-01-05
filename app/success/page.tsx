@@ -1,9 +1,35 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CircleCheckBig, Download, MessageCircle, Mail, FileText, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function SuccessPage() {
+  const [docTitle, setDocTitle] = useState("Documento");
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const savedTitle = localStorage.getItem("doku_current_doc_title");
+    const savedData = localStorage.getItem("doku_form_data");
+    
+    if (savedTitle && savedTitle !== docTitle) {
+      setDocTitle(savedTitle);
+    }
+    
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        if (data.full_name && data.full_name !== userName) {
+          setUserName(data.full_name);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar dados:", e);
+      }
+    }
+  }, [docTitle, userName]);
+
+  const fileName = `${docTitle.replace(/\s+/g, '_')}_${userName.split(' ')[0] || 'Doku'}.pdf`;
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <main className="mx-auto flex max-w-xl flex-col items-center px-6 py-16 text-center">
@@ -14,7 +40,7 @@ export default function SuccessPage() {
 
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Documento Pronto!</h1>
         <p className="mt-3 text-lg text-slate-600">
-          Seu documento foi gerado com sucesso e está pronto para download.
+          {userName ? `Parabéns, ${userName.split(' ')[0]}!` : "Parabéns!"} Seu documento foi gerado com sucesso.
         </p>
 
         {/* Document Preview Card */}
@@ -24,7 +50,7 @@ export default function SuccessPage() {
               <FileText size={24} />
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-bold text-slate-900">Requerimento_Emprego.pdf</h3>
+              <h3 className="font-bold text-slate-900">{fileName}</h3>
               <p className="text-sm text-slate-500">PDF • 142 KB</p>
             </div>
           </div>

@@ -25,11 +25,11 @@ export default function UserNav() {
       setLoading(true);
       const { data, error } = await supabase.auth.getUser();
       if (!error && data?.user) {
-        const meta = data.user.user_metadata as any;
+        const meta = data.user.user_metadata;
         setUser({
           id: data.user.id,
           email: data.user.email ?? null,
-          full_name: meta?.full_name || meta?.name || null,
+          full_name: (meta?.full_name as string) || (meta?.name as string) || null,
         });
       } else {
         setUser(null);

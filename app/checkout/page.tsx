@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, ShieldCheck, Smartphone, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -10,6 +10,14 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [docTitle, setDocTitle] = useState("Documento");
+
+  useEffect(() => {
+    const savedTitle = localStorage.getItem("doku_current_doc_title");
+    if (savedTitle && savedTitle !== docTitle) {
+      setDocTitle(savedTitle);
+    }
+  }, [docTitle]);
 
   const handlePayment = () => {
     if (!phoneNumber) return alert("Por favor, insira o número de telefone.");
@@ -61,7 +69,7 @@ export default function CheckoutPage() {
                 <Smartphone size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-slate-900">Documento: Requerimento</h3>
+                <h3 className="text-sm font-bold text-slate-900">Documento: {docTitle}</h3>
                 <p className="text-xs text-slate-500">Processamento instantâneo</p>
               </div>
               <div className="text-right">
@@ -142,7 +150,16 @@ export default function CheckoutPage() {
   );
 }
 
-function PaymentCard({ id, name, active, onClick, color, image }: any) {
+interface PaymentCardProps {
+  id: string;
+  name: string;
+  active: boolean;
+  onClick: () => void;
+  color: string;
+  image: string;
+}
+
+function PaymentCard({ name, active, onClick, color, image }: PaymentCardProps) {
   return (
     <button
       onClick={onClick}

@@ -55,9 +55,11 @@ export default function DocumentTypingSim() {
         setIsDeleting(true);
       }, 4000);
     } else if (isDeleting) {
-      setCharCount(0);
-      setIsDeleting(false);
-      setDocIndex((prev) => (prev + 1) % DOCUMENTS.length);
+      timeout = setTimeout(() => {
+        setCharCount(0);
+        setIsDeleting(false);
+        setDocIndex((prev) => (prev + 1) % DOCUMENTS.length);
+      }, 500);
     }
 
     return () => clearTimeout(timeout);
