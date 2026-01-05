@@ -10,6 +10,7 @@ interface DocumentPreviewProps {
   onBack: () => void;
   onConfirm: () => void;
   hideControls?: boolean;
+  isReadOnly?: boolean;
   title?: string;
   layoutType?: 'OFFICIAL' | 'DECLARATION' | 'LETTER';
 }
@@ -21,9 +22,12 @@ export default function DocumentPreview({
   onBack,
   onConfirm,
   hideControls = false,
+  isReadOnly = false,
   title,
   layoutType: propLayoutType,
 }: DocumentPreviewProps) {
+  
+  const effectiveHideControls = hideControls || isReadOnly;
   
   // Inferir o layout se não for passado explicitamente
   const layoutType = propLayoutType || (
@@ -91,8 +95,8 @@ export default function DocumentPreview({
   };
 
   return (
-    <div className={`flex flex-col items-center ${hideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-8 pb-32 min-h-screen'}`}>
-      {!hideControls && (
+    <div className={`flex flex-col items-center ${effectiveHideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-8 pb-32 min-h-screen'}`}>
+      {!effectiveHideControls && (
         <div className="mb-6 text-center">
           <h2 className="text-xl font-bold text-slate-800">
             Revisão do Documento
@@ -129,7 +133,7 @@ export default function DocumentPreview({
         )}
 
         {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
-        {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && (
+        {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && !isDeclarationOrContract && (
           <div className="mb-12 text-[12pt] relative z-0">
             <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
             <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
@@ -195,7 +199,7 @@ export default function DocumentPreview({
       </div>
 
       {/* Botões de Ação Fixos na Base */}
-      {!hideControls && (
+      {!effectiveHideControls && (
         <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-center items-center gap-6 shadow-inner z-50">
           <div className="flex flex-col items-end mr-4">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total a pagar</span>

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { 
   Plus, 
   ChevronDown, 
-  Search, 
   Menu, 
   X, 
   FileText, 
@@ -98,7 +97,9 @@ export default function Navbar() {
         <div className={`hidden flex-1 justify-center transition-all duration-500 lg:flex ${
           isScrolled ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0 pointer-events-none"
         }`}>
-          <SearchBar variant="nav" className="w-full max-w-xs" placeholder="Buscar documento..." />
+          <Suspense fallback={<div className="w-full max-w-xs h-10 bg-slate-100 rounded-full animate-pulse" />}>
+            <SearchBar variant="nav" className="w-full max-w-xs" placeholder="Buscar documento..." />
+          </Suspense>
         </div>
 
         {/* Right: Actions */}

@@ -1,15 +1,9 @@
-import { Suspense } from "react";
-import Link from "next/link";
 import Navbar from "../components/Navbar";
 import TemplatesGrid from "../components/TemplatesGrid";
-import TypingText from "../components/TypingText";
-import SearchBar from "../components/SearchBar";
 import Footer from "../components/Footer";
-import DocumentTypingSim from "../components/DocumentTypingSim";
 import PartnerTrustBar from "../components/PartnerTrustBar";
 import FloatingSupport from "../components/FloatingSupport";
 import Hero from "../components/Hero";
-import LogoLoading from "../components/LogoLoading";
 
 export default function Home() {
   return (

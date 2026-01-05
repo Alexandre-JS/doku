@@ -20,11 +20,14 @@ export default function FloatingSupport() {
 
   useEffect(() => {
     if (isOpen && step === "idle") {
-      setStep("typing");
-      const timer = setTimeout(() => setStep("message"), 1500);
-      return () => clearTimeout(timer);
+      const typingTimer = setTimeout(() => {
+        setStep("typing");
+        const messageTimer = setTimeout(() => setStep("message"), 1500);
+        return () => clearTimeout(messageTimer);
+      }, 100);
+      return () => clearTimeout(typingTimer);
     }
-  }, [isOpen]); // Removido 'step' das dependências para evitar que o timer seja limpo ao mudar para 'typing'
+  }, [isOpen, step]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();

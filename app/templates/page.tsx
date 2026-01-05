@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createBrowserSupabase } from "../../src/lib/supabase";
-import UserNav from "../../components/UserNav";
 import Navbar from "../../components/Navbar";
-import SearchBar from "../../components/SearchBar";
 import Footer from "../../components/Footer";
 import SuggestionBox from "../../components/SuggestionBox";
 import FloatingSupport from "../../components/FloatingSupport";
