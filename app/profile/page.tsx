@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabase } from "../../src/lib/supabase";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import LogoLoading from "../../components/LogoLoading";
+import { motion } from "framer-motion";
 
 type ProfileForm = {
   full_name: string;
@@ -142,7 +144,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <LogoLoading size="lg" />
       </div>
     );
   }
@@ -271,7 +273,14 @@ export default function ProfilePage() {
               disabled={saving}
               className="inline-flex items-center rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {saving && (
+                <motion.img 
+                  src="/logo-tra.png" 
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="mr-2 h-4 w-auto brightness-0 invert" 
+                />
+              )}
               {saving ? "Salvando..." : "Salvar"}
             </button>
           </div>

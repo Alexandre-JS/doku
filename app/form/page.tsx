@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
 import DynamicForm from "../../components/DynamicForm";
 import { createBrowserSupabase } from "../../src/lib/supabase";
 import { FormField, FormSection } from "../../src/types";
+import LogoLoading from "../../components/LogoLoading";
 
 const STEPS = ["Revisão"]; // Mantido apenas para compatibilidade mínima
 
@@ -106,10 +107,7 @@ function FormContent() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-blue-600" size={40} />
-          <p className="text-sm font-medium text-slate-500">Carregando modelo...</p>
-        </div>
+        <LogoLoading size="lg" />
       </div>
     );
   }
@@ -200,7 +198,7 @@ export default function FormPage() {
   return (
     <Suspense fallback={
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
+        <LogoLoading size="lg" />
       </div>
     }>
       <FormContent />
