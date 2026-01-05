@@ -23,7 +23,7 @@ export default function PartnerTrustBar() {
   const infinitePartners = [...partners, ...partners, ...partners];
 
   return (
-    <section className="w-full border-y border-slate-100 bg-white/30 py-12 backdrop-blur-md sm:py-16">
+    <section className="w-full border-y border-slate-100 bg-white/30 py-8 backdrop-blur-md sm:py-10">
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center gap-8 lg:flex-row">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 lg:w-48">

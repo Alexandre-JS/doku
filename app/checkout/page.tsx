@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ShieldCheck, Smartphone, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Smartphone, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "emola">("mpesa");
@@ -117,7 +118,12 @@ export default function CheckoutPage() {
             >
               {isLoading ? (
                 <div className="flex items-center gap-3">
-                  <Loader2 className="animate-spin" size={24} />
+                  <motion.img 
+                    src="/logo-tra.png" 
+                    animate={{ opacity: [0.5, 1, 0.5], scale: [0.9, 1, 0.9] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="h-6 w-auto brightness-0 invert" 
+                  />
                   <span>Aguardando confirmação do PIN...</span>
                 </div>
               ) : (

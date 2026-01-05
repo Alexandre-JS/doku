@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Loader2, Search, FileText } from "lucide-react";
+import { Sparkles, Search, FileText } from "lucide-react";
 import Link from "next/link";
 import { createBrowserSupabase } from "../src/lib/supabase";
+import LogoLoading from "./LogoLoading";
 
 interface Template {
   id: string;
@@ -52,9 +53,8 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-doku-blue/40">
-        <Loader2 className="mb-4 animate-spin" size={40} />
-        <p className="text-sm font-medium">Carregando modelos...</p>
+      <div className="flex flex-col items-center justify-center py-20">
+        <LogoLoading size="md" />
       </div>
     );
   }

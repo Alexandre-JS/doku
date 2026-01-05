@@ -62,7 +62,12 @@ export default function UserNav() {
 
   if (loading) {
     return (
-      <div className="h-9 w-9 rounded-full bg-slate-200 animate-pulse" />
+      <motion.img 
+        src="/logo-tra.png" 
+        animate={{ opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="h-8 w-8 object-contain grayscale opacity-50" 
+      />
     );
   }
 
@@ -94,23 +99,23 @@ export default function UserNav() {
             animate={{ opacity: 1, y: 4, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
-            className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/95 text-slate-50 shadow-xl z-50"
+            className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-900 shadow-xl z-50"
           >
-            <div className="px-4 py-3 border-b border-slate-800">
-              <p className="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Logado como</p>
-              <p className="text-sm font-medium truncate">{user.full_name || user.email}</p>
+            <div className="px-4 py-3 border-b border-slate-100">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-0.5">Logado como</p>
+              <p className="truncate text-sm font-medium text-slate-700">{user.full_name || user.email}</p>
             </div>
             <nav className="py-1 text-sm">
               <Link
                 href="/profile"
-                className="block px-4 py-2.5 hover:bg-slate-800/80"
+                className="block px-4 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-doku-blue"
                 onClick={() => setOpen(false)}
               >
                 Meu Perfil
               </Link>
               <Link
                 href="/templates"
-                className="block px-4 py-2.5 hover:bg-slate-800/80"
+                className="block px-4 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-doku-blue"
                 onClick={() => setOpen(false)}
               >
                 Meus Documentos
@@ -118,7 +123,7 @@ export default function UserNav() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center px-4 py-2.5 text-left text-red-300 hover:bg-red-500/10"
+                className="flex w-full items-center px-4 py-2.5 text-left text-red-600 hover:bg-red-50"
               >
                 Sair
               </button>

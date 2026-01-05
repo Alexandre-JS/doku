@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft, Search, Loader2 } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createBrowserSupabase } from "../../src/lib/supabase";
 import UserNav from "../../components/UserNav";
+import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
 import Footer from "../../components/Footer";
 import SuggestionBox from "../../components/SuggestionBox";
 import FloatingSupport from "../../components/FloatingSupport";
 import FloatingSuggestion from "../../components/FloatingSuggestion";
+import LogoLoading from "../../components/LogoLoading";
 
 const CATEGORIES = ["Todos", "Emprego", "Estado", "Legal"];
 
@@ -29,8 +31,8 @@ interface Template {
 export default function TemplatesPage() {
   return (
     <Suspense fallback={
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin text-slate-400" size={40} />
+      <div className="flex h-screen items-center justify-center bg-doku-bg">
+        <LogoLoading size="lg" />
       </div>
     }>
       <TemplatesContent />
@@ -87,24 +89,7 @@ function TemplatesContent() {
 
   return (
     <div className="min-h-screen bg-doku-bg font-sans text-doku-blue">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/" 
-              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-doku-bg"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-            <h1 className="text-xl font-bold tracking-tight">Modelos Disponíveis</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <SearchBar className="w-64" />
-            <UserNav />
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
         {/* Filter Chips */}
@@ -126,9 +111,8 @@ function TemplatesContent() {
 
         {/* Grid */}
         {loading ? (
-          <div className="mt-20 flex flex-col items-center justify-center text-doku-blue/40">
-            <Loader2 className="animate-spin mb-4" size={40} />
-            <p className="text-sm font-medium">Carregando modelos...</p>
+          <div className="mt-20 flex flex-col items-center justify-center">
+            <LogoLoading size="md" />
           </div>
         ) : filteredTemplates.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

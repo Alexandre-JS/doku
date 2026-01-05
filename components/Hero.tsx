@@ -8,7 +8,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-slate-900 py-20 lg:py-32">
+    <section className="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       {/* Geometric Pattern Background */}
       <div 
         className="absolute inset-0 z-0 opacity-20" 
