@@ -4,8 +4,6 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function PartnerTrustBar() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   const partners = [
     { name: "AT", logo: "/AT globo.png", fullName: "Autoridade Tributária" },
     { name: "INSS", logo: "/inss-logo-2023.webp", fullName: "Instituto Nacional de Segurança Social" },
@@ -21,70 +19,55 @@ export default function PartnerTrustBar() {
     { name: "FIPAG", logo: "/adrm.jpg", fullName: "Fundo de Investimento e Património do Abastecimento de Água" },
   ];
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollTo = direction === "left" ? scrollLeft - clientWidth / 2 : scrollLeft + clientWidth / 2;
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
-    }
-  };
+  // Duplicar a lista para o efeito infinito
+  const infinitePartners = [...partners, ...partners, ...partners];
 
   return (
-    <section className="w-full border-y border-slate-100 bg-white py-10 sm:py-12">
+    <section className="w-full border-y border-slate-100 bg-white/30 py-12 backdrop-blur-md sm:py-16">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="flex flex-col items-center gap-6 lg:flex-row">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 lg:w-48">
+        <div className="flex flex-col items-center gap-8 lg:flex-row">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 lg:w-48">
             Minutas aceites em:
           </p>
           
-          <div className="relative flex flex-1 items-center group w-full">
-            {/* Botão Esquerdo */}
-            <button 
-              onClick={() => scroll("left")}
-              className="absolute -left-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-slate-100 bg-white shadow-sm transition-all hover:bg-slate-50 hover:shadow-md md:flex"
-              aria-label="Anterior"
-            >
-              <ChevronLeft className="h-4 w-4 text-slate-400" />
-            </button>
+          <div className="relative flex-1 overflow-hidden">
+            {/* Gradientes de desfoque nas bordas */}
+            <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white/50 to-transparent lg:from-white/30" />
+            <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white/50 to-transparent lg:from-white/30" />
 
-            {/* Container de Logos com Scroll */}
-            <div 
-              ref={scrollRef}
-              className="flex w-full items-center gap-12 overflow-x-auto scroll-smooth px-4 scrollbar-hide md:gap-16"
-            >
-              {partners.map((partner, index) => (
+            <div className="flex animate-scroll items-center gap-16 whitespace-nowrap py-4">
+              {infinitePartners.map((partner, index) => (
                 <div
                   key={index}
-                  className="group flex flex-shrink-0 items-center justify-center transition-all duration-700"
+                  className="group flex flex-shrink-0 items-center justify-center transition-all duration-500"
                   title={partner.fullName}
                 >
                   <img
                     src={partner.logo}
                     alt={partner.name}
-                    className="h-8 w-auto object-contain transition-all duration-700 group-hover:scale-110 group-hover:rotate-[360deg] sm:h-10"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
+                    className="h-8 w-auto object-contain transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg] sm:h-10"
                   />
-                  <span className="hidden text-xs font-bold text-slate-400 transition-colors group-hover:text-doku-blue">
-                    {partner.name}
-                  </span>
                 </div>
               ))}
             </div>
-
-            {/* Botão Direito */}
-            <button 
-              onClick={() => scroll("right")}
-              className="absolute -right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-slate-100 bg-white shadow-sm transition-all hover:bg-slate-50 hover:shadow-md md:flex"
-              aria-label="Próximo"
-            >
-              <ChevronRight className="h-4 w-4 text-slate-400" />
-            </button>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-scroll {
+          animation: scroll 40s linear infinite;
+          display: flex;
+          width: max-content;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </section>
   );
 }
