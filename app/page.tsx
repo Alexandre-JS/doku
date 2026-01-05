@@ -7,6 +7,7 @@ import SearchBar from "../components/SearchBar";
 import Footer from "../components/Footer";
 import DocumentTypingSim from "../components/DocumentTypingSim";
 import PartnerTrustBar from "../components/PartnerTrustBar";
+import FloatingSupport from "../components/FloatingSupport";
 
 export default function Home() {
   return (
@@ -122,6 +123,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <FloatingSupport />
     </div>
   );
 }

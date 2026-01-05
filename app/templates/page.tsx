@@ -8,6 +8,9 @@ import { createBrowserSupabase } from "../../src/lib/supabase";
 import UserNav from "../../components/UserNav";
 import SearchBar from "../../components/SearchBar";
 import Footer from "../../components/Footer";
+import SuggestionBox from "../../components/SuggestionBox";
+import FloatingSupport from "../../components/FloatingSupport";
+import FloatingSuggestion from "../../components/FloatingSuggestion";
 
 const CATEGORIES = ["Todos", "Emprego", "Estado", "Legal"];
 
@@ -43,6 +46,7 @@ function TemplatesContent() {
   const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
 
   useEffect(() => {
     setSearchQuery(urlSearch);
@@ -141,13 +145,24 @@ function TemplatesContent() {
             </div>
             <h3 className="text-lg font-semibold text-doku-blue">Não encontramos esse modelo.</h3>
             <p className="mt-2 text-doku-blue/60">Sugira-nos o que você precisa!</p>
-            <button className="mt-6 rounded-full bg-doku-blue px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-doku-blue/90 min-h-[48px]">
+            <button 
+              onClick={() => setIsSuggestionOpen(true)}
+              className="mt-6 rounded-full bg-doku-blue px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-doku-blue/90 min-h-[48px]"
+            >
               Sugerir Modelo
             </button>
           </div>
         )}
       </main>
+
+      {/* Suggestion Trigger before Footer */}
+      <div className="mx-auto mb-16 flex max-w-7xl justify-end px-6">
+        <FloatingSuggestion onClick={() => setIsSuggestionOpen(true)} />
+      </div>
+
       <Footer />
+      <FloatingSupport />
+      <SuggestionBox isOpen={isSuggestionOpen} onClose={() => setIsSuggestionOpen(false)} />
     </div>
   );
 }
