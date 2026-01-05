@@ -6,6 +6,7 @@ import TypingText from "../components/TypingText";
 import SearchBar from "../components/SearchBar";
 import Footer from "../components/Footer";
 import DocumentTypingSim from "../components/DocumentTypingSim";
+import PartnerTrustBar from "../components/PartnerTrustBar";
 
 export default function Home() {
   return (
@@ -99,8 +100,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Partner Trust Bar */}
+        <div className="my-16 sm:my-24">
+          <PartnerTrustBar />
+        </div>
+
         {/* Catálogo de Modelos */}
-        <section className="mt-32">
+        <section className="mt-16 sm:mt-24">
           <div className="mb-10">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-doku-green">Explore Nossas Minutas</p>
             <h2 className="text-3xl font-black tracking-tight text-doku-blue">Modelos Disponíveis</h2>
