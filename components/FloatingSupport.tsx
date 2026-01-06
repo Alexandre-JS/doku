@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Phone, X, Send } from "lucide-react";
+import { MessageCircle, Phone, X, Send, Headphones } from "lucide-react";
 
 export default function FloatingSupport() {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,15 +56,8 @@ export default function FloatingSupport() {
             <div className="bg-doku-blue p-3 text-white sm:p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-white/20 bg-slate-200 sm:h-10 sm:w-10">
-                    <img 
-                      src="/assistant-avatar.png" 
-                      alt="Assistente DOKU" 
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://ui-avatars.com/api/?name=Doku+Support&background=003366&color=fff";
-                      }}
-                    />
+                  <div className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 sm:h-10 sm:w-10">
+                    <Headphones size={20} className="text-white" />
                     <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-doku-blue bg-green-500"></span>
                   </div>
                   <div>
@@ -158,18 +151,7 @@ export default function FloatingSupport() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex h-12 w-12 items-center justify-center rounded-full bg-doku-blue text-white shadow-lg ring-2 ring-white transition-all sm:h-14 sm:w-14 sm:ring-4"
       >
-        {isOpen ? <X size={24} /> : (
-          <div className="relative h-full w-full overflow-hidden rounded-full">
-            <img 
-              src="/assistant-avatar.png" 
-              alt="Suporte" 
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = "https://ui-avatars.com/api/?name=D&background=003366&color=fff";
-              }}
-            />
-          </div>
-        )}
+        {isOpen ? <X size={24} /> : <Headphones size={24} />}
       </motion.button>
     </div>
   );

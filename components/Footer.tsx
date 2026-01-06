@@ -47,9 +47,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:suporte@doku.co.mz" className="flex items-center gap-2 hover:text-white transition-colors">
+                <a href="mailto:info@dokumoz.com" className="flex items-center gap-2 hover:text-white transition-colors">
                   <Mail size={18} />
-                  suporte@doku.co.mz
+                  info@dokumoz.com
                 </a>
               </li>
               <li>

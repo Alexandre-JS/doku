@@ -9,180 +9,199 @@ Build passou sem erros: `npm run build` ✓
 ## 📋 O que foi Implementado
 
 ### 1. **Utilitários de Gerenciamento de Cookies**
-   - **Arquivo**: `src/utils/cookieManager.ts`
-   - **Funções Principais**:
-     - `setSecureCookie()` - Define cookies com atributos seguros
-     - `getSecureCookie()` - Recupera valor de cookie
-     - `clearCookie()` - Remove um cookie específico
-     - `clearSensitiveData()` - Remove todos os dados sensíveis de uma vez
-     - `setSensitiveCookie()` - Define cookie com expiração de 24h
-     - `setConsentCookie()` - Define cookie de consentimento (1 ano)
-     - `setSessionCookie()` - Define cookie de sessão do navegador
-     - `initializeSensitiveCookieCleanup()` - Auto-limpa dados após 24h
 
-   **Segurança Implementada**:
-   - ✅ Atributo `Secure` (HTTPS only)
-   - ✅ Atributo `SameSite=Lax` (CSRF protection)
-   - ✅ Expiração automática (24h para dados sensíveis)
-   - ✅ Validação de tipo (apenas strings)
+- **Arquivo**: `src/utils/cookieManager.ts`
+- **Funções Principais**:
+  - `setSecureCookie()` - Define cookies com atributos seguros
+  - `getSecureCookie()` - Recupera valor de cookie
+  - `clearCookie()` - Remove um cookie específico
+  - `clearSensitiveData()` - Remove todos os dados sensíveis de uma vez
+  - `setSensitiveCookie()` - Define cookie com expiração de 24h
+  - `setConsentCookie()` - Define cookie de consentimento (1 ano)
+  - `setSessionCookie()` - Define cookie de sessão do navegador
+  - `initializeSensitiveCookieCleanup()` - Auto-limpa dados após 24h
+
+**Segurança Implementada**:
+
+- ✅ Atributo `Secure` (HTTPS only)
+- ✅ Atributo `SameSite=Lax` (CSRF protection)
+- ✅ Expiração automática (24h para dados sensíveis)
+- ✅ Validação de tipo (apenas strings)
 
 ---
 
 ### 2. **Gerenciador de Sessão de Checkout**
-   - **Arquivo**: `src/utils/sessionManager.ts`
-   - **Funcionalidades**:
-     - Salva progresso do checkout em cookies de sessão
-     - Recupera dados quando página faz refresh
-     - Timeout automático de 30 minutos
-     - Aviso de expiração 5 minutos antes
-     - Validação de integridade de dados
 
-   **Métodos Principais**:
-   ```typescript
-   saveCheckoutSession(data)        // Salva estado atual
-   restoreCheckoutSession()         // Recupera estado
-   clearCheckoutSession()           // Limpa tudo
-   hasCheckoutSession()             // Verifica existência
-   getSessionTimeRemaining()        // Tempo restante
-   initializeSessionWarning()       // Setup de aviso
-   ```
+- **Arquivo**: `src/utils/sessionManager.ts`
+- **Funcionalidades**:
+  - Salva progresso do checkout em cookies de sessão
+  - Recupera dados quando página faz refresh
+  - Timeout automático de 30 minutos
+  - Aviso de expiração 5 minutos antes
+  - Validação de integridade de dados
 
-   **Benefício**: Usuário não perde progresso ao fazer refresh acidental
+**Métodos Principais**:
+
+```typescript
+saveCheckoutSession(data); // Salva estado atual
+restoreCheckoutSession(); // Recupera estado
+clearCheckoutSession(); // Limpa tudo
+hasCheckoutSession(); // Verifica existência
+getSessionTimeRemaining(); // Tempo restante
+initializeSessionWarning(); // Setup de aviso
+```
+
+**Benefício**: Usuário não perde progresso ao fazer refresh acidental
 
 ---
 
 ### 3. **Hook de Consentimento de Cookies**
-   - **Arquivo**: `src/hooks/useCookieConsent.ts`
-   - **Objetivo**: Gerenciar preferências de cookies do usuário
-   
-   **Estados Gerenciados**:
-   - `hasConsented` - Usuário já respondeu ao banner?
-   - `preferences` - Quais tipos de cookies foram aceitos?
-   - `isLoading` - Ainda carregando estado?
 
-   **Métodos Disponíveis**:
-   ```typescript
-   acceptAll()           // Aceita todos os tipos
-   acceptNecessary()     // Apenas essenciais
-   updatePreferences()   // Personalizado
-   resetConsent()        // Limpa consentimento
-   isConsentGiven()      // Verifica tipo específico
-   ```
+- **Arquivo**: `src/hooks/useCookieConsent.ts`
+- **Objetivo**: Gerenciar preferências de cookies do usuário
+
+**Estados Gerenciados**:
+
+- `hasConsented` - Usuário já respondeu ao banner?
+- `preferences` - Quais tipos de cookies foram aceitos?
+- `isLoading` - Ainda carregando estado?
+
+**Métodos Disponíveis**:
+
+```typescript
+acceptAll(); // Aceita todos os tipos
+acceptNecessary(); // Apenas essenciais
+updatePreferences(); // Personalizado
+resetConsent(); // Limpa consentimento
+isConsentGiven(); // Verifica tipo específico
+```
 
 ---
 
 ### 4. **Componente CookieBanner**
-   - **Arquivo**: `components/CookieBanner.tsx`
-   - **Design**: Moderno, minimalista, responsivo
 
-   **Características**:
-   - 🎨 Cores DOKU (azul/verde degradê)
-   - 📱 Totalmente responsivo (mobile-first)
-   - ✨ Animações suaves com Framer Motion
-   - 🎯 Expandir para ver detalhes de cada cookie
-   - 🔐 Sem dados desnecessários coletados
-   - ⏱️ Aparece uma única vez (verifica cookie doku_consent)
+- **Arquivo**: `components/CookieBanner.tsx`
+- **Design**: Estilo Floating Card Minimalista
 
-   **Comportamento**:
-   1. Primeira visita → Banner aparece
-   2. Usuário escolhe opção → Cookie é salvo por 1 ano
-   3. Visitas futuras → Nenhum banner (respeita preferência)
+**Características**:
+
+- 🎨 Cores DOKU (Solid Blue para ações primárias)
+- ⚪️ Fundo branco sólido com borda suave (Slate)
+- 📱 Floating Card posicionado no canto (Desktop) ou centralizado (Mobile)
+- ✨ Animações suaves de entrada e saída
+- 🎯 Configurações granulares via Settings Icon
+- 🔐 Lembretes de limpeza de dados para reforçar confiança
+- ⏱️ Aparece uma única vez (baseado em cookie)
+
+**Comportamento**:
+
+1.  Primeira visita → Banner aparece
+2.  Usuário escolhe opção → Cookie é salvo por 1 ano
+3.  Visitas futuras → Nenhum banner (respeita preferência)
 
 ---
 
 ### 5. **Integração Global no Layout**
-   - **Arquivo**: `app/layout.tsx`
-   - **Mudança**: Adicionado `<CookieBanner />` no root layout
-   
-   ```tsx
-   export default function RootLayout({
-     children,
-   }: Readonly<{
-     children: React.ReactNode;
-   }>) {
-     return (
-       <html lang="pt-BR">
-         <body>
-           {children}
-           <CookieBanner />  {/* ← Adicionado aqui */}
-         </body>
-       </html>
-     );
-   }
-   ```
+
+- **Arquivo**: `app/layout.tsx`
+- **Mudança**: Adicionado `<CookieBanner />` no root layout
+
+```tsx
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="pt-BR">
+      <body>
+        {children}
+        <CookieBanner /> {/* ← Adicionado aqui */}
+      </body>
+    </html>
+  );
+}
+```
 
 ---
 
 ### 6. **Integração Session Manager no Form**
-   - **Arquivo**: `app/form/page.tsx`
-   - **Mudanças**:
-     1. Importa `sessionManager` utilities
-     2. Restaura sessão no mount (se existir)
-     3. Salva progresso a cada mudança de dados/step
-     4. Mostra aviso de expiração 5 minutos antes
-     5. Limpa sessão ao sucesso do pagamento
 
-   **Fluxo**:
-   ```
-   USER LOADS PAGE
-     ↓
-   Verifica doku_checkout_session cookie
-     ↓
-   Se válido → Restaura dados + step → Toast "Sessão restaurada"
-   Se inválido/expirado → Começa do zero
-     ↓
-   User preenche formulário
-     ↓
-   Cada mudança → Salva em cookie (timeout 30min)
-     ↓
-   Se fizer refresh → Recupera tudo intacto
-     ↓
-   Completa pagamento
-     ↓
-   clearCheckoutSession() → Remove tudo
-   ```
+- **Arquivo**: `app/form/page.tsx`
+- **Mudanças**:
+  1.  Importa `sessionManager` utilities
+  2.  Restaura sessão no mount (se existir)
+  3.  Salva progresso a cada mudança de dados/step
+  4.  Mostra aviso de expiração 5 minutos antes
+  5.  Limpa sessão ao sucesso do pagamento
+
+**Fluxo**:
+
+```
+USER LOADS PAGE
+  ↓
+Verifica doku_checkout_session cookie
+  ↓
+Se válido → Restaura dados + step → Toast "Sessão restaurada"
+Se inválido/expirado → Começa do zero
+  ↓
+User preenche formulário
+  ↓
+Cada mudança → Salva em cookie (timeout 30min)
+  ↓
+Se fizer refresh → Recupera tudo intacto
+  ↓
+Completa pagamento
+  ↓
+clearCheckoutSession() → Remove tudo
+```
 
 ---
 
 ### 7. **Integração PaymentModal - Limpeza de Dados**
-   - **Arquivo**: `components/PaymentModal.tsx`
-   - **Mudança**: Adicionado `clearSensitiveData()` após PDF sucesso
 
-   **Cookies Removidos Automaticamente**:
-   - `doku_nuit` - Número fiscal
-   - `doku_name` - Nome completo
-   - `doku_email` - Email
-   - `doku_phone` - Telefone
-   - `doku_full_name` - Nome (backup)
-   - `doku_document_type` - Tipo de documento
-   - `doku_document_number` - Número do documento
+- **Arquivo**: `components/PaymentModal.tsx`
+- **Mudança**: Adicionado `clearSensitiveData()` após PDF sucesso
 
-   **Timing**:
-   1. Usuário clica em confirmar pagamento
-   2. PDF é gerado (processamento)
-   3. ✅ Sucesso → clearSensitiveData() executa
-   4. Toast mostra confirmação
-   5. Dados nunca são salvos em disco
+**Cookies Removidos Automaticamente**:
+
+- `doku_nuit` - Número fiscal
+- `doku_name` - Nome completo
+- `doku_email` - Email
+- `doku_phone` - Telefone
+- `doku_full_name` - Nome (backup)
+- `doku_document_type` - Tipo de documento
+- `doku_document_number` - Número do documento
+
+**Timing**:
+
+1.  Usuário clica em confirmar pagamento
+2.  PDF é gerado (processamento)
+3.  ✅ Sucesso → clearSensitiveData() executa
+4.  Toast mostra confirmação
+5.  Dados nunca são salvos em disco
 
 ---
 
 ### 8. **Documentação Completa**
-   - **Arquivo**: `COOKIE_POLICY.md`
-   - **Conteúdo**:
-     - Tipos de cookies (6 categorias)
-     - Fluxo de consentimento
-     - Gestão de sessão de checkout
-     - Limpeza de dados sensíveis
-     - Especificações técnicas
-     - Testes recomendados
-     - Roadmap futuro
-     - Referências GDPR
+
+- **Arquivo**: `COOKIE_POLICY.md`
+- **Conteúdo**:
+  - Tipos de cookies (6 categorias)
+  - Fluxo de consentimento
+  - Gestão de sessão de checkout
+  - Limpeza de dados sensíveis
+  - Especificações técnicas
+  - Testes recomendados
+  - Roadmap futuro
+  - Referências GDPR
 
 ---
 
 ## 🔒 Conformidade GDPR
 
 ### ✅ Implementado
+
 - **Consentimento Prévio**: Banner antes de qualquer rastreamento
 - **Transparência**: Descrição clara de cada tipo de cookie
 - **Direito de Retirada**: Usuário pode desativar a qualquer momento
@@ -192,14 +211,14 @@ Build passou sem erros: `npm run build` ✓
 
 ### 🎯 Cookies Implementados
 
-| Cookie | Tipo | Duração | Consentimento | Propósito |
-|--------|------|---------|---------------|-----------|
-| `doku_consent` | Consentimento | 1 ano | Não | Guardar preferências de cookies |
-| `doku_checkout_session` | Essencial | Sessão | Não | Recuperar progresso de checkout |
-| `doku_nuit` | Sensível | 24h | Sim | Dados de pagamento (auto-limpo) |
-| `doku_name` | Sensível | 24h | Sim | Dados de pagamento (auto-limpo) |
-| `doku_email` | Sensível | 24h | Sim | Dados de pagamento (auto-limpo) |
-| `doku_phone` | Sensível | 24h | Sim | Dados de pagamento (auto-limpo) |
+| Cookie                  | Tipo          | Duração | Consentimento | Propósito                       |
+| ----------------------- | ------------- | ------- | ------------- | ------------------------------- |
+| `doku_consent`          | Consentimento | 1 ano   | Não           | Guardar preferências de cookies |
+| `doku_checkout_session` | Essencial     | Sessão  | Não           | Recuperar progresso de checkout |
+| `doku_nuit`             | Sensível      | 24h     | Sim           | Dados de pagamento (auto-limpo) |
+| `doku_name`             | Sensível      | 24h     | Sim           | Dados de pagamento (auto-limpo) |
+| `doku_email`            | Sensível      | 24h     | Sim           | Dados de pagamento (auto-limpo) |
+| `doku_phone`            | Sensível      | 24h     | Sim           | Dados de pagamento (auto-limpo) |
 
 ---
 
@@ -254,6 +273,7 @@ Build passou sem erros: `npm run build` ✓
 ## 🧪 Como Testar
 
 ### Teste 1: Banner de Consentimento
+
 ```javascript
 // No DevTools Console
 // 1. Abra http://localhost:3000
@@ -266,6 +286,7 @@ Build passou sem erros: `npm run build` ✓
 ```
 
 ### Teste 2: Persistência de Sessão
+
 ```javascript
 // 1. Vá para /form?template=carta-de-apresentacao
 // 2. Preencha alguns campos
@@ -275,6 +296,7 @@ Build passou sem erros: `npm run build` ✓
 ```
 
 ### Teste 3: Limpeza de Dados Sensíveis
+
 ```javascript
 // 1. Preencha formulário com NUIT "123456789"
 // 2. Clique pagar
@@ -285,6 +307,7 @@ Build passou sem erros: `npm run build` ✓
 ```
 
 ### Teste 4: Aviso de Expiração
+
 ```javascript
 // Nota: Sessão expira em 30 minutos
 // Aviso aparece 5 minutos antes
@@ -297,6 +320,7 @@ Build passou sem erros: `npm run build` ✓
 ## 📁 Arquivos Criados/Modificados
 
 ### ✨ Novos Arquivos
+
 - ✅ `src/utils/cookieManager.ts` (270 linhas)
 - ✅ `src/utils/sessionManager.ts` (200 linhas)
 - ✅ `src/hooks/useCookieConsent.ts` (140 linhas)
@@ -304,6 +328,7 @@ Build passou sem erros: `npm run build` ✓
 - ✅ `COOKIE_POLICY.md` (450 linhas)
 
 ### 🔄 Modificados
+
 - ✅ `app/layout.tsx` - Adicionado CookieBanner
 - ✅ `app/form/page.tsx` - Integrado sessionManager + restauração
 - ✅ `components/PaymentModal.tsx` - Adicionada limpeza de dados
@@ -327,18 +352,21 @@ Build passou sem erros: `npm run build` ✓
 ## 🔮 Próximos Passos (Roadmap)
 
 ### Curto Prazo (Pronto para Produção)
+
 - [ ] Integrar Google Analytics (com consentimento)
 - [ ] Integrar Sentry (com consentimento)
 - [ ] Testes E2E com Playwright/Cypress
 - [ ] Performance monitoring
 
 ### Médio Prazo
+
 - [ ] Painel de gerenciamento de cookies do usuário
 - [ ] Histórico de consentimento (auditoria)
 - [ ] Export de dados (GDPR right to portability)
 - [ ] Support para "Do Not Track" header
 
 ### Longo Prazo
+
 - [ ] Machine learning para otimização de banner
 - [ ] A/B testing de mensagens
 - [ ] Multi-idioma dinâmico
@@ -369,4 +397,3 @@ Build passou sem erros: `npm run build` ✓
 **Implementação Completada**: 6 de Janeiro de 2026
 **Status**: ✅ PRONTO PARA PRODUÇÃO
 **Próxima Revisão**: Após feedback de usuários
-

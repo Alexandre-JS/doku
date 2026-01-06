@@ -3,6 +3,7 @@
 ## Visão Geral
 
 O DOKU implementa um sistema de gerenciamento de cookies robusto e compatível com GDPR que garante:
+
 - ✅ Consentimento explícito do usuário
 - ✅ Transparência na coleta de dados
 - ✅ Limpeza automática de dados sensíveis
@@ -14,6 +15,7 @@ O DOKU implementa um sistema de gerenciamento de cookies robusto e compatível c
 ## 1. Tipos de Cookies Implementados
 
 ### 1.1 Cookies Essenciais (Sempre Ativados)
+
 ```
 doku_consent          (1 ano)      - Preferências de consentimento do usuário
 doku_checkout_session (sessão)     - Progresso da compra e estado do checkout
@@ -25,6 +27,7 @@ doku_checkout_session (sessão)     - Progresso da compra e estado do checkout
 ---
 
 ### 1.2 Cookies de Análise (Consentimento Opcional)
+
 ```
 Futuros: ga_*, intercom_*, etc.
 ```
@@ -35,6 +38,7 @@ Futuros: ga_*, intercom_*, etc.
 ---
 
 ### 1.3 Cookies de Marketing (Consentimento Opcional)
+
 ```
 Futuros: _fbp, _gcl_*, etc.
 ```
@@ -45,6 +49,7 @@ Futuros: _fbp, _gcl_*, etc.
 ---
 
 ### 1.4 Cookies de Preferências (Consentimento Opcional)
+
 ```
 doku_language          (1 ano)     - Idioma preferido
 doku_theme            (1 ano)     - Tema (claro/escuro)
@@ -57,6 +62,7 @@ doku_layout_preference (1 ano)     - Preferências de layout
 ---
 
 ### 1.5 Cookies Sensíveis (24 horas ou Limpeza Manual)
+
 ```
 doku_nuit               (24h)      - Número de identificação fiscal
 doku_name               (24h)      - Nome completo
@@ -76,16 +82,19 @@ doku_document_number    (24h)      - Número do documento
 ## 2. Banner de Consentimento
 
 ### 2.1 Comportamento
+
 - **Primeira Visita**: Banner aparece no rodapé com opções
 - **Usuários Retornantes**: Verifica cookie `doku_consent` e não mostra
 - **Respeitar DNT**: Comportamento futuro a implementar
 
 ### 2.2 Opções
+
 1. **Aceitar Tudo** - Ativa todos os tipos de cookies
 2. **Apenas Essenciais** - Ativa apenas cookies necessários (padrão)
 3. **Detalhes** - Expandir para configuração granular de cada tipo
 
 ### 2.3 Componente
+
 **Arquivo**: `components/CookieBanner.tsx`
 
 ```tsx
@@ -144,6 +153,7 @@ doku_document_number    (24h)      - Número do documento
 ## 4. Gestão de Sessão de Checkout
 
 ### 4.1 Propósito
+
 Permite que o usuário recupere o seu progresso no checkout caso a página faça refresh ou o navegador feche.
 
 ### 4.2 Fluxo
@@ -191,6 +201,7 @@ interface CheckoutSessionData {
 ```
 
 ### 4.4 Timeouts
+
 - **Sessão ativa**: 30 minutos
 - **Aviso de expiração**: 5 minutos antes do timeout
 - **Auto-cleanup**: Detecta expiração e limpa automaticamente
@@ -200,13 +211,13 @@ interface CheckoutSessionData {
 ```typescript
 // src/utils/sessionManager.ts
 
-saveCheckoutSession(data)        // Salva progresso
-restoreCheckoutSession()         // Recupera progresso
-clearCheckoutSession()           // Limpa tudo
-hasCheckoutSession()             // Verifica se existe
-getSessionTimeRemaining()        // Tempo restante (segundos)
-initializeSessionWarning()       // Aviso de expiração
-isValidCheckoutSession()         // Valida integridade
+saveCheckoutSession(data); // Salva progresso
+restoreCheckoutSession(); // Recupera progresso
+clearCheckoutSession(); // Limpa tudo
+hasCheckoutSession(); // Verifica se existe
+getSessionTimeRemaining(); // Tempo restante (segundos)
+initializeSessionWarning(); // Aviso de expiração
+isValidCheckoutSession(); // Valida integridade
 ```
 
 ---
@@ -216,31 +227,35 @@ isValidCheckoutSession()         // Valida integridade
 ### 5.1 Estratégias
 
 #### Limpeza Automática após 24h
+
 ```javascript
 // Ativado na primeira visita
-initializeSensitiveCookieCleanup()
+initializeSensitiveCookieCleanup();
 
 // Timeout automático a cada 24h
 setTimeout(() => {
-  clearSensitiveData();  // Remove tudo
+  clearSensitiveData(); // Remove tudo
 }, 24 * 60 * 60 * 1000);
 ```
 
 #### Limpeza Imediata após PDF
+
 ```javascript
 // Em PaymentModal.tsx após sucesso do PDF
 clearSensitiveData();
-console.log('[DOKU Security] Cleared sensitive cookies');
+console.log("[DOKU Security] Cleared sensitive cookies");
 ```
 
 #### Limpeza Manual (Futuro)
+
 ```javascript
 // Permitir ao usuário limpar dados a qualquer momento
 clearSensitiveData();
-addToast('Dados sensíveis foram removidos com segurança', 'success');
+addToast("Dados sensíveis foram removidos com segurança", "success");
 ```
 
 ### 5.2 Dados Afetados
+
 - Nome completo
 - NUIT (Número de identificação fiscal)
 - Email
@@ -256,21 +271,21 @@ addToast('Dados sensíveis foram removidos com segurança', 'success');
 
 ```javascript
 // Cookies Sensíveis (24h)
-setSensitiveCookie(name, value)
+setSensitiveCookie(name, value);
 // ├─ Max-Age: 86400 (24 horas)
 // ├─ Secure: true (HTTPS only)
 // ├─ SameSite: Lax
 // └─ Path: /
 
 // Cookies de Sessão (browser session)
-setSessionCookie(name, value)
+setSessionCookie(name, value);
 // ├─ Expires: Com navegador
 // ├─ Secure: true
 // ├─ SameSite: Lax
 // └─ Path: /
 
 // Cookies de Consentimento (1 ano)
-setConsentCookie(name, value)
+setConsentCookie(name, value);
 // ├─ Max-Age: 31536000 (1 ano)
 // ├─ Secure: true
 // ├─ SameSite: Lax
@@ -279,14 +294,14 @@ setConsentCookie(name, value)
 
 ### 6.2 Segurança
 
-| Aspecto | Implementação |
-|---------|---------------|
-| **Criptografia** | HTTPS (Secure flag obrigatório) |
-| **CSRF** | SameSite=Lax em todos |
-| **XSS** | Sem eval(), validação de entrada |
+| Aspecto          | Implementação                       |
+| ---------------- | ----------------------------------- |
+| **Criptografia** | HTTPS (Secure flag obrigatório)     |
+| **CSRF**         | SameSite=Lax em todos               |
+| **XSS**          | Sem eval(), validação de entrada    |
 | **Acesso do JS** | httpOnly indisponível (client-side) |
-| **Expiração** | 24h para dados sensíveis |
-| **Limpeza** | Automática e manual |
+| **Expiração**    | 24h para dados sensíveis            |
+| **Limpeza**      | Automática e manual                 |
 
 ### 6.3 Conformidade GDPR
 
@@ -302,22 +317,26 @@ setConsentCookie(name, value)
 ## 7. Arquivos Criados
 
 ### 7.1 Utilities
+
 ```
 src/utils/cookieManager.ts       - Gerenciamento de cookies
 src/utils/sessionManager.ts      - Gerenciamento de sessão checkout
 ```
 
 ### 7.2 Hooks
+
 ```
 src/hooks/useCookieConsent.ts    - Hook para consentimento
 ```
 
 ### 7.3 Componentes
+
 ```
 components/CookieBanner.tsx      - Banner de consentimento UI
 ```
 
 ### 7.4 Integrações
+
 ```
 app/layout.tsx                   - Adiciona CookieBanner globalmente
 app/form/page.tsx                - Integra sessionManager
@@ -385,6 +404,7 @@ components/PaymentModal.tsx      - Limpa dados após PDF
 ## 9. Testes Recomendados
 
 ### 9.1 Consentimento
+
 ```
 [ ] Banner aparece na primeira visita
 [ ] Banner não aparece se cookie doku_consent existe
@@ -394,6 +414,7 @@ components/PaymentModal.tsx      - Limpa dados após PDF
 ```
 
 ### 9.2 Sessão de Checkout
+
 ```
 [ ] Progresso é salvo enquanto digita
 [ ] Refresh recupera dados preenchidos
@@ -403,6 +424,7 @@ components/PaymentModal.tsx      - Limpa dados após PDF
 ```
 
 ### 9.3 Limpeza de Dados
+
 ```
 [ ] NUIT é removido após PDF sucesso
 [ ] Nome é removido após PDF sucesso
@@ -412,6 +434,7 @@ components/PaymentModal.tsx      - Limpa dados após PDF
 ```
 
 ### 9.4 GDPR
+
 ```
 [ ] Consentimento é prévi (antes de rastrear)
 [ ] Descrição clara de cada tipo
