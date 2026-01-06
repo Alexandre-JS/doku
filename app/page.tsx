@@ -14,12 +14,15 @@ export default function Home() {
         {/* Hero Section */}
         <Hero />
 
-        <div className="mx-auto max-w-7xl px-6">
-          {/* Partner Trust Bar */}
-          <div className="py-12 sm:py-16">
-            <PartnerTrustBar />
-          </div>
+        {/* Partner Trust Bar - Full Width with Robust Responsive Container */}
+        <div className="w-full overflow-x-hidden" style={{ 
+          minWidth: '100%',
+          maxWidth: '100vw'
+        }}>
+          <PartnerTrustBar />
+        </div>
 
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Catálogo de Modelos */}
           <section className="pb-16 sm:pb-20">
             <div className="mb-10">
@@ -38,7 +41,24 @@ export default function Home() {
       </main>
 
       <Footer />
-      <FloatingSupport />
+
+      {/* Floating Support - Robust Responsive Container */}
+      <div 
+        className="pointer-events-none fixed inset-0 z-[100]"
+        style={{
+          overflow: 'hidden',
+          pointerEvents: 'none'
+        }}
+      >
+        <div 
+          className="pointer-events-auto absolute bottom-4 right-4 sm:bottom-6 sm:right-6"
+          style={{
+            pointerEvents: 'auto'
+          }}
+        >
+          <FloatingSupport />
+        </div>
+      </div>
     </div>
   );
 }

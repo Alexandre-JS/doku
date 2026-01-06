@@ -46,10 +46,10 @@ export default function Navbar() {
         {/* Left: Logo & Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <img src="/logo-tra.png" alt="DOKU" className="h-9 w-auto transition-transform group-hover:scale-105" />
-            <div className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5 ring-1 ring-slate-200">
+            <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto transition-transform group-hover:scale-105 sm:h-9" />
+            <div className="flex items-center gap-1.2 rounded-full bg-slate-100 px-1.5 py-0.5 ring-1 ring-slate-200 sm:gap-1.5 sm:px-2">
               <Cloud size={10} className="text-doku-blue/40" />
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-500">Beta</span>
+              <span className="text-[9px] font-bold uppercase tracking-tighter text-slate-500 sm:text-[10px]">Beta</span>
             </div>
           </Link>
 
@@ -142,7 +142,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 z-[70] h-full w-80 bg-white p-6 shadow-2xl lg:hidden"
+              className="fixed right-0 top-0 z-[70] h-full w-full max-w-[320px] bg-white p-6 shadow-2xl lg:hidden"
             >
               <div className="flex items-center justify-between mb-8">
                 <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto" />

@@ -41,9 +41,9 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-4xl font-black tracking-tight text-white sm:text-6xl"
+              className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl"
             >
-              O que você quer <br />
+              O que você quer <br className="sm:hidden" />
               <span className="text-doku-green">resolver hoje?</span>
             </motion.h1>
 
@@ -51,7 +51,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400"
+              className="mt-4 max-w-xl text-base leading-relaxed text-slate-400 sm:mt-6 sm:text-lg"
             >
               Encontre e gere documentos oficiais, contratos e requerimentos em segundos. 
               Simples, rápido e juridicamente seguro.
@@ -62,7 +62,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-10 w-full max-w-2xl"
+              className="mt-8 w-full max-w-2xl sm:mt-10"
             >
               <div className="relative group">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-doku-green to-emerald-500 opacity-25 blur transition duration-1000 group-hover:opacity-50 group-hover:duration-200"></div>
@@ -102,7 +102,7 @@ export default function Hero() {
           {/* Right Side: Floating Gallery */}
           <div className="absolute inset-0 z-0 lg:relative lg:z-10 lg:h-[500px] lg:block">
             {/* Mobile Overlay Effect */}
-            <div className="absolute inset-0 z-0 bg-slate-900/60 lg:hidden" />
+            <div className="absolute inset-0 z-0 bg-slate-900/40 lg:hidden" />
 
             <div className="absolute inset-0 flex items-center justify-center opacity-30 lg:static lg:h-full lg:opacity-100">
               {/* Card 1: Requerimento */}
@@ -116,10 +116,10 @@ export default function Hero() {
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="absolute left-0 top-10 z-30 w-56 -rotate-6 rounded-xl bg-white p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] lg:w-64 lg:p-4"
+                className="absolute left-0 top-10 z-30 w-44 -rotate-6 rounded-xl bg-white p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:w-56 sm:p-3 lg:w-64 lg:p-4"
               >
-                <div className="h-72 w-full rounded-lg bg-slate-50 p-4 lg:h-80">
-                  <div className="h-4 w-3/4 rounded bg-slate-200 mb-4" />
+                <div className="h-56 w-full rounded-lg bg-slate-50 p-2 sm:h-72 sm:p-3 lg:h-80 lg:p-4">
+                  <div className="h-3 w-3/4 rounded bg-slate-200 mb-3 sm:h-4 sm:mb-4" />
                   <div className="space-y-2">
                     <div className="h-2 w-full rounded bg-slate-100" />
                     <div className="h-2 w-full rounded bg-slate-100" />
@@ -147,10 +147,10 @@ export default function Hero() {
                   ease: "easeInOut",
                   delay: 0.5
                 }}
-                className="absolute left-1/2 top-1/2 z-20 w-56 -translate-x-1/2 -translate-y-1/2 rotate-3 rounded-xl bg-white/95 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm lg:w-64 lg:p-4"
+                className="absolute left-1/2 top-1/2 z-20 w-44 -translate-x-1/2 -translate-y-1/2 rotate-3 rounded-xl bg-white/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm sm:w-56 sm:p-3 lg:w-64 lg:p-4"
               >
-                <div className="h-72 w-full rounded-lg bg-slate-50 p-4 lg:h-80">
-                  <div className="h-4 w-1/2 rounded bg-slate-200 mb-4" />
+                <div className="h-56 w-full rounded-lg bg-slate-50 p-2 sm:h-72 sm:p-3 lg:h-80 lg:p-4">
+                  <div className="h-3 w-1/2 rounded bg-slate-200 mb-3 sm:h-4 sm:mb-4" />
                   <div className="space-y-2">
                     <div className="h-2 w-full rounded bg-slate-100" />
                     <div className="h-2 w-full rounded bg-slate-100" />
@@ -175,10 +175,10 @@ export default function Hero() {
                   ease: "easeInOut",
                   delay: 1
                 }}
-                className="absolute bottom-10 right-0 z-10 w-56 rotate-8 rounded-xl bg-white/90 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm lg:w-64 lg:p-4"
+                className="absolute bottom-10 right-0 z-10 w-44 rotate-8 rounded-xl bg-white/90 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm sm:w-56 sm:p-3 lg:w-64 lg:p-4"
               >
-                <div className="h-72 w-full rounded-lg bg-slate-50 p-4 lg:h-80">
-                  <div className="h-4 w-2/3 rounded bg-slate-200 mb-4" />
+                <div className="h-56 w-full rounded-lg bg-slate-50 p-2 sm:h-72 sm:p-3 lg:h-80 lg:p-4">
+                  <div className="h-3 w-2/3 rounded bg-slate-200 mb-3 sm:h-4 sm:mb-4" />
                   <div className="space-y-2">
                     <div className="h-2 w-full rounded bg-slate-100" />
                     <div className="h-2 w-full rounded bg-slate-100" />
