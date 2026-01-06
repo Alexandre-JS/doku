@@ -126,32 +126,31 @@ export default function DocumentPreview({
         </div>
 
         {/* LAYOUT: LETTER - Data no Topo Direito */}
-        {layoutType === 'LETTER' && (
+        {/* {layoutType === 'LETTER' && (
           <div className="mb-8 text-right text-[12pt]">
-            {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
+            {getValue('current_city') || getValue('target_location') || "__________"}, {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}
           </div>
-        )}
+        )} */}
 
         {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
         {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && !isDeclarationOrContract && (
-          <div className="mb-12 text-[12pt] relative z-0">
-            <p className="font-bold">Exmo Senhor {getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
-            <p className="font-bold uppercase">{getValue('institution_name') || '________________'}</p>
-            <p className="underline">{getValue('target_location') || getValue('address') || '________________'}</p>
-          </div>
-        )}
+          <div className="mb-6 text-[12pt] relative z-0 text-justify">
+            <p className="font-bold uppercase">{getValue('destinatary_role') || getValue('target_authority') || ''}</p>
+            <p className="font-bold uppercase">{getValue('institution_name') || ''}</p>
+            
+            {/* Assunto logo abaixo do cabeçalho para OFFICIAL */}
+            {layoutType === 'OFFICIAL' && (getValue('subject') || title) && (
+              <div className="mt-8 font-bold uppercase underline">
+                {getValue('subject') || title}
+              </div>
+            )}
 
-        {/* LAYOUT: LETTER - Saudação */}
-        {layoutType === 'LETTER' && (
-          <div className="mb-6 text-[12pt]">
-            Exmo. Senhor,
-          </div>
-        )}
-
-        {/* Assunto (Só OFFICIAL) */}
-        {layoutType === 'OFFICIAL' && !templateHasHeaderPlaceholders && !hasTitleInContent && (
-          <div className="mb-8 text-center text-[13pt] font-bold uppercase underline relative z-0">
-            Assunto: {getValue('subject') || "Requerimento Geral"}
+            {/* Localização no lado direito para OFFICIAL */}
+            {layoutType === 'OFFICIAL' && (getValue('target_location') || getValue('address')) && (
+              <div className="mt-8 text-right underline">
+                {getValue('target_location') || getValue('address')}
+              </div>
+            )}
           </div>
         )}
 
@@ -169,29 +168,22 @@ export default function DocumentPreview({
 
         {/* Fecho: Pede Deferimento (Só OFFICIAL) */}
         {layoutType === 'OFFICIAL' && (
-          <div className="mt-12 text-center text-[12pt] font-bold italic">
-            Pede Deferimento.
-          </div>
-        )}
-
-        {/* Fecho: Atenciosamente (Só LETTER) */}
-        {layoutType === 'LETTER' && (
-          <div className="mt-12 text-[12pt]">
-            Com os melhores cumprimentos,
+          <div className="mt-12 text-center text-[12pt]">
+            Pede deferimento.
           </div>
         )}
 
         {/* Local e Data (OFFICIAL e DECLARATION) */}
         {(layoutType === 'OFFICIAL' || layoutType === 'DECLARATION') && !templateHasFooterPlaceholders && (
-          <div className="mt-16 text-[12pt] text-center relative z-0">
-            {getValue('target_location') || "Maputo"}, {new Date().toLocaleDateString('pt-PT')}
+          <div className="mt-12 text-[12pt] text-center relative z-0">
+            {getValue('current_city') || getValue('target_location') || "__________"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}.
           </div>
         )}
 
         {/* Linha de Assinatura */}
-        <div className="mt-20 flex flex-col items-center relative z-0">
+        <div className="mt-8 flex flex-col items-center relative z-0">
+          <p className="text-[12pt] font-bold uppercase mb-8">{getValue('full_name') || ''}</p>
           <div className="w-64 border-t border-black mb-2"></div>
-          <p className="text-[12pt] font-bold uppercase">{getValue('full_name') || '________________'}</p>
           <p className="text-[10pt] text-slate-500">
             {layoutType === 'DECLARATION' ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)'}
           </p>

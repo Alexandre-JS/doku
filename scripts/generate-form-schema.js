@@ -5,7 +5,8 @@ const path = require('path');
 
 const knownProfileFields = new Set([
   'full_name','father_name','mother_name','bi_number','bi_date_issue','bi_local_issue',
-  'nuit','birth_date','province','district','neighborhood','address_details','phone_number'
+  'nuit','birth_date','province','district','neighborhood','address_details','phone_number',
+  'current_city', 'current_date'
 ]);
 
 function extractPlaceholders(template) {
@@ -21,9 +22,14 @@ function extractPlaceholders(template) {
 function mapToField(id) {
   const isProfile = knownProfileFields.has(id);
   const type = id.includes('date') ? 'date' : (id === 'request_details' || id === 'requestDetails' || id.includes('details') ? 'textarea' : 'text');
+  
+  let label = id.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  if (id === 'current_city') label = 'Cidade Actual';
+  if (id === 'current_date') label = 'Data Actual';
+
   return {
     id,
-    label: id.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+    label,
     type,
     source: isProfile ? 'profile' : 'user_input'
   };
