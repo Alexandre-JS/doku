@@ -68,15 +68,15 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-auto rounded-3xl bg-white shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 p-6">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white p-4 sm:p-6">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900 sm:text-lg">
               {step === "success" ? "Documento Pronto!" : "Finalizar Documento"}
             </h3>
-            <p className="text-xs text-slate-500">Passo {step === "summary" ? "1" : step === "payment" ? "2" : "3"} de 3</p>
+            <p className="text-[10px] text-slate-500 sm:text-xs">Passo {step === "summary" ? "1" : step === "payment" ? "2" : "3"} de 3</p>
           </div>
           {step !== "processing" && (
             <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors">
@@ -85,7 +85,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
           )}
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <AnimatePresence mode="wait">
             {step === "summary" && (
               <motion.div
@@ -95,8 +95,8 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-6"
               >
-                <div className="rounded-2xl bg-slate-50 p-6 space-y-4 ring-1 ring-slate-100">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-slate-50 p-4 space-y-4 ring-1 ring-slate-100 sm:p-6">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nome Completo</p>
                       <p className="text-sm font-bold text-slate-900 truncate">{formData?.full_name || "Alexandre [Sobrenome]"}</p>
@@ -112,15 +112,15 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-amber-50 p-4 border border-amber-100">
-                  <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                <div className="rounded-xl bg-amber-50 p-3 border border-amber-100 sm:p-4">
+                  <p className="text-[11px] text-amber-800 font-medium leading-relaxed sm:text-xs">
                     "Confirma que estes dados estão corretos? Não será possível editar após o pagamento."
                   </p>
                 </div>
 
                 <button
                   onClick={handleConfirmData}
-                  className="w-full rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.98]"
+                  className="w-full rounded-2xl bg-slate-900 py-3.5 font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.98] sm:py-4"
                 >
                   Confirmar e Ir para Pagamento
                 </button>
@@ -185,7 +185,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
 
                 <button
                   onClick={handlePayment}
-                  className="w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition-all hover:bg-emerald-700 active:scale-[0.98]"
+                  className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white transition-all hover:bg-emerald-700 active:scale-[0.98] sm:py-4 sm:text-lg"
                 >
                   Pagar Agora
                 </button>
@@ -226,17 +226,17 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 <p className="mt-2 text-sm text-slate-600">Documento gerado e baixado com sucesso!</p>
 
                 <div className="mt-8 w-full space-y-3">
-                  <button className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 py-4 font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700">
-                    <Mail size={18} />
-                    Enviar para meu e-mail
+                  <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 sm:gap-3 sm:py-4 sm:text-base">
+                    <Mail size={16} className="sm:size-[18px]" />
+                    <span className="text-sm sm:text-base">Enviar para meu e-mail</span>
                   </button>
                   
-                  <div className="rounded-2xl bg-blue-50 p-4 text-left ring-1 ring-blue-100">
-                    <div className="flex items-center gap-2 text-blue-900 font-bold text-xs mb-1">
-                      <Printer size={14} />
+                  <div className="rounded-2xl bg-blue-50 p-3 text-left ring-1 ring-blue-100 sm:p-4">
+                    <div className="flex items-center gap-2 text-blue-900 font-bold text-[11px] mb-1 sm:text-xs">
+                      <Printer size={12} className="sm:size-[14px]" />
                       Dica de Mestre
                     </div>
-                    <p className="text-[11px] text-blue-800 leading-relaxed">
+                    <p className="text-[10px] text-blue-800 leading-relaxed sm:text-[11px]">
                       Imprima em papel A4 de 80g para um acabamento mais oficial.
                     </p>
                   </div>
@@ -272,10 +272,10 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
           animate={{ opacity: 1, y: 0 }}
           href="https://wa.me/258840000000" 
           target="_blank"
-          className="fixed bottom-8 right-8 flex items-center gap-3 rounded-full bg-emerald-500 px-6 py-4 font-bold text-white shadow-2xl transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95 z-[110]"
+          className="fixed bottom-4 right-4 flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-3.5 font-bold text-white shadow-2xl transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95 z-[110] sm:bottom-8 sm:right-8 sm:gap-3 sm:px-6 sm:py-4"
         >
-          <MessageCircle size={24} />
-          <span className="hidden sm:inline">Não baixou? Fale connosco</span>
+          <MessageCircle size={20} className="sm:size-[24px]" />
+          <span className="text-sm sm:inline sm:text-base">Não baixou? Fale connosco</span>
         </motion.a>
       )}
     </div>

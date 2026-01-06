@@ -93,31 +93,31 @@ export default function SearchBar({
   };
 
   const containerClasses = variant === "hero"
-    ? "relative flex items-center rounded-full bg-slate-800/40 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.3)] ring-1 ring-white/20 focus-within:ring-2 focus-within:ring-doku-green transition-all p-2.5"
+    ? "relative flex items-center rounded-full bg-slate-800/40 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.3)] ring-1 ring-white/20 focus-within:ring-2 focus-within:ring-doku-green transition-all p-1.5 sm:p-2.5"
     : `relative flex items-center rounded-full bg-slate-100/80 ring-1 ring-slate-200/50 focus-within:bg-white focus-within:ring-doku-blue/30 focus-within:shadow-md transition-all ${variant === "nav" ? "p-1" : "p-2"}`;
 
   const inputClasses = variant === "hero" 
-    ? "w-full border-none bg-transparent px-5 py-4 text-lg text-white placeholder-slate-400 focus:outline-none focus:ring-0"
+    ? "w-full border-none bg-transparent px-3 py-3 text-base text-white placeholder-slate-400 focus:outline-none focus:ring-0 sm:px-5 sm:py-4 sm:text-lg"
     : `w-full border-none bg-transparent px-3 py-1 text-sm text-slate-600 placeholder-slate-400 focus:outline-none focus:ring-0 ${variant === "nav" ? "py-1" : "py-2"}`;
 
   const buttonClasses = variant === "hero"
-    ? "rounded-full bg-doku-green font-black text-white transition-all hover:bg-doku-green/90 hover:shadow-[0_0_20px_rgba(0,168,107,0.4)] active:scale-95 flex items-center justify-center px-10 py-4 text-lg min-h-[64px]"
+    ? "rounded-full bg-doku-green font-black text-white transition-all hover:bg-doku-green/90 hover:shadow-[0_0_20px_rgba(0,168,107,0.4)] active:scale-95 flex items-center justify-center px-5 py-3 text-base min-h-[48px] sm:min-h-[64px] sm:px-10 sm:py-4 sm:text-lg"
     : `rounded-full bg-doku-blue font-semibold text-white transition-all hover:bg-doku-blue/90 active:scale-95 flex items-center justify-center ${variant === "nav" ? "hidden" : "px-8 py-3 text-sm min-h-[48px]"}`;
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <form onSubmit={handleSearch} className="w-full">
         <div className={containerClasses}>
-          <div className={`flex items-center ${variant === "hero" ? "text-doku-green pl-4" : "text-slate-400 " + (variant === "nav" ? "pl-2" : "pl-4")}`}>
+          <div className={`flex items-center ${variant === "hero" ? "text-doku-green pl-3 sm:pl-4" : "text-slate-400 " + (variant === "nav" ? "pl-2" : "pl-4")}`}>
             {loading ? (
               <motion.img 
                 src="/logo-tra.png" 
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1, repeat: Infinity }}
-                className={variant === "nav" ? "h-4 w-4" : "h-6 w-6"} 
+                className={variant === "nav" ? "h-3 w-3 sm:h-4 sm:w-4" : "h-5 w-5 sm:h-6 sm:w-6"} 
               />
             ) : (
-              <Search size={variant === "nav" ? 16 : 24} />
+              <Search size={variant === "nav" ? 14 : (variant === "hero" ? 20 : 24)} className="sm:size-[24px]" />
             )}
           </div>
           <input

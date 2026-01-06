@@ -37,20 +37,20 @@ export default function FloatingSupport() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100]">
+    <div className="fixed bottom-4 right-4 z-[100] flex flex-col items-end sm:bottom-6 sm:right-6">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="mb-4 w-80 overflow-hidden rounded-2xl border border-white/20 bg-white/80 shadow-2xl backdrop-blur-xl"
+            className="mb-4 w-[calc(100vw-2rem)] max-w-[350px] overflow-hidden rounded-2xl border border-white/20 bg-white/80 shadow-2xl backdrop-blur-xl sm:w-80"
           >
             {/* Header */}
-            <div className="bg-doku-blue p-4 text-white">
+            <div className="bg-doku-blue p-3 text-white sm:p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-slate-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-white/20 bg-slate-200 sm:h-10 sm:w-10">
                     <img 
                       src="/assistant-avatar.png" 
                       alt="Assistente DOKU" 
@@ -80,7 +80,7 @@ export default function FloatingSupport() {
             </div>
 
             {/* Body */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {step === "typing" ? (
                 <div className="flex gap-1 py-4">
                   <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 0.8 }} className="h-1.5 w-1.5 rounded-full bg-slate-400" />
@@ -150,7 +150,7 @@ export default function FloatingSupport() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-doku-blue text-white shadow-lg ring-4 ring-white transition-all"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-doku-blue text-white shadow-lg ring-2 ring-white transition-all sm:h-14 sm:w-14 sm:ring-4"
       >
         {isOpen ? <X size={24} /> : (
           <div className="relative h-full w-full overflow-hidden rounded-full">

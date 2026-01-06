@@ -18,9 +18,9 @@ export default function FloatingSuggestion({ onClick }: FloatingSuggestionProps)
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="relative flex w-full max-w-[320px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl transition-all hover:shadow-doku-green/10"
+      className="relative flex w-full max-w-sm cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl transition-all hover:shadow-doku-green/10 sm:max-w-[320px]"
     >
-      <div className="relative p-4" onClick={onClick}>
+      <div className="relative p-3 sm:p-4" onClick={onClick}>
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -31,19 +31,19 @@ export default function FloatingSuggestion({ onClick }: FloatingSuggestionProps)
           <X size={14} />
         </button>
 
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-doku-green/10 text-doku-green">
-            <Sparkles size={20} className="animate-pulse" />
+        <div className="flex items-start gap-2 sm:gap-3">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-doku-green/10 text-doku-green sm:h-10 sm:w-10">
+            <Sparkles size={16} className="animate-pulse sm:size-[20px]" />
           </div>
-          <div className="pr-4">
-            <p className="text-xs font-bold text-doku-blue">Não encontrou o que precisava?</p>
-            <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+          <div className="pr-3 sm:pr-4">
+            <p className="text-[11px] font-bold text-doku-blue sm:text-xs">Não encontrou o que precisava?</p>
+            <p className="mt-1 text-[9px] leading-relaxed text-slate-500 sm:text-[10px]">
               Diga-nos qual modelo você gostaria de ver aqui e nós criamos para você.
             </p>
           </div>
         </div>
         
-        <div className="mt-3 flex items-center gap-1.5 text-[10px] font-bold text-doku-green">
+        <div className="mt-2 flex items-center gap-1.5 text-[9px] font-bold text-doku-green sm:mt-3 sm:text-[10px]">
           <span>Sugerir Novo Modelo</span>
           <motion.span
             animate={{ x: [0, 4, 0] }}
