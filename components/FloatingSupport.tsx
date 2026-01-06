@@ -37,14 +37,20 @@ export default function FloatingSupport() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex flex-col items-end sm:bottom-6 sm:right-6">
+    <div 
+      className="flex flex-col items-end gap-3"
+      style={{
+        position: 'relative',
+        width: 'fit-content'
+      }}
+    >
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="mb-4 w-[calc(100vw-2rem)] max-w-[350px] overflow-hidden rounded-2xl border border-white/20 bg-white/80 shadow-2xl backdrop-blur-xl sm:w-80"
+            className="mb-4 w-full max-w-[350px] overflow-hidden rounded-2xl border border-white/20 bg-white/80 shadow-2xl backdrop-blur-xl sm:w-80"
           >
             {/* Header */}
             <div className="bg-doku-blue p-3 text-white sm:p-4">

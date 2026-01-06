@@ -1,8 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
 export default function PartnerTrustBar() {
   const partners = [
     { name: "AT", logo: "/AT globo.png", fullName: "Autoridade Tributária" },
@@ -19,33 +16,72 @@ export default function PartnerTrustBar() {
     { name: "FIPAG", logo: "/adrm.jpg", fullName: "Fundo de Investimento e Património do Abastecimento de Água" },
   ];
 
-  // Duplicar a lista para o efeito infinito
   const infinitePartners = [...partners, ...partners, ...partners];
 
   return (
-    <section className="w-full border-y border-slate-100 bg-white/30 py-6 backdrop-blur-md sm:py-8 lg:py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+    <section 
+      className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] border-y border-slate-100 bg-white/30 py-6 backdrop-blur-md sm:py-8 lg:py-10"
+      style={{
+        width: '100vw',
+        position: 'relative',
+        left: '50%',
+        right: '50%',
+        marginLeft: '-50vw',
+        marginRight: '-50vw'
+      }}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6" style={{ width: '100%' }}>
         <div className="flex flex-col items-center gap-4 sm:gap-6 lg:flex-row lg:gap-8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 sm:text-[11px] sm:tracking-[0.2em] lg:w-48">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 whitespace-nowrap sm:text-[11px] sm:tracking-[0.2em] lg:w-48">
             Minutas aceites em:
           </p>
           
-          <div className="relative flex-1 overflow-hidden">
+          <div className="relative flex-1 w-full overflow-hidden min-h-[2.5rem] sm:min-h-[3rem]">
             {/* Gradientes de desfoque nas bordas */}
-            <div className="absolute left-0 top-0 z-10 h-full w-12 bg-gradient-to-r from-white/50 to-transparent sm:w-16 lg:w-20 lg:from-white/30" />
-            <div className="absolute right-0 top-0 z-10 h-full w-12 bg-gradient-to-l from-white/50 to-transparent sm:w-16 lg:w-20 lg:from-white/30" />
+            <div className="absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-white/50 to-transparent sm:w-12 lg:w-16" />
+            <div className="absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-white/50 to-transparent sm:w-12 lg:w-16" />
 
-            <div className="flex animate-scroll items-center gap-8 whitespace-nowrap py-3 sm:gap-12 sm:py-4 lg:gap-16">
+            <div 
+              className="flex items-center gap-6 sm:gap-8 lg:gap-10 py-2 sm:py-3 lg:py-4"
+              style={{
+                animation: 'scroll 50s linear infinite',
+                display: 'flex',
+                width: 'max-content'
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.animationPlayState = 'paused';
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.animationPlayState = 'running';
+              }}
+            >
               {infinitePartners.map((partner, index) => (
                 <div
                   key={index}
-                  className="group flex flex-shrink-0 items-center justify-center transition-all duration-500"
+                  className="flex flex-shrink-0 items-center justify-center h-8 sm:h-10 lg:h-12 transition-transform duration-300 hover:scale-110 hover:drop-shadow-md"
                   title={partner.fullName}
+                  style={{
+                    minWidth: 'auto',
+                    flexShrink: 0
+                  }}
                 >
                   <img
                     src={partner.logo}
                     alt={partner.name}
-                    className="h-6 w-auto object-contain transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg] sm:h-8 lg:h-10"
+                    className="h-full w-auto max-w-[80px] sm:max-w-[100px] lg:max-w-[120px] object-contain object-center"
+                    loading="lazy"
+                    style={{
+                      filter: 'grayscale(100%)',
+                      transition: 'filter 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(0%)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(100%)';
+                    }}
                   />
                 </div>
               ))}
@@ -56,16 +92,19 @@ export default function PartnerTrustBar() {
 
       <style jsx>{`
         @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
         }
-        .animate-scroll {
-          animation: scroll 40s linear infinite;
-          display: flex;
-          width: max-content;
-        }
-        .animate-scroll:hover {
-          animation-play-state: paused;
+
+        @media (max-width: 640px) {
+          section {
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+          }
         }
       `}</style>
     </section>
