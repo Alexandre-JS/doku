@@ -111,12 +111,11 @@ export default function DocumentPreview({
       {/* Container de Escalonamento para Mobile */}
       <div className="w-full overflow-x-auto pb-4 flex justify-center">
         <div 
-          className="bg-white shadow-2xl relative overflow-hidden origin-top scale-[0.45] sm:scale-[0.7] md:scale-100 transition-transform"
+          className="bg-white shadow-2xl relative overflow-hidden origin-top scale-[0.45] sm:scale-[0.7] md:scale-100 transition-transform font-serif"
           style={{
             width: '210mm',
             minHeight: '297mm',
             padding: '30mm 20mm 20mm 30mm', // Margens oficiais
-            fontFamily: '"Times New Roman", Times, serif',
             lineHeight: '1.6',
             color: '#1e293b', // slate-800
             marginBottom: 'calc(-297mm * 0.55)', // Compensar o vácuo deixado pelo scale no mobile
