@@ -95,68 +95,41 @@ export default function DocumentPreview({
   };
 
   return (
-    <div className={`flex flex-col items-center w-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-slate-100 px-4 pt-4 sm:pt-6 sm:px-8 pb-32 min-h-screen"}`}>
-      {!effectiveHideControls && (
-        <div className="mb-4 text-center">
-          <h2 className="font-display text-2xl font-black text-slate-900 tracking-tight">
-            Revisão Final do Documento
-          </h2>
-          {title && (
-            <p className="mt-1 text-slate-500 font-medium">{title}</p>
-          )}
-          <div className="mt-4 flex justify-center items-center gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Padrão A4 Oficial</span>
-          </div>
-        </div>
-      )}
-
-      {/* Container de Escalonamento Inteligente */}
-      <div className="w-full max-w-full overflow-hidden flex justify-center pt-2 pb-8 bg-slate-50/50 rounded-[2.5rem] ring-1 ring-slate-200/50">
+    <div className={`flex flex-col items-center w-full h-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-transparent pb-10"}`}>
+      
+      {/* Container de Escalonamento Inteligente com Scroll Interno */}
+      <div className={`w-full flex-1 flex justify-center p-4 sm:p-6 overflow-y-auto no-scrollbar ${!effectiveHideControls ? "bg-slate-100/30 rounded-[2.5rem]" : ""}`}>
         <div 
-          className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.08)] relative origin-top scale-[0.45] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.82] xl:scale-[0.95] transition-all duration-700 font-serif border border-slate-100"
+          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.12)] relative origin-top scale-[0.45] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.85] xl:scale-[0.98] transition-all duration-700 font-serif border border-slate-100 mb-4 shrink-0"
           style={{
             width: '210mm',
             minHeight: '297mm',
             padding: '25mm 22mm 20mm 25mm', 
             lineHeight: '1.6',
             color: '#1e293b', 
-            marginBottom: 'calc(-297mm * 0.55)', 
           }}
         >
-          {/* Ajuste dinâmico para compensar vácuo do scale */}
-          <style jsx>{`
-            @media (min-width: 640px) {
-              div { margin-bottom: calc(-297mm * 0.4) !important; }
-            }
-            @media (min-width: 768px) {
-              div { margin-bottom: calc(-297mm * 0.25) !important; }
-            }
-            @media (min-width: 1024px) {
-              div { margin-bottom: calc(-297mm * 0.18) !important; }
-            }
-            @media (min-width: 1280px) {
-              div { margin-bottom: calc(-297mm * 0.05) !important; }
-            }
-            @media (min-width: 1440px) {
-              div { margin-bottom: 0 !important; }
-            }
-          `}</style>
-        {/* Marca de Água */}
-        <div className="absolute inset-0 flex flex-wrap justify-center items-center opacity-[0.02] pointer-events-none rotate-[-45deg] select-none text-6xl font-black z-10">
-           {Array(40).fill("DOKU PREVIEW ").join(" ")}
+        {/* Marca de Água Profissional - Repetida e atrás do texto */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 opacity-[0.04]">
+          <div className="absolute inset-[-50%] flex flex-wrap items-center justify-center content-center rotate-[-30deg]">
+            {Array(120).fill(null).map((_, i) => (
+              <span key={i} className="m-10 text-4xl font-black tracking-widest whitespace-nowrap text-slate-900">
+                DOKU PREVIEW
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* LAYOUT: LETTER & OFFICIAL - Data no Topo Direito (Estilo mais comum) */}
         {(layoutType === 'LETTER' || layoutType === 'OFFICIAL') && (
-          <div className="mb-12 text-right text-[12pt] font-medium italic">
+          <div className="mb-12 text-right text-[12pt] font-medium italic relative z-10">
             {getValue('current_city') || getValue('target_location') || "Maputo"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}
           </div>
         )}
 
         {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
         {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && !isDeclarationOrContract && (
-          <div className="mb-10 text-[12pt] relative z-0 text-left">
+          <div className="mb-10 text-[12pt] relative z-10 text-left">
             <p className="font-bold uppercase leading-tight italic">Exmo(a) Senhor(a)</p>
             <p className="font-bold uppercase leading-tight">{getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
             <p className="font-bold uppercase leading-tight">{getValue('institution_name') || ''}</p>
@@ -176,32 +149,32 @@ export default function DocumentPreview({
 
         {/* Título para DECLARATION */}
         {layoutType === 'DECLARATION' && (
-          <div className="mb-12 text-center text-[14pt] font-bold uppercase underline relative z-0">
+          <div className="mb-12 text-center text-[14pt] font-bold uppercase underline relative z-10">
             {title || "DECLARAÇÃO"}
           </div>
         )}
 
         {/* Corpo do Texto */}
-        <div className={`text-[12pt] text-justify whitespace-pre-line relative z-0 ${layoutType === 'OFFICIAL' ? 'indent-12' : ''}`}>
+        <div className={`text-[12pt] text-justify whitespace-pre-line relative z-10 ${layoutType === 'OFFICIAL' ? 'indent-12' : ''}`}>
           {renderPreview(template, userData)}
         </div>
 
         {/* Fecho: Pede Deferimento (Só OFFICIAL) */}
         {layoutType === 'OFFICIAL' && (
-          <div className="mt-12 text-center text-[12pt]">
+          <div className="mt-12 text-center text-[12pt] relative z-10">
             Pede deferimento.
           </div>
         )}
 
         {/* Local e Data (OFFICIAL e DECLARATION) */}
         {(layoutType === 'OFFICIAL' || layoutType === 'DECLARATION') && !templateHasFooterPlaceholders && (
-          <div className="mt-12 text-[12pt] text-center relative z-0">
+          <div className="mt-12 text-[12pt] text-center relative z-10">
             {getValue('current_city') || getValue('target_location') || "__________"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}.
           </div>
         )}
 
         {/* Linha de Assinatura */}
-        <div className="mt-8 flex flex-col items-center relative z-0">
+        <div className="mt-8 flex flex-col items-center relative z-10">
           <p className="text-[12pt] font-bold uppercase mb-8">{getValue('full_name') || ''}</p>
           <div className="w-64 border-t border-black mb-2"></div>
           <p className="text-[10pt] text-slate-500">
@@ -211,29 +184,36 @@ export default function DocumentPreview({
       </div>
       </div>
 
-      {/* Botões de Ação Fixos na Base */}
+      {/* Seção Final de Ações */}
       {!effectiveHideControls && (
-        <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-center items-center gap-6 shadow-inner z-50">
-          <div className="flex flex-col items-end mr-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total a pagar</span>
-            <span className="text-xl font-black text-slate-900">{price} MT</span>
+        <div className="mt-12 mb-20 w-full max-w-3xl px-4">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_30px_60px_rgba(0,0,0,0.05)]">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex flex-col items-center md:items-start">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total a Pagar</span>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-slate-900">{price.replace(' MT', '')}</span>
+                  <span className="text-sm font-bold text-slate-500">MT</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <button 
+                  onClick={onBack}
+                  className="w-full sm:w-auto px-8 h-12 rounded-xl border border-slate-200 font-bold text-slate-500 hover:bg-slate-50 transition-all active:scale-95"
+                >
+                  Editar
+                </button>
+                <button 
+                  onClick={onConfirm}
+                  className="w-full sm:w-auto px-10 h-12 rounded-xl bg-slate-900 font-bold text-white shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <Lock size={16} />
+                  Confirmar
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <button 
-            onClick={onBack}
-            className="px-8 py-3 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-all flex items-center gap-2"
-          >
-            <ArrowLeft size={18} />
-            Voltar a Editar
-          </button>
-          
-          <button 
-            onClick={onConfirm}
-            className="px-12 py-3 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 transition-all flex items-center gap-2"
-          >
-            <Lock size={18} />
-            Confirmar e Gerar
-          </button>
         </div>
       )}
     </div>

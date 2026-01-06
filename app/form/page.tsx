@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
-import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
@@ -44,6 +44,7 @@ interface DocumentFormData {
 function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [templateData, setTemplateData] = useState<{ content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [toastList, setToastList] = useState<Array<{
@@ -282,18 +283,15 @@ function FormContent() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total a pagar</p>
-              <p className="text-sm font-black text-slate-900">{templateData?.price || "0"} MT</p>
-            </div>
+            {/* O preço foi movido para o final do processo para uma experiência mais limpa */}
           </div>
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-[1440px] px-6 lg:px-12 pt-8 pb-12">
+      <main className="relative mx-auto max-w-[1440px] px-6 lg:px-12 pt-4 pb-12">
         {/* Cabeçalho do Documento - Ocupa a largura total ou limitada para leitura */}
-        <div className="mb-10 max-w-5xl animate-in fade-in slide-in-from-top-4 duration-1000">
-          <div className="space-y-6">
+        <div className="mb-8 max-w-5xl animate-in fade-in slide-in-from-top-4 duration-1000">
+          <div className="space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50/50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
@@ -302,11 +300,11 @@ function FormContent() {
               Gerador Inteligente DOKU
             </div>
             
-            <h1 className="font-display text-4xl font-black leading-[1.1] tracking-tight text-slate-900 md:text-6xl">
+            <h1 className="font-display text-4xl font-black leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
               {templateData?.title || "Preencher Documento"}
             </h1>
             
-            <div className="flex flex-wrap items-center gap-6 pt-2">
+            <div className="flex flex-wrap items-center gap-6 pt-1">
               <div className="flex items-center gap-2">
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500">
                   <Check size={12} strokeWidth={3} />
@@ -353,6 +351,19 @@ function FormContent() {
                 />
               </div>
 
+              {/* Botão Flutuante Mobile para Ver Prévia */}
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 lg:hidden">
+                <button
+                  onClick={() => setShowMobilePreview(true)}
+                  className="flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-bold text-white shadow-2xl ring-1 ring-white/10 active:scale-95"
+                >
+                  <FileText size={18} className="text-emerald-400" />
+                  Ver Documento
+                  <div className="h-4 w-px bg-white/20 mx-1" />
+                  <span className="text-slate-400">Gratis</span>
+                </button>
+              </div>
+
               <div className="flex items-start gap-5 rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-emerald-400 ring-1 ring-white/20">
@@ -368,64 +379,65 @@ function FormContent() {
             </div>
           </div>
 
-          {/* Coluna da Direita: Preview (Mais larga para o Documento) */}
+          {/* Coluna da Direita: Preview (Documento) */}
           <div className={`lg:col-span-7 ${currentStep === 0 ? 'hidden lg:block' : ''}`}>
-            <div className="lg:sticky lg:top-8 pb-10">
+            <div className="lg:sticky lg:top-8 pb-10 h-[calc(100vh-64px)] max-h-[900px]">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentStep}
-                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -10 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="h-full"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="relative h-full w-full"
                 >
                   {currentStep === 0 ? (
-                    <div className="relative group/preview transition-all duration-700">
+                    <div className="group/preview relative h-full w-full">
+                      {/* Efeito Glow de Fundo */}
                       <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-500/5 to-blue-500/5 rounded-[3rem] blur-2xl opacity-0 group-hover/preview:opacity-100 transition-opacity duration-700" />
                       
-                      <div className="relative">
-                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-slate-900 border border-slate-700/50 px-5 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl backdrop-blur-md">
-                          Live Preview
-                        </div>
+                      {/* Badge Superior */}
+                      <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-slate-900 border border-slate-700/50 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">
+                        Live Preview
+                      </div>
+                      
+                      <div className="relative h-full rounded-[2.5rem] border border-slate-200 bg-[#EBEEF2] p-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-700 group-hover/preview:scale-[1.01] flex flex-col">
+                        {/* Pontilhado técnico */}
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                             style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
                         
-                        <div className="pointer-events-none transition-all duration-700 group-hover/preview:scale-[1.01]">
-                          <div className="rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-sm p-2 shadow-2xl overflow-hidden">
-                            <DocumentPreview
-                              userData={formData}
-                              template={currentTemplate}
-                              price={templateData?.price || "0 MT"}
-                              title={templateData?.title}
-                              onBack={() => {}}
-                              onConfirm={() => {}}
-                              isReadOnly={true}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="absolute inset-x-0 bottom-0 h-40 flex items-center justify-center bg-gradient-to-t from-[#F8FAFC]/95 via-[#F8FAFC]/40 to-transparent pt-10">
-                          <button 
-                            onClick={() => handleFormSubmit(formData as DocumentFormData)}
-                            className="group/btn flex items-center gap-3 rounded-full bg-white px-8 py-4 text-sm font-black text-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.12)] ring-1 ring-slate-200 transition-all hover:scale-105 hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] active:scale-95"
-                          >
-                            Revisar e Finalizar
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white transition-transform group-hover/btn:translate-x-1">
-                              <ChevronRight size={14} />
-                            </div>
-                          </button>
-                        </div>
+                        <DocumentPreview
+                          userData={formData}
+                          template={currentTemplate}
+                          price={templateData?.price || "0 MT"}
+                          title={templateData?.title}
+                          onBack={() => {}}
+                          onConfirm={() => {}}
+                          isReadOnly={true}
+                        />
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl overflow-hidden bg-white">
-                      <DocumentPreview
-                        userData={formData}
-                        template={currentTemplate}
-                        price={templateData?.price || "0 MT"}
-                        title={templateData?.title}
-                        onBack={() => setCurrentStep(0)}
-                        onConfirm={() => setIsPaymentModalOpen(true)}
-                      />
+                    <div className="relative h-full w-full">
+                      {/* Badge Superior Revisão */}
+                      <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-emerald-600 border border-emerald-500 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">
+                        Revisão Final
+                      </div>
+                      
+                      <div className="relative h-full rounded-[2.5rem] border-2 border-emerald-100 bg-white p-4 shadow-2xl overflow-hidden flex flex-col">
+                         {/* Padrão sutil para revisão */}
+                         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
+                                 style={{ backgroundImage: 'radial-gradient(#10b981 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
+
+                        <DocumentPreview
+                          userData={formData}
+                          template={currentTemplate}
+                          price={templateData?.price || "0 MT"}
+                          title={templateData?.title}
+                          onBack={() => setCurrentStep(0)}
+                          onConfirm={() => setIsPaymentModalOpen(true)}
+                        />
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -434,6 +446,55 @@ function FormContent() {
           </div>
         </div>
       </main>
+
+      {/* Modal de Preview Mobile */}
+      <AnimatePresence>
+        {showMobilePreview && (
+          <div className="fixed inset-0 z-[100] lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/80 backdrop-blur-md"
+              onClick={() => setShowMobilePreview(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute inset-x-0 bottom-0 top-12 rounded-t-[3rem] bg-slate-100 overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Visualização</span>
+                </div>
+                <button 
+                  onClick={() => setShowMobilePreview(false)}
+                  className="rounded-full bg-slate-100 p-2 text-slate-900"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <DocumentPreview
+                  userData={formData}
+                  template={currentTemplate}
+                  price={templateData?.price || "0 MT"}
+                  title={templateData?.title}
+                  onBack={() => setShowMobilePreview(false)}
+                  onConfirm={() => {
+                    setShowMobilePreview(false);
+                    handleFormSubmit(formData as DocumentFormData);
+                  }}
+                  isReadOnly={currentStep === 0}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <PaymentModal 
         isOpen={isPaymentModalOpen}

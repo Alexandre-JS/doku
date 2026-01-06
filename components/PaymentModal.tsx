@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight } from "lucide-react";
 import { generatePDF, LayoutType } from "../src/utils/pdfGenerator";
@@ -18,7 +19,8 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ isOpen, onClose, formData, templateContent, docTitle, price, layoutType, onSuccess }: PaymentModalProps) {
-  const [step, setStep] = useState<"summary" | "payment" | "processing" | "success">("summary");
+  const router = useRouter();
+  const [step, setStep] = useState<"payment" | "processing" | "success">("payment");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "emola">("mpesa");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
   // Resetar o modal ao abrir
   useEffect(() => {
     if (isOpen) {
-      setStep("summary");
+      setStep("payment");
       setPhoneNumber("");
       setError("");
       setUserEmail(formData?.email || "");
@@ -116,7 +118,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={step !== "processing" ? onClose : undefined}
+        onClick={step === "success" ? () => router.push('/templates') : (step !== "processing" ? onClose : undefined)}
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
       />
 
@@ -133,10 +135,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
             <h3 className="text-base font-bold text-slate-900 sm:text-lg">
               {step === "success" ? "Documento Pronto!" : "Finalizar Documento"}
             </h3>
-            <p className="text-[10px] text-slate-500 sm:text-xs">Passo {step === "summary" ? "1" : step === "payment" ? "2" : "3"} de 3</p>
+            <p className="text-[10px] text-slate-500 sm:text-xs">Passo {step === "payment" ? "1" : "2"} de 2</p>
           </div>
           {step !== "processing" && (
-            <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+            <button 
+              onClick={step === "success" ? () => router.push('/templates') : onClose} 
+              className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            >
               <X size={20} />
             </button>
           )}
@@ -144,46 +149,6 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
 
         <div className="p-4 sm:p-6">
           <AnimatePresence mode="wait">
-            {step === "summary" && (
-              <motion.div
-                key="summary"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-6"
-              >
-                <div className="rounded-2xl bg-slate-50 p-4 space-y-4 ring-1 ring-slate-100 sm:p-6">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nome Completo</p>
-                      <p className="text-sm font-bold text-slate-900 truncate">{formData?.full_name || "Alexandre [Sobrenome]"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">NUIT</p>
-                      <p className="text-sm font-bold text-slate-900">{formData?.nuit || "123 456 789"}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Documento</p>
-                    <p className="text-sm font-bold text-slate-900">{docTitle}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-amber-50 p-3 border border-amber-100 sm:p-4">
-                  <p className="text-[11px] text-amber-800 font-medium leading-relaxed sm:text-xs">
-                    "Confirma que estes dados estão corretos? Não será possível editar após o pagamento."
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleConfirmData}
-                  className="btn-primary"
-                >
-                  Confirmar e Ir para Pagamento
-                </button>
-              </motion.div>
-            )}
-
             {step === "payment" && (
               <motion.div
                 key="payment"
@@ -296,7 +261,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 <p className="mt-2 text-sm text-slate-600">Documento gerado e baixado com sucesso!</p>
 
                 <div className="mt-8 w-full space-y-5">
-                  <div className="text-left">
+                  {/* <div className="text-left">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">E-mail para Recebimento</p>
                     <input 
                       type="email"
@@ -305,9 +270,9 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                       onChange={(e) => setUserEmail(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 transition-all"
                     />
-                  </div>
+                  </div> */}
 
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-left">Enviar cópia digital</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button 
@@ -342,13 +307,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                         Imprima em papel A4 de 80g para um acabamento mais oficial.
                       </p>
                     </div>
-                  </div>
+                  </div> */}
 
                   <button 
-                    onClick={onClose}
+                    onClick={() => router.push('/templates')}
                     className="mt-6 text-sm font-bold text-slate-400 hover:text-doku-blue transition-colors flex items-center gap-2 mx-auto active:scale-95"
                   >
-                    Fechar e Voltar ao Editor
+                    Fechar
                     <ArrowRight size={14} />
                   </button>
                 </div>
