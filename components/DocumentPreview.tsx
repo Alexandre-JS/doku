@@ -95,7 +95,7 @@ export default function DocumentPreview({
   };
 
   return (
-    <div className={`flex flex-col items-center ${effectiveHideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-8 pb-32 min-h-screen'}`}>
+    <div className={`flex flex-col items-center w-full ${effectiveHideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-4 sm:p-8 pb-32 min-h-screen'}`}>
       {!effectiveHideControls && (
         <div className="mb-6 text-center">
           <h2 className="text-xl font-bold text-slate-800">
@@ -108,47 +108,56 @@ export default function DocumentPreview({
         </div>
       )}
 
-      {/* Simulador de Papel A4 */}
-      <div 
-        className="bg-white shadow-2xl relative overflow-hidden mx-auto"
-        style={{
-          width: '210mm',
-          minHeight: '297mm',
-          padding: '30mm 20mm 20mm 30mm', // Margens oficiais
-          fontFamily: '"Times New Roman", Times, serif',
-          lineHeight: '1.5',
-          color: '#1e293b' // slate-800
-        }}
-      >
+      {/* Container de Escalonamento para Mobile */}
+      <div className="w-full overflow-x-auto pb-4 flex justify-center">
+        <div 
+          className="bg-white shadow-2xl relative overflow-hidden origin-top scale-[0.45] sm:scale-[0.7] md:scale-100 transition-transform"
+          style={{
+            width: '210mm',
+            minHeight: '297mm',
+            padding: '30mm 20mm 20mm 30mm', // Margens oficiais
+            fontFamily: '"Times New Roman", Times, serif',
+            lineHeight: '1.6',
+            color: '#1e293b', // slate-800
+            marginBottom: 'calc(-297mm * 0.55)', // Compensar o vácuo deixado pelo scale no mobile
+          }}
+        >
+          {/* Ajuste dinâmico para compensar margin-bottom em diferentes breakpoints */}
+          <style jsx>{`
+            @media (min-width: 640px) {
+              div { margin-bottom: calc(-297mm * 0.3) !important; }
+            }
+            @media (min-width: 768px) {
+              div { margin-bottom: 0 !important; }
+            }
+          `}</style>
         {/* Marca de Água */}
         <div className="absolute inset-0 flex flex-wrap justify-center items-center opacity-[0.04] pointer-events-none rotate-[-45deg] select-none text-6xl font-black z-10">
            {Array(20).fill("DOKU PREVIEW ").join(" ")}
         </div>
 
-        {/* LAYOUT: LETTER - Data no Topo Direito */}
-        {/* {layoutType === 'LETTER' && (
-          <div className="mb-8 text-right text-[12pt]">
-            {getValue('current_city') || getValue('target_location') || "__________"}, {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}
+        {/* LAYOUT: LETTER & OFFICIAL - Data no Topo Direito (Estilo mais comum) */}
+        {(layoutType === 'LETTER' || layoutType === 'OFFICIAL') && (
+          <div className="mb-12 text-right text-[12pt] font-medium italic">
+            {getValue('current_city') || getValue('target_location') || "Maputo"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}
           </div>
-        )} */}
+        )}
 
         {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
         {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && !isDeclarationOrContract && (
-          <div className="mb-6 text-[12pt] relative z-0 text-justify">
-            <p className="font-bold uppercase">{getValue('destinatary_role') || getValue('target_authority') || ''}</p>
-            <p className="font-bold uppercase">{getValue('institution_name') || ''}</p>
+          <div className="mb-10 text-[12pt] relative z-0 text-left">
+            <p className="font-bold uppercase leading-tight italic">Exmo(a) Senhor(a)</p>
+            <p className="font-bold uppercase leading-tight">{getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
+            <p className="font-bold uppercase leading-tight">{getValue('institution_name') || ''}</p>
             
-            {/* Assunto logo abaixo do cabeçalho para OFFICIAL */}
-            {layoutType === 'OFFICIAL' && (getValue('subject') || title) && (
-              <div className="mt-8 font-bold uppercase underline">
-                {getValue('subject') || title}
-              </div>
-            )}
+            <p className="mt-8 font-bold uppercase underline underline-offset-4">
+              {getValue('target_location') || getValue('address') || "MAPUTO"}
+            </p>
 
-            {/* Localização no lado direito para OFFICIAL */}
-            {layoutType === 'OFFICIAL' && (getValue('target_location') || getValue('address')) && (
-              <div className="mt-8 text-right underline">
-                {getValue('target_location') || getValue('address')}
+            {/* Assunto logo abaixo para ambos */}
+            {(getValue('subject') || title) && (
+              <div className="mt-10 font-bold uppercase">
+                <span className="underline underline-offset-4">Assunto: {getValue('subject') || title}</span>
               </div>
             )}
           </div>
@@ -188,6 +197,7 @@ export default function DocumentPreview({
             {layoutType === 'DECLARATION' ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)'}
           </p>
         </div>
+      </div>
       </div>
 
       {/* Botões de Ação Fixos na Base */}
