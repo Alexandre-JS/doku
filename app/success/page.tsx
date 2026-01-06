@@ -107,7 +107,7 @@ export default function SuccessPage() {
         <div className="mt-16 border-t border-slate-200 pt-8">
           <p className="text-sm text-slate-600">
             Teve algum problema com o download?{" "}
-            <a href="https://wa.me/258840000000" target="_blank" className="font-bold text-emerald-600 hover:underline">
+            <a href="https://wa.me/258847563555" target="_blank" className="font-bold text-emerald-600 hover:underline">
               Fale com o suporte agora
             </a>
           </p>

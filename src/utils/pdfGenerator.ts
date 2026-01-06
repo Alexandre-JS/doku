@@ -18,7 +18,7 @@ const parseTemplate = (template: string, userData: UserData): string => {
 
 export type LayoutType = 'OFFICIAL' | 'DECLARATION' | 'LETTER';
 
-export const generatePDF = (userData: UserData, template: string, title: string, layoutType?: LayoutType) => {
+export const generatePDF = (userData: UserData, template: string, title: string, layoutType?: LayoutType, shouldDownload: boolean = true) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   
   // Detecta se o template já inclui placeholders para cabeçalho/rodapé
@@ -158,8 +158,12 @@ export const generatePDF = (userData: UserData, template: string, title: string,
   const labelX = (pageWidth - labelWidth) / 2;
   doc.text(signatureLabel, labelX, y);
 
-  // 7. Download
-  const formattedDate = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
-  const fileName = `DOKU_${title.replace(/\s+/g, '_')}_${formattedDate}.pdf`;
-  doc.save(fileName);
+  // 7. Download / Return
+  if (shouldDownload) {
+    const formattedDate = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
+    const fileName = `DOKU_${title.replace(/\s+/g, '_')}_${formattedDate}.pdf`;
+    doc.save(fileName);
+  }
+
+  return doc;
 };

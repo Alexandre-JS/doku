@@ -83,7 +83,7 @@ export default function CheckoutPage() {
 
         {/* Botão de Suporte Flutuante */}
         <a 
-          href="https://wa.me/258840000000" 
+          href="https://wa.me/258867563555" 
           target="_blank"
           className="fixed bottom-8 right-8 flex items-center gap-3 rounded-full bg-emerald-500 px-6 py-4 font-bold text-white shadow-2xl transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95"
         >

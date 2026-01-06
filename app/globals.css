@@ -14,7 +14,9 @@
   --color-doku-blue: var(--doku-blue);
   --color-doku-green: var(--doku-green);
   --color-doku-bg: var(--doku-bg);
-  --font-sans: var(--font-inter);
+  --font-sans: "Inter", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Times New Roman", Times, serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,7 +29,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;

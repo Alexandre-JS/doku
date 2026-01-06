@@ -41,7 +41,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl"
+              className="font-display text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl"
             >
               O que você quer <br className="sm:hidden" />
               <span className="text-doku-green">resolver hoje?</span>

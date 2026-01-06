@@ -21,18 +21,31 @@ export default function SuggestionBox({ isOpen, onClose }: SuggestionBoxProps) {
     { emoji: "🙁", label: "Ruim" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!suggestion) return;
     
-    // Simular envio
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setSuggestion("");
-      setReaction(null);
-      onClose();
-    }, 3000);
+    try {
+      const response = await fetch("/api/suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suggestion, reaction }),
+      });
+
+      if (!response.ok) throw new Error("Falha ao enviar");
+
+      // Sucesso
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setSuggestion("");
+        setReaction(null);
+        onClose();
+      }, 3000);
+    } catch (error) {
+      console.error("Erro ao enviar sugestão:", error);
+      alert("Ocorreu um erro ao enviar sua sugestão. Por favor, tente novamente.");
+    }
   };
 
   return (

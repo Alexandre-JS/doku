@@ -143,7 +143,25 @@ function TemplatesContent() {
       </div>
 
       <Footer />
-      <FloatingSupport />
+
+      {/* Floating Support - Robust Responsive Container */}
+      <div 
+        className="pointer-events-none fixed inset-0 z-[100]"
+        style={{
+          overflow: 'hidden',
+          pointerEvents: 'none'
+        }}
+      >
+        <div 
+          className="pointer-events-auto absolute bottom-4 right-4 sm:bottom-6 sm:right-6"
+          style={{
+            pointerEvents: 'auto'
+          }}
+        >
+          <FloatingSupport />
+        </div>
+      </div>
+
       <SuggestionBox isOpen={isSuggestionOpen} onClose={() => setIsSuggestionOpen(false)} />
     </div>
   );
