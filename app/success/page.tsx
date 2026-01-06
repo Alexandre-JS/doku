@@ -122,6 +122,4 @@ export default function SuccessPage() {
     </div>
   );
 }
-    </div>
-  );
-}
+  
