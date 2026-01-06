@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight } from "lucide-react";
 import { generatePDF, LayoutType } from "../src/utils/pdfGenerator";
+import { clearSensitiveData } from "../src/utils/cookieManager";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -48,6 +49,10 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         generatePDF(formData, templateContent, docTitle, layoutType);
       }
       setStep("success");
+      
+      // Limpar cookies sensíveis após sucesso
+      clearSensitiveData();
+      console.log('[DOKU Security] Cleared sensitive cookies after PDF generation');
       
       // Chamar callback de sucesso
       if (onSuccess) {

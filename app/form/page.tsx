@@ -14,6 +14,12 @@ import { FormSection } from "../../src/types";
 import LogoLoading from "../../components/LogoLoading";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutType } from "../../src/utils/pdfGenerator";
+import {
+  saveCheckoutSession,
+  restoreCheckoutSession,
+  clearCheckoutSession,
+  initializeSessionWarning,
+} from "../../src/utils/sessionManager";
 
 const STEPS = [
   { id: "data", title: "Dados", icon: FileText },
@@ -100,6 +106,48 @@ function FormContent() {
     setToastList((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // Restaurar sessão de checkout se existir
+  useEffect(() => {
+    const restoredSession = restoreCheckoutSession();
+    
+    if (restoredSession) {
+      // Restaura os dados do formulário
+      setFormData(restoredSession.formData as DocumentFormData);
+      // Restaura o passo
+      setCurrentStep(restoredSession.currentStep || 0);
+      
+      addToast(
+        "✓ Sessão de checkout restaurada",
+        "info",
+        2500
+      );
+      
+      console.log('[DOKU Checkout] Session restored from cookie');
+    }
+
+    // Inicializa aviso de expiração de sessão
+    const cleanupWarning = initializeSessionWarning(() => {
+      addToast(
+        "⚠️ Sua sessão expirará em 5 minutos",
+        "warning",
+        4000
+      );
+    });
+
+    return cleanupWarning;
+  }, []);
+
+  // Salvar sessão de checkout quando dados ou passo mudarem
+  useEffect(() => {
+    if (formData && Object.keys(formData).some((key) => formData[key])) {
+      saveCheckoutSession({
+        formData,
+        currentStep,
+        documentType: slug || undefined,
+      });
+    }
+  }, [formData, currentStep, slug]);
+
   // Buscar template
   useEffect(() => {
     async function fetchTemplate() {
@@ -153,6 +201,8 @@ function FormContent() {
   const handlePaymentSuccess = useCallback(() => {
     // Limpa dados salvos após sucesso
     clearSavedData();
+    // Limpa sessão de checkout
+    clearCheckoutSession();
     addToast(
       "✓ Documento gerado com sucesso! Dados removidos por segurança.",
       "success",
@@ -293,7 +343,7 @@ function FormContent() {
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-transparent to-slate-50/80">
                       <button 
-                        onClick={() => handleFormSubmit(formData)}
+                        onClick={() => handleFormSubmit(formData as DocumentFormData)}
                         className="group flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-2xl ring-1 ring-slate-200 transition-all hover:scale-105 active:scale-95"
                       >
                         Revisar Documento Completo
