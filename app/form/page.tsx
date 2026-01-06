@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
 import DynamicForm from "../../components/DynamicForm";
 import PaymentModal from "../../components/PaymentModal";
+import { ToastContainer } from "../../components/Toast";
+import { useFormPersistence, useToast } from "../../src/hooks/useFormPersistence";
 import { createBrowserSupabase } from "../../src/lib/supabase";
 import { FormSection } from "../../src/types";
 import LogoLoading from "../../components/LogoLoading";
@@ -36,51 +38,69 @@ interface DocumentFormData {
 function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [formData, setFormData] = useState<DocumentFormData>({
-    full_name: "",
-    bi_number: "",
-    nuit: "",
-    father_name: "",
-    mother_name: "",
-    target_authority: "",
-    institution_name: "",
-    position_name: "",
-    address: "",
-    date: new Date().toLocaleDateString('pt-PT'),
-  });
   const [templateData, setTemplateData] = useState<{ content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const router = useRouter();
+  const [toastList, setToastList] = useState<Array<{
+    id: string;
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    duration?: number;
+  }>>([]);
+
   const searchParams = useSearchParams();
   const slug = searchParams.get("template");
 
-  // Carregar dados do localStorage ao iniciar
-  useEffect(() => {
-    const savedData = localStorage.getItem("doku_form_data");
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setFormData(prev => ({ ...prev, ...parsed }));
-      } catch (e) {
-        console.error("Erro ao carregar dados salvos:", e);
-      }
+  // Hook de persistência com notificação
+  const {
+    formData,
+    setFormData,
+    updateField,
+    updateMultiple,
+    clearSavedData,
+    hasRestoredData,
+  } = useFormPersistence(
+    {
+      full_name: "",
+      bi_number: "",
+      nuit: "",
+      father_name: "",
+      mother_name: "",
+      target_authority: "",
+      institution_name: "",
+      position_name: "",
+      address: "",
+      date: new Date().toLocaleDateString("pt-PT"),
+      current_date: new Date().toISOString().split("T")[0],
+    },
+    {
+      storageKey: "doku_form_auto_save",
+      debounceMs: 500,
+      onRestore: (data) => {
+        // Mostra toast de recuperação
+        addToast(
+          "✓ Retomamos o seu preenchimento de onde parou",
+          "success",
+          3500
+        );
+      },
     }
+  );
+
+  // Função para adicionar toasts
+  const addToast = useCallback(
+    (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration = 3000) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      setToastList((prev) => [...prev, { id, message, type, duration }]);
+    },
+    []
+  );
+
+  // Função para remover toast
+  const removeToast = useCallback((id: string) => {
+    setToastList((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Salvar dados no localStorage sempre que mudarem (persistência)
-  useEffect(() => {
-    localStorage.setItem("doku_form_data", JSON.stringify(formData));
-  }, [formData]);
-
-  // Pre-preencher data actual se estiver vazia
-  useEffect(() => {
-    if (!formData.current_date) {
-      const today = new Date().toISOString().split('T')[0];
-      setFormData(prev => ({ ...prev, current_date: today }));
-    }
-  }, [formData.current_date]);
-
+  // Buscar template
   useEffect(() => {
     async function fetchTemplate() {
       if (!slug) {
@@ -121,14 +141,24 @@ function FormContent() {
   }, [slug]);
 
   const handleFormChange = (newData: DocumentFormData) => {
-    setFormData(newData);
+    updateMultiple(newData);
   };
 
   const handleFormSubmit = (data: DocumentFormData) => {
     setFormData(data);
-    setCurrentStep(1); // Vai para a revisão
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handlePaymentSuccess = useCallback(() => {
+    // Limpa dados salvos após sucesso
+    clearSavedData();
+    addToast(
+      "✓ Documento gerado com sucesso! Dados removidos por segurança.",
+      "success",
+      3000
+    );
+  }, [clearSavedData, addToast]);
 
   if (loading) {
     return (
@@ -300,6 +330,13 @@ function FormContent() {
           (templateData?.title?.toLowerCase().includes('carta') || templateData?.title?.toLowerCase().includes('manifestação')) ? 'LETTER' :
           'OFFICIAL'
         }
+        onSuccess={handlePaymentSuccess}
+      />
+
+      {/* Toast Container */}
+      <ToastContainer 
+        toasts={toastList}
+        onClose={removeToast}
       />
     </div>
   );

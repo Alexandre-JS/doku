@@ -13,9 +13,10 @@ interface PaymentModalProps {
   docTitle: string;
   price: string;
   layoutType?: LayoutType;
+  onSuccess?: () => void;
 }
 
-export default function PaymentModal({ isOpen, onClose, formData, templateContent, docTitle, price, layoutType }: PaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, formData, templateContent, docTitle, price, layoutType, onSuccess }: PaymentModalProps) {
   const [step, setStep] = useState<"summary" | "payment" | "processing" | "success">("summary");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "emola">("mpesa");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -47,6 +48,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         generatePDF(formData, templateContent, docTitle, layoutType);
       }
       setStep("success");
+      
+      // Chamar callback de sucesso
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+        }, 500);
+      }
     }, 2000);
   };
 
