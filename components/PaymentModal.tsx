@@ -192,25 +192,29 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setPaymentMethod("mpesa")}
-                    className={`btn-mpesa group relative overflow-hidden ${paymentMethod === "mpesa" ? "ring-2 ring-red-600 ring-offset-2" : "opacity-80 grayscale-[0.5]"}`}
+                    className={`btn-mpesa group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "mpesa" ? "ring-2 ring-red-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
                   >
-                     <span className="text-lg">Pagar com</span>
-                    <img src="/m-pesa.png" alt="M-Pesa" className="h-10 w-auto brightness-0 invert" />
-                   
-                    {paymentMethod === "mpesa" && <CheckCircle2 size={24} className="ml-auto" />}
+                    <img src="/m-pesa.png" alt="M-Pesa" className="h-7 w-auto brightness-0 invert" />
+                    {paymentMethod === "mpesa" && (
+                      <div className="absolute right-2 top-2">
+                        <CheckCircle2 size={18} className="text-white" />
+                      </div>
+                    )}
                   </button>
                   
                   <button
                     onClick={() => setPaymentMethod("emola")}
-                    className={`btn-emola group relative overflow-hidden ${paymentMethod === "emola" ? "ring-2 ring-orange-600 ring-offset-2" : "opacity-80 grayscale-[0.5]"}`}
+                    className={`btn-emola group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "emola" ? "ring-2 ring-orange-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
                   >
-                    <span className="text-lg">Pagar com</span>
-                    <img src="/e-mola.png" alt="e-Mola" className="h-10 w-auto brightness-0 invert" />
-                    
-                    {paymentMethod === "emola" && <CheckCircle2 size={24} className="ml-auto" />}
+                    <img src="/e-mola.png" alt="e-Mola" className="h-7 w-auto brightness-0 invert" />
+                    {paymentMethod === "emola" && (
+                      <div className="absolute right-2 top-2">
+                        <CheckCircle2 size={18} className="text-white" />
+                      </div>
+                    )}
                   </button>
                 </div>
 
@@ -247,12 +251,14 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                   <span className="text-xl font-black text-slate-900">{price}</span>
                 </div>
 
-                <button
-                  onClick={handlePayment}
-                  className="btn-primary"
-                >
-                  Pagar Agora
-                </button>
+                <div className="flex justify-center pt-2">
+                  <button
+                    onClick={handlePayment}
+                    className="btn-primary w-full sm:w-auto sm:px-16"
+                  >
+                    Pagar Agora
+                  </button>
+                </div>
               </motion.div>
             )}
 

@@ -95,44 +95,56 @@ export default function DocumentPreview({
   };
 
   return (
-    <div className={`flex flex-col items-center w-full ${effectiveHideControls ? 'bg-transparent p-0' : 'bg-slate-100 p-4 sm:p-8 pb-32 min-h-screen'}`}>
+    <div className={`flex flex-col items-center w-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-slate-100 px-4 pt-4 sm:pt-6 sm:px-8 pb-32 min-h-screen"}`}>
       {!effectiveHideControls && (
-        <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold text-slate-800">
-            Revisão do Documento
-            {title && (
-              <span className="ml-2 text-slate-500 font-semibold">— {title}</span>
-            )}
+        <div className="mb-4 text-center">
+          <h2 className="font-display text-2xl font-black text-slate-900 tracking-tight">
+            Revisão Final do Documento
           </h2>
-          <p className="text-sm text-slate-500">Verifique se as margens e os dados estão corretos.</p>
+          {title && (
+            <p className="mt-1 text-slate-500 font-medium">{title}</p>
+          )}
+          <div className="mt-4 flex justify-center items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Padrão A4 Oficial</span>
+          </div>
         </div>
       )}
 
-      {/* Container de Escalonamento para Mobile */}
-      <div className="w-full overflow-x-auto pb-4 flex justify-center">
+      {/* Container de Escalonamento Inteligente */}
+      <div className="w-full max-w-full overflow-hidden flex justify-center pt-2 pb-8 bg-slate-50/50 rounded-[2.5rem] ring-1 ring-slate-200/50">
         <div 
-          className="bg-white shadow-2xl relative overflow-hidden origin-top scale-[0.45] sm:scale-[0.7] md:scale-100 transition-transform font-serif"
+          className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.08)] relative origin-top scale-[0.45] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.82] xl:scale-[0.95] transition-all duration-700 font-serif border border-slate-100"
           style={{
             width: '210mm',
             minHeight: '297mm',
-            padding: '30mm 20mm 20mm 30mm', // Margens oficiais
+            padding: '25mm 22mm 20mm 25mm', 
             lineHeight: '1.6',
-            color: '#1e293b', // slate-800
-            marginBottom: 'calc(-297mm * 0.55)', // Compensar o vácuo deixado pelo scale no mobile
+            color: '#1e293b', 
+            marginBottom: 'calc(-297mm * 0.55)', 
           }}
         >
-          {/* Ajuste dinâmico para compensar margin-bottom em diferentes breakpoints */}
+          {/* Ajuste dinâmico para compensar vácuo do scale */}
           <style jsx>{`
             @media (min-width: 640px) {
-              div { margin-bottom: calc(-297mm * 0.3) !important; }
+              div { margin-bottom: calc(-297mm * 0.4) !important; }
             }
             @media (min-width: 768px) {
+              div { margin-bottom: calc(-297mm * 0.25) !important; }
+            }
+            @media (min-width: 1024px) {
+              div { margin-bottom: calc(-297mm * 0.18) !important; }
+            }
+            @media (min-width: 1280px) {
+              div { margin-bottom: calc(-297mm * 0.05) !important; }
+            }
+            @media (min-width: 1440px) {
               div { margin-bottom: 0 !important; }
             }
           `}</style>
         {/* Marca de Água */}
-        <div className="absolute inset-0 flex flex-wrap justify-center items-center opacity-[0.04] pointer-events-none rotate-[-45deg] select-none text-6xl font-black z-10">
-           {Array(20).fill("DOKU PREVIEW ").join(" ")}
+        <div className="absolute inset-0 flex flex-wrap justify-center items-center opacity-[0.02] pointer-events-none rotate-[-45deg] select-none text-6xl font-black z-10">
+           {Array(40).fill("DOKU PREVIEW ").join(" ")}
         </div>
 
         {/* LAYOUT: LETTER & OFFICIAL - Data no Topo Direito (Estilo mais comum) */}

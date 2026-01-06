@@ -3,6 +3,7 @@ export type FormField = {
   label: string;
   type: 'text' | 'number' | 'date' | 'textarea';
   placeholder?: string;
+  required?: boolean;
   source: 'profile' | 'user_input'; // 'profile' pode vir pré-preenchido
 };
 

@@ -233,7 +233,14 @@ function FormContent() {
   const currentTemplate = templateData?.content || "";
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-emerald-50/50 blur-[120px]" />
+        <div className="absolute top-[20%] -right-[5%] w-[30%] h-[30%] rounded-full bg-blue-50/50 blur-[100px]" />
+        <div className="absolute bottom-0 left-[20%] w-[50%] h-[50%] rounded-full bg-slate-100/30 blur-[120px]" />
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -283,21 +290,61 @@ function FormContent() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-          {/* Coluna da Esquerda: Formulário */}
-          <div className={`lg:col-span-5 ${currentStep === 1 ? 'hidden lg:block' : ''}`}>
-            <div className="sticky top-24 space-y-8">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">
-                  {templateData?.title || "Preencher Documento"}
-                </h1>
-                <p className="mt-2 text-sm text-slate-500">
-                  Preencha os campos abaixo. O documento será atualizado em tempo real ao lado.
-                </p>
+      <main className="relative mx-auto max-w-[1440px] px-6 lg:px-12 pt-8 pb-12">
+        {/* Cabeçalho do Documento - Ocupa a largura total ou limitada para leitura */}
+        <div className="mb-10 max-w-5xl animate-in fade-in slide-in-from-top-4 duration-1000">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50/50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+              Gerador Inteligente DOKU
+            </div>
+            
+            <h1 className="font-display text-4xl font-black leading-[1.1] tracking-tight text-slate-900 md:text-6xl">
+              {templateData?.title || "Preencher Documento"}
+            </h1>
+            
+            <div className="flex flex-wrap items-center gap-6 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+                  <Check size={12} strokeWidth={3} />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Tempo: 2 min</span>
+              </div>
+              
+              <div className="h-4 w-px bg-slate-200" />
+              
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <ShieldCheck size={12} strokeWidth={3} />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Juridicamente Revisitado</span>
               </div>
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+              <div className="h-4 w-px bg-slate-200" />
+
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <FileText size={12} strokeWidth={3} />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-widest text-blue-600">PDF em Alta Definição</span>
+              </div>
+            </div>
+
+            <p className="text-xl leading-relaxed text-slate-500 max-w-2xl font-medium">
+              Complete os campos abaixo. Nosso sistema organiza seus dados automaticamente no padrão oficial de Moçambique.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 items-start">
+          {/* Coluna da Esquerda: Formulário (Mais compacta) */}
+          <div className={`lg:col-span-5 ${currentStep === 1 ? 'hidden lg:block' : ''}`}>
+            <div className="space-y-8 pb-20">
+              <div className="relative rounded-[2.5rem] border border-slate-200 bg-white p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)]">
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-50 rounded-full blur-3xl -z-10 opacity-50" />
                 <DynamicForm 
                   schema={templateData?.form_schema || []} 
                   initialData={formData} 
@@ -306,63 +353,84 @@ function FormContent() {
                 />
               </div>
 
-              <div className="flex items-center gap-4 rounded-2xl bg-blue-50 p-4 text-blue-700">
-                <ShieldCheck size={20} className="shrink-0" />
-                <p className="text-xs font-medium leading-relaxed">
-                  Seus dados estão seguros e serão usados apenas para gerar este documento. Não armazenamos informações sensíveis permanentemente.
-                </p>
+              <div className="flex items-start gap-5 rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-emerald-400 ring-1 ring-white/20">
+                  <ShieldCheck size={28} />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-white tracking-tight">Privacidade Total Garantida</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-400 font-medium">
+                    Seus dados pessoais nunca são armazenados. A geração do documento ocorre de forma efêmera e segura.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Coluna da Direita: Preview */}
+          {/* Coluna da Direita: Preview (Mais larga para o Documento) */}
           <div className={`lg:col-span-7 ${currentStep === 0 ? 'hidden lg:block' : ''}`}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full"
-              >
-                {currentStep === 0 ? (
-                  <div className="relative">
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-slate-900 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-xl">
-                      Visualização em Tempo Real
+            <div className="lg:sticky lg:top-8 pb-10">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="h-full"
+                >
+                  {currentStep === 0 ? (
+                    <div className="relative group/preview transition-all duration-700">
+                      <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-500/5 to-blue-500/5 rounded-[3rem] blur-2xl opacity-0 group-hover/preview:opacity-100 transition-opacity duration-700" />
+                      
+                      <div className="relative">
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-slate-900 border border-slate-700/50 px-5 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl backdrop-blur-md">
+                          Live Preview
+                        </div>
+                        
+                        <div className="pointer-events-none transition-all duration-700 group-hover/preview:scale-[1.01]">
+                          <div className="rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-sm p-2 shadow-2xl overflow-hidden">
+                            <DocumentPreview
+                              userData={formData}
+                              template={currentTemplate}
+                              price={templateData?.price || "0 MT"}
+                              title={templateData?.title}
+                              onBack={() => {}}
+                              onConfirm={() => {}}
+                              isReadOnly={true}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="absolute inset-x-0 bottom-0 h-40 flex items-center justify-center bg-gradient-to-t from-[#F8FAFC]/95 via-[#F8FAFC]/40 to-transparent pt-10">
+                          <button 
+                            onClick={() => handleFormSubmit(formData as DocumentFormData)}
+                            className="group/btn flex items-center gap-3 rounded-full bg-white px-8 py-4 text-sm font-black text-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.12)] ring-1 ring-slate-200 transition-all hover:scale-105 hover:shadow-[0_30px_60px_rgba(0,0,0,0.18)] active:scale-95"
+                          >
+                            Revisar e Finalizar
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white transition-transform group-hover/btn:translate-x-1">
+                              <ChevronRight size={14} />
+                            </div>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="pointer-events-none opacity-80 scale-[0.95] origin-top transition-all duration-500">
+                  ) : (
+                    <div className="rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl overflow-hidden bg-white">
                       <DocumentPreview
                         userData={formData}
                         template={currentTemplate}
                         price={templateData?.price || "0 MT"}
                         title={templateData?.title}
-                        onBack={() => {}}
-                        onConfirm={() => {}}
-                        isReadOnly={true}
+                        onBack={() => setCurrentStep(0)}
+                        onConfirm={() => setIsPaymentModalOpen(true)}
                       />
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-transparent to-slate-50/80">
-                      <button 
-                        onClick={() => handleFormSubmit(formData as DocumentFormData)}
-                        className="group flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-2xl ring-1 ring-slate-200 transition-all hover:scale-105 active:scale-95"
-                      >
-                        Revisar Documento Completo
-                        <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <DocumentPreview
-                    userData={formData}
-                    template={currentTemplate}
-                    price={templateData?.price || "0 MT"}
-                    title={templateData?.title}
-                    onBack={() => setCurrentStep(0)}
-                    onConfirm={() => setIsPaymentModalOpen(true)}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </main>

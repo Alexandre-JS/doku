@@ -56,6 +56,14 @@ main {
   animation: blink 1s step-end infinite;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 640px) {
   html, body, main {
@@ -74,5 +82,24 @@ main {
   html, body, main {
     width: 100%;
     overflow-x: auto;
+  }
+}
+
+/* Design System Components */
+@layer components {
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 rounded-full bg-[#00A86B] px-8 py-4 text-sm font-bold text-white shadow-xl shadow-emerald-100 transition-all hover:scale-105 hover:bg-emerald-600 active:scale-95 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 rounded-full border-2 border-[#143361] bg-transparent px-8 py-4 text-sm font-bold text-[#143361] transition-all hover:bg-blue-50 active:scale-95 disabled:opacity-50;
+  }
+
+  .btn-mpesa {
+    @apply flex items-center justify-center gap-2 rounded-2xl bg-[#E21E26] px-6 py-4 font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-red-100;
+  }
+
+  .btn-emola {
+    @apply flex items-center justify-center gap-2 rounded-2xl bg-[#F68B1E] px-6 py-4 font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-orange-100;
   }
 }
