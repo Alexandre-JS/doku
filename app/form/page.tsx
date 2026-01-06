@@ -6,10 +6,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
 import DynamicForm from "../../components/DynamicForm";
+import PaymentModal from "../../components/PaymentModal";
 import { createBrowserSupabase } from "../../src/lib/supabase";
 import { FormSection } from "../../src/types";
 import LogoLoading from "../../components/LogoLoading";
 import { motion, AnimatePresence } from "framer-motion";
+import { LayoutType } from "../../src/utils/pdfGenerator";
 
 const STEPS = [
   { id: "data", title: "Dados", icon: FileText },
@@ -33,6 +35,7 @@ interface DocumentFormData {
 
 function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [formData, setFormData] = useState<DocumentFormData>({
     full_name: "",
     bi_number: "",
@@ -70,6 +73,14 @@ function FormContent() {
     localStorage.setItem("doku_form_data", JSON.stringify(formData));
   }, [formData]);
 
+  // Pre-preencher data actual se estiver vazia
+  useEffect(() => {
+    if (!formData.current_date) {
+      const today = new Date().toISOString().split('T')[0];
+      setFormData(prev => ({ ...prev, current_date: today }));
+    }
+  }, [formData.current_date]);
+
   useEffect(() => {
     async function fetchTemplate() {
       if (!slug) {
@@ -95,9 +106,12 @@ function FormContent() {
           title: data.title || undefined
         });
         
-        // Salvar título no localStorage para uso em outras páginas
+        // Salvar título e conteúdo no localStorage para uso em outras páginas
         if (data.title) {
           localStorage.setItem("doku_current_doc_title", data.title);
+        }
+        if (data.content_html) {
+          localStorage.setItem("doku_current_template_content", data.content_html);
         }
       }
       setLoading(false);
@@ -264,7 +278,7 @@ function FormContent() {
                     price={templateData?.price || "0 MT"}
                     title={templateData?.title}
                     onBack={() => setCurrentStep(0)}
-                    onConfirm={() => router.push("/checkout")}
+                    onConfirm={() => setIsPaymentModalOpen(true)}
                   />
                 )}
               </motion.div>
@@ -272,6 +286,21 @@ function FormContent() {
           </div>
         </div>
       </main>
+
+      <PaymentModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        formData={formData}
+        templateContent={currentTemplate}
+        docTitle={templateData?.title || "Documento"}
+        price={templateData?.price ? `${templateData.price} MT` : "0 MT"}
+        layoutType={
+          templateData?.title?.toLowerCase().includes('requerimento') ? 'OFFICIAL' :
+          (templateData?.title?.toLowerCase().includes('declaração') || templateData?.title?.toLowerCase().includes('compromisso') || templateData?.title?.toLowerCase().includes('contrato')) ? 'DECLARATION' :
+          (templateData?.title?.toLowerCase().includes('carta') || templateData?.title?.toLowerCase().includes('manifestação')) ? 'LETTER' :
+          'OFFICIAL'
+        }
+      />
     </div>
   );
 }

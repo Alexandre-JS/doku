@@ -1,32 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CircleCheckBig, Download, MessageCircle, Mail, FileText, ArrowRight } from "lucide-react";
+import { CircleCheckBig, Download, MessageCircle, Mail, FileText, ArrowRight, Printer } from "lucide-react";
 import Link from "next/link";
+import { generatePDF } from "../../src/utils/pdfGenerator";
 
 export default function SuccessPage() {
   const [docTitle, setDocTitle] = useState("Documento");
   const [userName, setUserName] = useState("");
+  const [formData, setFormData] = useState<any>(null);
+  const [templateContent, setTemplateContent] = useState("");
 
   useEffect(() => {
     const savedTitle = localStorage.getItem("doku_current_doc_title");
     const savedData = localStorage.getItem("doku_form_data");
+    const savedTemplate = localStorage.getItem("doku_current_template_content");
     
-    if (savedTitle && savedTitle !== docTitle) {
-      setDocTitle(savedTitle);
-    }
+    if (savedTitle) setDocTitle(savedTitle);
+    if (savedTemplate) setTemplateContent(savedTemplate);
     
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
-        if (data.full_name && data.full_name !== userName) {
+        setFormData(data);
+        if (data.full_name) {
           setUserName(data.full_name);
         }
       } catch (e) {
         console.error("Erro ao carregar dados:", e);
       }
     }
-  }, [docTitle, userName]);
+  }, []);
+
+  const handleDownload = () => {
+    if (formData && templateContent) {
+      generatePDF(formData, templateContent, docTitle);
+    } else {
+      alert("Dados do documento não encontrados. Por favor, tente gerar novamente.");
+    }
+  };
 
   const fileName = `${docTitle.replace(/\s+/g, '_')}_${userName.split(' ')[0] || 'Doku'}.pdf`;
 
@@ -34,7 +46,7 @@ export default function SuccessPage() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <main className="mx-auto flex max-w-xl flex-col items-center px-6 py-16 text-center">
         {/* Success Animation */}
-        <div className="mb-8 flex h-24 w-24 animate-pulse items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
           <CircleCheckBig size={64} />
         </div>
 
@@ -51,25 +63,34 @@ export default function SuccessPage() {
             </div>
             <div className="flex-1 text-left">
               <h3 className="font-bold text-slate-900">{fileName}</h3>
-              <p className="text-sm text-slate-500">PDF • 142 KB</p>
+              <p className="text-sm text-slate-500">PDF • Oficial • Pronto para imprimir</p>
             </div>
           </div>
         </div>
 
         {/* Main Action */}
-        <button className="mt-8 flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 text-lg font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-[0.98]">
+        <button 
+          onClick={handleDownload}
+          className="mt-8 flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 text-lg font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 active:scale-[0.98]"
+        >
           <Download size={24} />
-          Baixar PDF
+          Baixar PDF Agora
         </button>
 
-        {/* Persistence Message */}
-        <p className="mt-6 text-sm text-slate-500">
-          Uma cópia também foi enviada para o seu perfil e email.
-        </p>
+        {/* Printing Tips */}
+        <div className="mt-8 w-full rounded-2xl bg-blue-50 p-6 text-left ring-1 ring-blue-100">
+          <div className="flex items-center gap-3 text-blue-900 font-bold mb-2">
+            <Printer size={18} />
+            Dica de Mestre
+          </div>
+          <p className="text-sm text-blue-800 leading-relaxed">
+            Para um resultado profissional, imprima em papel A4 de 80g ou superior. Certifique-se de que a escala de impressão está em 100% (Tamanho Real).
+          </p>
+        </div>
 
         {/* Secondary Actions */}
         <div className="mt-10 w-full space-y-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Compartilhar</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Outras Opções</p>
           <div className="grid grid-cols-2 gap-4">
             <button className="flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-500 font-bold text-white transition-all hover:bg-emerald-600 active:scale-95">
               <MessageCircle size={20} />
@@ -77,7 +98,7 @@ export default function SuccessPage() {
             </button>
             <button className="flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-200 font-bold text-slate-700 transition-all hover:bg-slate-300 active:scale-95">
               <Mail size={20} />
-              Email
+              Enviar por Email
             </button>
           </div>
         </div>
@@ -85,9 +106,9 @@ export default function SuccessPage() {
         {/* Support Section */}
         <div className="mt-16 border-t border-slate-200 pt-8">
           <p className="text-sm text-slate-600">
-            Teve algum problema?{" "}
-            <a href="#" className="font-bold text-emerald-600 hover:underline">
-              Contacte o nosso suporte via WhatsApp
+            Teve algum problema com o download?{" "}
+            <a href="https://wa.me/258840000000" target="_blank" className="font-bold text-emerald-600 hover:underline">
+              Fale com o suporte agora
             </a>
           </p>
         </div>
@@ -98,6 +119,9 @@ export default function SuccessPage() {
           <ArrowRight size={16} />
         </Link>
       </main>
+    </div>
+  );
+}
     </div>
   );
 }
