@@ -188,6 +188,25 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
                         : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50/50'
                     }`}
                   />
+                ) : field.type === 'select' ? (
+                  <select
+                    id={field.id}
+                    value={formData[field.id] || ''}
+                    onFocus={() => setFocusedField(field.id)}
+                    onBlur={() => setFocusedField(null)}
+                    onChange={(e) => handleChange(field.id, e.target.value)}
+                    required={field.required !== false}
+                    className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none text-slate-900 appearance-none ${
+                      errors[field.id] 
+                        ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
+                        : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50/50'
+                    }`}
+                  >
+                    <option value="" disabled>{field.placeholder || `Selecione ${field.label}`}</option>
+                    {field.options?.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     id={field.id}
