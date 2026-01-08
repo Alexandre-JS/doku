@@ -98,93 +98,44 @@ export default function DocumentPreview({
     <div className={`flex flex-col items-center w-full h-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-transparent pb-10"}`}>
       
       {/* Container de Escalonamento Inteligente com Scroll Interno */}
-      <div className={`w-full flex-1 flex justify-center p-4 sm:p-6 overflow-y-auto no-scrollbar ${!effectiveHideControls ? "bg-slate-100/30 rounded-[2.5rem]" : ""}`}>
-        <div 
-          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.12)] relative origin-top scale-[0.45] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.85] xl:scale-[0.98] transition-all duration-700 font-serif border border-slate-100 mb-4 shrink-0"
-          style={{
-            width: '210mm',
-            minHeight: '297mm',
-            padding: '25mm 22mm 20mm 25mm', 
-            lineHeight: '1.6',
-            color: '#1e293b', 
-          }}
-        >
-        {/* Marca de Água Profissional - Repetida e atrás do texto */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 opacity-[0.04]">
-          <div className="absolute inset-[-50%] flex flex-wrap items-center justify-center content-center rotate-[-30deg]">
-            {Array(120).fill(null).map((_, i) => (
-              <span key={i} className="m-10 text-4xl font-black tracking-widest whitespace-nowrap text-slate-900">
-                DOKU PREVIEW
-              </span>
-            ))}
+      <div className={`w-full flex-1 flex justify-center p-4 sm:p-8 overflow-y-auto overflow-x-hidden no-scrollbar ${!effectiveHideControls ? "bg-slate-100/40 rounded-[2.5rem]" : ""}`}>
+        
+        {/* Wrapper do Escalonamento: Resolve o problema de "Folha esticada" */}
+        <div className="flex justify-center w-full min-h-min py-6 sm:py-10">
+          <div 
+            className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative origin-top scale-[0.38] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.85] xl:scale-[0.95] 2xl:scale-100 transition-all duration-700 font-serif border border-slate-200 shrink-0"
+            style={{
+              width: '210mm',
+              minHeight: '297mm',
+              padding: '25mm 22mm 20mm 25mm', 
+              boxSizing: 'border-box',
+              lineHeight: '1.6',
+              color: '#1e293b', 
+            }}
+          >
+          {/* Marca de Água Profissional */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 opacity-[0.03]">
+            <div className="absolute inset-[-50%] flex flex-wrap items-center justify-center content-center rotate-[-30deg]">
+              {Array(80).fill(null).map((_, i) => (
+                <span key={i} className="m-12 text-3xl font-black tracking-widest whitespace-nowrap text-slate-800 uppercase">
+                  DOKU PREVIEW
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Corpo do Texto - Agora ÚNICA fonte de verdade */}
+          <div 
+            className="text-[12pt] text-justify relative z-10 official-document-content"
+            style={{ 
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word'
+            }}
+            dangerouslySetInnerHTML={{ __html: renderPreviewHTML(template, userData) }}
+          />
+
           </div>
         </div>
-
-        {/* LAYOUT: LETTER & OFFICIAL - Data no Topo Direito (Estilo mais comum) */}
-        {(layoutType === 'LETTER' || layoutType === 'OFFICIAL') && (
-          <div className="mb-12 text-right text-[12pt] font-medium italic relative z-10">
-            {getValue('current_city') || getValue('target_location') || "Maputo"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}
-          </div>
-        )}
-
-        {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
-        {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeader && !isDeclarationOrContract && (
-          <div className="mb-10 text-[12pt] relative z-10 text-left">
-            <p className="font-bold uppercase leading-tight italic">Exmo(a) Senhor(a)</p>
-            <p className="font-bold uppercase leading-tight">{getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
-            <p className="font-bold uppercase leading-tight">{getValue('institution_name') || ''}</p>
-            
-            <p className="mt-8 font-bold uppercase underline underline-offset-4">
-              {getValue('target_location') || getValue('address') || "MAPUTO"}
-            </p>
-
-            {/* Assunto logo abaixo para ambos */}
-            {(getValue('subject') || title) && (
-              <div className="mt-10 font-bold uppercase">
-                <span className="underline underline-offset-4">Assunto: {getValue('subject') || title}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Título para DECLARATION */}
-        {layoutType === 'DECLARATION' && !templateHasHeader && (
-          <div className="mb-12 text-center text-[14pt] font-bold uppercase underline relative z-10">
-            {title || "DECLARAÇÃO"}
-          </div>
-        )}
-
-        {/* Corpo do Texto - Suporta HTML do Quill */}
-        <div 
-          className={`text-[12pt] text-justify relative z-10 official-document-content ${layoutType === 'OFFICIAL' ? 'indent-12' : ''}`}
-          dangerouslySetInnerHTML={{ __html: renderPreviewHTML(template, userData) }}
-        />
-
-        {/* Fecho: Pede Deferimento (Só OFFICIAL) */}
-        {layoutType === 'OFFICIAL' && !templateHasFooter && (
-          <div className="mt-12 text-center text-[12pt] relative z-10">
-            Pede deferimento.
-          </div>
-        )}
-
-        {/* Local e Data (OFFICIAL e DECLARATION) */}
-        {(layoutType === 'OFFICIAL' || layoutType === 'DECLARATION') && !templateHasFooter && (
-          <div className="mt-12 text-[12pt] text-center relative z-10">
-            {getValue('current_city') || getValue('target_location') || "__________"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}.
-          </div>
-        )}
-
-        {/* Linha de Assinatura */}
-        {!templateHasFooter && (
-          <div className="mt-8 flex flex-col items-center relative z-10">
-            <p className="text-[12pt] font-bold uppercase mb-8">{getValue('full_name') || ''}</p>
-            <div className="w-64 border-t border-black mb-2"></div>
-            <p className="text-[10pt] text-slate-500">
-              {layoutType === 'DECLARATION' ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)'}
-            </p>
-          </div>
-        )}
-      </div>
       </div>
 
       {/* Seção Final de Ações */}

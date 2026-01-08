@@ -400,7 +400,7 @@ function FormContent() {
                         Live Preview
                       </div>
                       
-                      <div className="relative h-full rounded-[2.5rem] border border-slate-200 bg-[#EBEEF2] p-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-700 group-hover/preview:scale-[1.01] flex flex-col">
+                      <div className="relative h-full rounded-[2.5rem] border border-slate-200 bg-[#EBEEF2] p-0 sm:p-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-700 group-hover/preview:scale-[1.01] flex flex-col">
                         {/* Pontilhado técnico */}
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
                              style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
@@ -423,7 +423,7 @@ function FormContent() {
                         Revisão Final
                       </div>
                       
-                      <div className="relative h-full rounded-[2.5rem] border-2 border-emerald-100 bg-white p-4 shadow-2xl overflow-hidden flex flex-col">
+                      <div className="relative h-full rounded-[2.5rem] border-2 border-emerald-100 bg-white p-0 sm:p-2 shadow-2xl overflow-hidden flex flex-col">
                          {/* Padrão sutil para revisão */}
                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
                                  style={{ backgroundImage: 'radial-gradient(#10b981 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />

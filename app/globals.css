@@ -107,6 +107,9 @@ main {
   .official-document-content {
     font-family: var(--font-serif);
     color: #1e293b;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
   .official-document-content p {
     margin-bottom: 1.5rem;
