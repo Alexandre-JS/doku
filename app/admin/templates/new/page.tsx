@@ -47,24 +47,27 @@ const ReactQuill = dynamic(
   }
 );
 
-// Interface para Variáveis Globais com Agrupamento
+// 1. Nova Interface alinhada ao Banco de Dados
 interface GlobalVariable {
-  id: string;
-  name: string;
-  description: string;
-  category: 'Dados do Perfil' | 'Dados da Minuta' | 'Outros';
-  icon?: any;
+  key_name: string;
+  display_label: string;
+  category: string;
+  description?: string;
 }
 
-const STATIC_VARIABLES: GlobalVariable[] = [
-  { id: 'nome_completo', name: 'Nome Completo', description: 'Nome do perfil', category: 'Dados do Perfil', icon: User },
-  { id: 'bi_numero', name: 'Nº de B.I / Passaporte', description: 'Documento', category: 'Dados do Perfil', icon: CreditCard },
-  { id: 'nuit', name: 'Nº de NUIT', description: 'Número fiscal', category: 'Dados do Perfil', icon: Hash },
-  { id: 'endereco', name: 'Morada / Domicílio', description: 'Endereço', category: 'Dados do Perfil', icon: MapPin },
-  { id: 'nacionalidade', name: 'Nacionalidade', description: 'País', category: 'Dados do Perfil', icon: Flag },
-  { id: 'estado_civil', name: 'Estado Civil', description: 'Estado civil', category: 'Dados do Perfil', icon: Heart },
-  { id: 'data_actual', name: 'Data Extenso', description: 'Data do dia', category: 'Dados da Minuta', icon: Calendar },
-];
+// 2. Mapeador de Ícones para manter a UI elegante
+const getVariableIcon = (key: string) => {
+  const icons: any = {
+    full_name: User,
+    bi_number: CreditCard,
+    nuit: Hash,
+    address: MapPin,
+    gender: User,
+    marital_status: Heart,
+    current_date: Calendar,
+  };
+  return icons[key] || TypeIcon;
+};
 
 type FieldType = 'text' | 'textarea' | 'date' | 'select';
 
@@ -103,7 +106,7 @@ export default function NewTemplatePage() {
   // Data from DB
   const [categories, setCategories] = useState<Category[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [globalVariables, setGlobalVariables] = useState<GlobalVariable[]>(STATIC_VARIABLES);
+  const [globalVariables, setGlobalVariables] = useState<GlobalVariable[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   // Template State
@@ -123,28 +126,13 @@ export default function NewTemplatePage() {
       const [cats, comps, vars] = await Promise.all([
         supabase.from("categories").select("*").order("name"),
         supabase.from("companies").select("*").order("name"),
-        supabase.from("global_variables").select("*").order("name")
+        supabase.from("global_variables").select("*").order("display_label")
       ]);
 
       if (cats.data) setCategories(cats.data);
       if (comps.data) setCompanies(comps.data);
-      if (vars.data && vars.data.length > 0) {
-        // Merge DB variables with statics, avoiding duplicates
-        const dbVars: GlobalVariable[] = vars.data.map((v: any) => ({
-          id: v.key_name, // Usamos o slug (ex: full_name) como ID para as tags {{}}
-          name: v.display_label,
-          description: "",
-          category: (v.category === 'profile' ? 'Dados do Perfil' : 'Outros') as GlobalVariable['category'],
-          icon: STATIC_VARIABLES.find(s => s.id === v.key_name)?.icon || TypeIcon
-        }));
-        
-        const merged = [...STATIC_VARIABLES];
-        dbVars.forEach((dv) => {
-          if (!merged.find(m => m.id === dv.id)) {
-            merged.push(dv);
-          }
-        });
-        setGlobalVariables(merged);
+      if (vars.data) {
+        setGlobalVariables(vars.data); // Pure DB state
       }
 
       if (cats.data && cats.data.length > 0) {
@@ -162,13 +150,13 @@ export default function NewTemplatePage() {
     const keys = Array.from(new Set(matches.map(m => m.replace(/\{\{\s*|\s*\}\}/g, ""))));
     
     const fields = keys.map(key => {
-      const globalVar = globalVariables.find(v => v.id === key);
+      const globalVar = globalVariables.find(v => v.key_name === key);
       return {
         id: key,
-        label: globalVar ? globalVar.name : key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        label: globalVar ? globalVar.display_label : key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
         type: key.includes("data") ? "date" : key.includes("descricao") ? "textarea" : "text",
         required: true,
-        source: globalVar?.category === 'Dados do Perfil' ? 'profile' : 'user_input'
+        source: globalVar?.category === 'profile' ? 'profile' : 'user_input'
       };
     });
 
@@ -495,31 +483,42 @@ export default function NewTemplatePage() {
               </div>
 
               <div className="space-y-6 overflow-y-auto pr-2 no-scrollbar">
-                {['Dados do Perfil', 'Dados da Minuta', 'Outros'].map(group => {
-                  const items = globalVariables.filter(v => v.category === group);
+                {[
+                  { id: 'profile', label: 'Dados do Usuário' },
+                  { id: 'custom', label: 'Dados da Minuta' },
+                  { id: 'other', label: 'Outros Campos' }
+                ].map(group => {
+                  const items = globalVariables.filter(v => {
+                    if (group.id === 'other') return v.category !== 'profile' && v.category !== 'custom';
+                    return v.category === group.id;
+                  });
+                  
                   if (items.length === 0) return null;
 
                   return (
-                    <div key={group}>
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-3">{group}</p>
+                    <div key={group.id}>
+                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-3">{group.label}</p>
                       <div className="space-y-2">
-                        {items.map(v => (
-                          <button 
-                            key={v.id}
-                            onClick={() => insertVariable(v.id)}
-                            className="w-full group flex items-start gap-3 p-3 rounded-2xl border border-slate-50 bg-slate-50/30 text-left hover:border-blue-200 hover:bg-blue-50/50 transition-all"
-                          >
-                            <div className="mt-0.5 p-1.5 rounded-lg bg-white border border-slate-100 text-slate-400 group-hover:text-blue-500 transition-colors shadow-sm">
-                              {v.icon ? <v.icon size={12} /> : <TypeIcon size={12} />}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-bold text-slate-700 leading-tight mb-0.5">{v.name}</p>
-                              <code className="text-[9px] font-mono font-medium text-blue-400 opacity-70">
-                                {"{{"}{v.id}{"}}"}
-                              </code>
-                            </div>
-                          </button>
-                        ))}
+                        {items.map(v => {
+                          const IconComponent = getVariableIcon(v.key_name);
+                          return (
+                            <button 
+                              key={v.key_name}
+                              onClick={() => insertVariable(v.key_name)}
+                              className="w-full group flex items-start gap-3 p-3 rounded-2xl border border-slate-50 bg-slate-50/30 text-left hover:border-blue-200 hover:bg-blue-50/50 transition-all"
+                            >
+                              <div className="mt-0.5 p-1.5 rounded-lg bg-white border border-slate-100 text-slate-400 group-hover:text-blue-500 transition-colors shadow-sm">
+                                <IconComponent size={12} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-bold text-slate-700 leading-tight mb-0.5">{v.display_label}</p>
+                                <code className="text-[9px] font-mono font-medium text-blue-400 opacity-70">
+                                  {"{{"}{v.key_name}{"}}"}
+                                </code>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   );
