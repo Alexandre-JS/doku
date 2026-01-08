@@ -1,22 +1,39 @@
 "use client";
 
-export default function PartnerTrustBar() {
-  const partners = [
-    { name: "AT", logo: "/AT globo.png", fullName: "Autoridade Tributária" },
-    { name: "INSS", logo: "/inss-logo-2023.webp", fullName: "Instituto Nacional de Segurança Social" },
-    { name: "CM Beira", logo: "/Conselho-Municipal-Beira-CMB.png", fullName: "Conselho Municipal da Beira" },
-    { name: "INATRO", logo: "/inatro.webp", fullName: "Instituto Nacional dos Transportes Rodoviários" },
-    { name: "CIM", logo: "/cimentos-de-mocambique-Logo.png", fullName: "Cimentos de Moçambique" },
-    { name: "BIM", logo: "/bim.png", fullName: "Millennium BIM" },
-    { name: "BCI", logo: "/bci.png", fullName: "Banco Comercial e de Investimentos" },
-    { name: "Standard Bank", logo: "/standard_bank_logo.webp", fullName: "Standard Bank" },
-    { name: "Cornelder", logo: "/cornelder.png", fullName: "Cornelder de Moçambique" },
-    { name: "CFM", logo: "/cfm.jpeg", fullName: "Portos e Caminhos de Ferro de Moçambique" },
-    { name: "EdM", logo: "/edm.png", fullName: "Eletricidade de Moçambique" },
-    { name: "FIPAG", logo: "/adrm.jpg", fullName: "Fundo de Investimento e Património do Abastecimento de Água" },
-  ];
+import { useEffect, useState } from "react";
+import { createBrowserSupabase } from "../src/lib/supabase";
+import { Company } from "../src/types";
 
-  const infinitePartners = [...partners, ...partners, ...partners];
+export default function PartnerTrustBar() {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCompanies() {
+      const supabase = createBrowserSupabase();
+      const { data, error } = await supabase
+        .from("companies")
+        .select("*")
+        .order("name");
+      
+      if (!error && data) {
+        setCompanies(data);
+      }
+      setLoading(false);
+    }
+    fetchCompanies();
+  }, []);
+
+  // Só duplicamos se houver um número considerável de empresas para criar o efeito de scroll infinito
+  // Se houver poucas, apenas mostramos a lista real centralizada
+  const shouldAnimate = companies.length >= 6;
+  const displayPartners = shouldAnimate ? [...companies, ...companies] : companies;
+
+  if (loading) return (
+    <div className="h-20 w-screen bg-slate-50 animate-pulse border-y border-slate-100 flex items-center justify-center">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Carregando parceiros...</p>
+    </div>
+  );
 
   return (
     <section 
@@ -37,38 +54,44 @@ export default function PartnerTrustBar() {
           </p>
           
           <div className="relative flex-1 w-full overflow-hidden min-h-[2.5rem] sm:min-h-[3rem]">
-            {/* Gradientes de desfoque nas bordas */}
-            <div className="absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-white/50 to-transparent sm:w-12 lg:w-16" />
-            <div className="absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-white/50 to-transparent sm:w-12 lg:w-16" />
+            {/* Gradientes de desfoque nas bordas - Apenas se estiver animando */}
+            {shouldAnimate && (
+              <>
+                <div className="absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-white/50 to-transparent sm:w-12 lg:w-16" />
+                <div className="absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-white/50 to-transparent sm:w-12 lg:w-16" />
+              </>
+            )}
 
             <div 
-              className="flex items-center gap-6 sm:gap-8 lg:gap-10 py-2 sm:py-3 lg:py-4"
-              style={{
+              className={`flex items-center gap-6 sm:gap-8 lg:gap-10 py-2 sm:py-3 lg:py-4 ${!shouldAnimate ? 'justify-start md:justify-center' : ''}`}
+              style={shouldAnimate ? {
                 animation: 'scroll 50s linear infinite',
                 display: 'flex',
                 width: 'max-content'
-              }}
+              } : {}}
               onMouseEnter={(e) => {
+                if (!shouldAnimate) return;
                 const el = e.currentTarget as HTMLElement;
                 el.style.animationPlayState = 'paused';
               }}
               onMouseLeave={(e) => {
+                if (!shouldAnimate) return;
                 const el = e.currentTarget as HTMLElement;
                 el.style.animationPlayState = 'running';
               }}
             >
-              {infinitePartners.map((partner, index) => (
+              {displayPartners.map((partner, index) => (
                 <div
                   key={index}
                   className="flex flex-shrink-0 items-center justify-center h-8 sm:h-10 lg:h-12 transition-transform duration-300 hover:scale-110 hover:drop-shadow-md"
-                  title={partner.fullName}
+                  title={partner.name}
                   style={{
                     minWidth: 'auto',
                     flexShrink: 0
                   }}
                 >
                   <img
-                    src={partner.logo}
+                    src={partner.logo_url}
                     alt={partner.name}
                     className="h-full w-auto max-w-[80px] sm:max-w-[100px] lg:max-w-[120px] object-contain object-center"
                     loading="lazy"

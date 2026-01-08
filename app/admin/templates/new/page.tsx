@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Trash2, Save, FileCode, CheckCircle2, AlertCircle, ArrowLeft, Settings2, Layout, Layers } from "lucide-react";
+import { Plus, Trash2, Save, FileCode, CheckCircle2, AlertCircle, ArrowLeft, Settings2, Layout, Layers, Building2, Tag } from "lucide-react";
 import Link from "next/link";
 import { createBrowserSupabase } from "@/src/lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
+import { Category, Company } from "@/src/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type FieldType = 'text' | 'textarea' | 'date' | 'select';
 
@@ -24,16 +27,40 @@ export default function NewTemplatePage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Dados do DB
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   // Estados do Modelo
   const [template, setTemplate] = useState({
     title: "",
     slug: "",
-    category: "Jurídico",
+    category_id: "",
+    description: "",
     price: 0,
     popular: false,
     content_html: "",
   });
+
+  // Fetch initial data
+  useEffect(() => {
+    async function fetchData() {
+      const [cats, comps] = await Promise.all([
+        supabase.from("categories").select("*").order("name"),
+        supabase.from("companies").select("*").order("name")
+      ]);
+
+      if (cats.data) setCategories(cats.data);
+      if (comps.data) setCompanies(comps.data);
+      
+      if (cats.data && cats.data.length > 0) {
+        setTemplate(prev => ({ ...prev, category_id: cats.data[0].id }));
+      }
+    }
+    fetchData();
+  }, [supabase]);
 
   // Estado do Form Schema (JSON dinâmico)
   const [fields, setFields] = useState<AdminFormField[]>([
@@ -113,20 +140,38 @@ export default function NewTemplatePage() {
     ];
 
     try {
-      const { error: dbError } = await supabase
+      // 1. Inserir o modelo
+      const { data: newTemplate, error: dbError } = await supabase
         .from("document_templates")
         .insert({
           title: template.title,
           slug: template.slug,
-          category: template.category,
+          category_id: template.category_id,
+          description: template.description,
           price: template.price,
           popular: template.popular,
           content_html: template.content_html,
           form_schema: formattedSchema,
           is_active: true
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
+
+      // 2. Lincar empresas se houver
+      if (selectedCompanies.length > 0 && newTemplate) {
+        const relations = selectedCompanies.map(companyId => ({
+          template_id: newTemplate.id,
+          company_id: companyId
+        }));
+        
+        const { error: relError } = await supabase
+          .from("template_companies")
+          .insert(relations);
+          
+        if (relError) console.error("Erro ao vincular empresas:", relError);
+      }
 
       setSuccess(true);
       setTimeout(() => router.push("/templates"), 2000);
@@ -152,6 +197,14 @@ export default function NewTemplatePage() {
               </div>
               <h1 className="text-lg font-black tracking-tight text-slate-900 uppercase">Admin / Novo Modelo</h1>
             </div>
+            
+            <Link 
+              href="/admin/settings" 
+              className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all"
+            >
+              <Settings2 size={14} />
+              GERIR CATEGORIAS/EMPRESAS
+            </Link>
           </div>
 
           <div className="flex items-center gap-4">
@@ -209,18 +262,28 @@ export default function NewTemplatePage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Descrição Curta</label>
+                  <textarea 
+                    value={template.description}
+                    onChange={(e) => setTemplate({ ...template, description: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Breve resumo para o card..."
+                    rows={2}
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Categoria</label>
                     <select 
-                       value={template.category}
-                       onChange={(e) => setTemplate({ ...template, category: e.target.value })}
+                       value={template.category_id}
+                       onChange={(e) => setTemplate({ ...template, category_id: e.target.value })}
                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium focus:outline-none"
                     >
-                      <option>Jurídico</option>
-                      <option>Recursos Humanos</option>
-                      <option>Educação</option>
-                      <option>Imobiliário</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -231,6 +294,48 @@ export default function NewTemplatePage() {
                       onChange={(e) => setTemplate({ ...template, price: Number(e.target.value) })}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-bold focus:outline-none"
                     />
+                  </div>
+                </div>
+
+                {/* Seção de Empresas */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                    <Building2 size={12} />
+                    Empresas Relacionadas
+                  </label>
+                  <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto no-scrollbar p-1">
+                    {companies.map(company => (
+                      <label 
+                        key={company.id} 
+                        className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                          selectedCompanies.includes(company.id) 
+                            ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-7 w-7 border border-slate-200">
+                            <AvatarImage src={company.logo_url} alt={company.name} />
+                            <AvatarFallback className="text-[10px] font-bold bg-slate-100">
+                              {company.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-bold">{company.name}</span>
+                        </div>
+                        <input 
+                          type="checkbox"
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedCompanies.includes(company.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCompanies([...selectedCompanies, company.id]);
+                            } else {
+                              setSelectedCompanies(selectedCompanies.filter(id => id !== company.id));
+                            }
+                          }}
+                        />
+                      </label>
+                    ))}
                   </div>
                 </div>
 
