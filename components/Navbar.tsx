@@ -100,10 +100,11 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-      isScrolled ? "bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-200" : "bg-white border-b border-slate-100"
-    }`}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+    <>
+      <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
+        isScrolled ? "bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-200" : "bg-white border-b border-slate-100"
+      }`}>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Left: Logo & Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
@@ -315,5 +316,7 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    <div className="h-16 w-full" />
+    </>
   );
 }

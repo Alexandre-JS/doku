@@ -144,7 +144,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header Admin */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-6">
             <Link href="/templates" className="text-slate-400 hover:text-slate-900 transition-colors">
@@ -171,6 +171,7 @@ export default function AdminSettingsPage() {
           </button>
         </div>
       </header>
+      <div className="h-16 w-full" />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* Success/Error Alerts */}

@@ -31,10 +31,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createBrowserSupabase } from "@/src/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Category, Company } from "@/src/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -42,7 +41,6 @@ import "react-quill-new/dist/quill.snow.css";
 const ReactQuill = dynamic(
   async () => {
     const { default: RQ } = await import("react-quill-new");
-    // Wrapper para permitir o uso de refs com next/dynamic
     return ({ forwardedRef, ...props }: any) => <RQ ref={forwardedRef} {...props} />;
   },
   { 
@@ -51,7 +49,6 @@ const ReactQuill = dynamic(
   }
 );
 
-// 1. Nova Interface alinhada ao Banco de Dados
 interface GlobalVariable {
   key_name: string;
   display_label: string;
@@ -59,7 +56,6 @@ interface GlobalVariable {
   description?: string;
 }
 
-// 2. Mapeador de Ícones para manter a UI elegante
 const getVariableIcon = (key: string) => {
   const icons: any = {
     full_name: User,
@@ -73,31 +69,23 @@ const getVariableIcon = (key: string) => {
   return icons[key] || TypeIcon;
 };
 
-type FieldType = 'text' | 'textarea' | 'date' | 'select';
-
-interface AdminFormField {
-  id: string;
-  label: string;
-  type: FieldType;
-  options?: string; // String separada por vírgula para edição, convertida em array no final
-  required: boolean;
-  placeholder?: string;
-}
-
-export default function NewTemplatePage() {
+export default function EditTemplatePage() {
   const router = useRouter();
+  const params = useParams();
+  const templateId = params.id as string;
   const supabase = createBrowserSupabase();
   const quillRef = useRef<any>(null);
   
   // States
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeGroup, setActiveGroup] = useState<string | null>("profile");
   const [showAutoSchema, setShowAutoSchema] = useState(false);
 
-  // Configuração do Editor - Usando useMemo para evitar re-renders e erros de tipo no align
+  // Configuração do Editor
   const modules = useMemo(() => ({
     toolbar: [
       ['bold', 'italic', 'underline'],
@@ -116,14 +104,6 @@ export default function NewTemplatePage() {
   const [globalVariables, setGlobalVariables] = useState<GlobalVariable[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
-  // Filtragem do Dicionário
-  const filteredVariables = useMemo(() => {
-    return globalVariables.filter(v => 
-      v.display_label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.key_name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [globalVariables, searchTerm]);
-
   // Template State
   const [template, setTemplate] = useState({
     title: "",
@@ -135,31 +115,66 @@ export default function NewTemplatePage() {
     content_html: "",
   });
 
-  // Fetch initial data
+  // Fetch data
   useEffect(() => {
     async function fetchData() {
-      const [cats, comps, vars] = await Promise.all([
-        supabase.from("categories").select("*").order("name"),
-        supabase.from("companies").select("*").order("name"),
-        supabase.from("global_variables").select("*").order("display_label")
-      ]);
+      setLoading(true);
+      try {
+        const [cats, comps, vars] = await Promise.all([
+          supabase.from("categories").select("*").order("name"),
+          supabase.from("companies").select("*").order("name"),
+          supabase.from("global_variables").select("*").order("display_label")
+        ]);
 
-      if (cats.data) setCategories(cats.data);
-      if (comps.data) setCompanies(comps.data);
-      if (vars.data) {
-        setGlobalVariables(vars.data); // Pure DB state
-      }
+        if (cats.data) setCategories(cats.data);
+        if (comps.data) setCompanies(comps.data);
+        if (vars.data) setGlobalVariables(vars.data);
 
-      if (cats.data && cats.data.length > 0) {
-        setTemplate(prev => ({ ...prev, category_id: cats.data[0].id }));
+        // Fetch current template
+        const { data: existingTemplate, error: tError } = await supabase
+          .from("templates")
+          .select("*")
+          .eq("id", templateId)
+          .single();
+
+        if (tError) throw tError;
+
+        if (existingTemplate) {
+          setTemplate({
+            title: existingTemplate.title || "",
+            slug: existingTemplate.slug || "",
+            category_id: existingTemplate.category_id || "",
+            description: existingTemplate.description || "",
+            price: existingTemplate.price ? parseInt(existingTemplate.price.toString().replace(/\D/g, "")) : 0,
+            popular: existingTemplate.popular || false,
+            content_html: existingTemplate.content || "",
+          });
+
+          // Fetch related companies
+          const { data: relData } = await supabase
+            .from("template_companies")
+            .select("company_id")
+            .eq("template_id", templateId);
+          
+          if (relData) {
+            setSelectedCompanies(relData.map(r => r.company_id));
+          }
+        }
+      } catch (err: any) {
+        console.error("Erro ao carregar dados:", err);
+        setError("Não foi possível carregar os dados deste modelo.");
+      } finally {
+        setLoading(false);
       }
     }
-    fetchData();
-  }, [supabase]);
+    
+    if (templateId) {
+      fetchData();
+    }
+  }, [supabase, templateId]);
 
-  // AUTO SCAN: Gera o form_schema baseado no conteúdo do editor
+  // AUTO SCAN
   const generatedSchema = useMemo(() => {
-    // Extrair {{variaveis}} filtrando tags HTML que o Quill pode inserir no meio do texto
     const plainText = template.content_html.replace(/<[^>]*>/g, "");
     const matches = plainText.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
     const keys = Array.from(new Set(matches.map(m => m.replace(/\{\{\s*|\s*\}\}/g, ""))));
@@ -181,7 +196,6 @@ export default function NewTemplatePage() {
     }];
   }, [template.content_html, globalVariables]);
 
-  // Gerar slug automaticamente
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
     const slug = title
@@ -207,42 +221,45 @@ export default function NewTemplatePage() {
     quill.setSelection(range.index + varTag.length);
   };
 
-  // Salvar no Supabase (Transaction-like)
   const handleSave = async () => {
     if (!template.title || !template.slug || !template.content_html) {
       setError("Preencha o título e o conteúdo da minuta.");
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     setError(null);
 
     try {
-      // Encontrar o nome da categoria selecionada para preencher a coluna 'category' (que é obrigatória no seu banco)
       const selectedCategory = categories.find(c => c.id === template.category_id);
       
-      // 2. Inserir o modelo (Tabela 'templates' - Colunas: slug, title, category, category_id, content, price, popular, form_schema)
-      const { data: newTemplate, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from("templates")
-        .insert({
+        .update({
           title: template.title,
           slug: template.slug,
-          category: selectedCategory?.name || "Geral", // Coluna string obrigatória
-          category_id: template.category_id,           // Foreign Key
+          category: selectedCategory?.name || "Geral",
+          category_id: template.category_id,
           content: template.content_html, 
           price: `${template.price} MT`,  
           popular: template.popular,
           form_schema: generatedSchema
         })
-        .select()
-        .single();
+        .eq("id", templateId);
 
       if (dbError) throw dbError;
 
-      // 3. Vincular empresas (Relacional - Tabela template_companies)
-      if (selectedCompanies.length > 0 && newTemplate) {
+      // Update companies: simple approach - delete old and insert new
+      const { error: delError } = await supabase
+        .from("template_companies")
+        .delete()
+        .eq("template_id", templateId);
+      
+      if (delError) throw delError;
+
+      if (selectedCompanies.length > 0) {
         const relations = selectedCompanies.map(compId => ({
-          template_id: newTemplate.id,
+          template_id: templateId,
           company_id: compId
         }));
         
@@ -254,18 +271,35 @@ export default function NewTemplatePage() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/admin/templates?success=created"), 2000);
+      setTimeout(() => router.push("/admin/templates?success=updated"), 2000);
     } catch (err: any) {
-      console.error("Erro detalhado no salvamento:", err);
-      setError(err.message || "Erro ao salvar a minuta.");
+      console.error("Erro ao salvar:", err);
+      setError(err.message || "Erro ao atualizar a minuta.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  const filteredVariables = useMemo(() => {
+    return globalVariables.filter(v => 
+      v.display_label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.key_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [globalVariables, searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#143361] border-t-transparent" />
+          <p className="text-sm font-bold text-[#143361]">Carregando modelo...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F7F9] pb-10">
-      {/* Header Fixo e Moderno */}
       <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-zinc-200 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between px-6">
           <div className="flex items-center gap-4">
@@ -277,23 +311,31 @@ export default function NewTemplatePage() {
               <span className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">Document Engine</span>
               <span className="text-zinc-300">/</span>
               <h1 className="text-sm font-bold text-[#143361] truncate max-w-[200px]">
-                {template.title || "Novo Modelo"}
+                Editar: {template.title}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-[#143361] hover:bg-blue-50 transition-all">
-              <Save size={14} />
-              Guardar Rascunho
-            </button>
+            {error && (
+              <div className="flex items-center gap-2 text-red-500 text-xs font-bold mr-4 animate-pulse">
+                <AlertCircle size={14} />
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="flex items-center gap-2 text-[#00A86B] text-xs font-bold mr-4">
+                <CheckCircle2 size={14} />
+                Atualizado com sucesso!
+              </div>
+            )}
             <button 
               onClick={handleSave}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-lg bg-[#00A86B] px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-100 transition-all hover:bg-emerald-600 disabled:opacity-50"
+              disabled={saving}
+              className="flex items-center gap-2 rounded-lg bg-[#143361] px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-100 transition-all hover:bg-blue-900 disabled:opacity-50"
             >
-              <CheckCircle2 size={14} />
-              {loading ? "A publicar..." : "Publicar Modelo"}
+              <Save size={14} />
+              {saving ? "A guardar..." : "Guardar Alterações"}
             </button>
           </div>
         </div>
@@ -303,7 +345,6 @@ export default function NewTemplatePage() {
       <main className="mx-auto max-w-[1600px] px-6 pt-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 h-[calc(100vh-100px)]">
           
-          {/* 1. PAINEL ESQUERDO: Ficha Técnica (2/12) */}
           <div className="lg:col-span-2 space-y-4 flex flex-col overflow-y-auto no-scrollbar pb-10">
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
@@ -396,7 +437,6 @@ export default function NewTemplatePage() {
               </div>
             </div>
 
-            {/* Auto-Schema Resumido no Rodapé do Painel */}
             <div className="mt-auto rounded-2xl bg-[#143361] p-4 text-white shadow-lg">
               <button 
                 onClick={() => setShowAutoSchema(!showAutoSchema)}
@@ -437,7 +477,6 @@ export default function NewTemplatePage() {
             </div>
           </div>
 
-          {/* 2. ÁREA CENTRAL: Editor A4 (7/12) */}
           <div className="lg:col-span-7 flex flex-col h-full bg-zinc-200/50 rounded-3xl border border-zinc-200 overflow-hidden relative">
             <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-200 bg-white">
               <div className="flex items-center gap-3">
@@ -446,13 +485,7 @@ export default function NewTemplatePage() {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-[#143361]">Editor de Minuta</h3>
-                  <p className="text-[10px] text-zinc-500 font-medium">Os campos serão substituídos por dados reais</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-100 text-[10px] font-bold text-zinc-500">
-                  <Monitor size={10} />
-                  <span>Modo Focus</span>
+                  <p className="text-[10px] text-zinc-500 font-medium">Edite o conteúdo estrutural do documento</p>
                 </div>
               </div>
             </div>
@@ -477,9 +510,6 @@ export default function NewTemplatePage() {
                     background: #ffffff !important;
                     padding: 8px 24px !important;
                   }
-                  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
                 `}</style>
                 <ReactQuill 
                   forwardedRef={quillRef}
@@ -495,7 +525,6 @@ export default function NewTemplatePage() {
             </div>
           </div>
 
-          {/* 3. PAINEL DIREITO: Dicionário Inteligente (3/12) */}
           <div className="lg:col-span-3 flex flex-col bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden h-full">
             <div className="p-5 border-b border-zinc-100">
               <div className="flex items-center gap-2 mb-4">
@@ -505,7 +534,6 @@ export default function NewTemplatePage() {
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-[#143361]">Dicionário de Dados</h4>
               </div>
 
-              {/* Barra de Busca */}
               <div className="relative group">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-[#143361] transition-colors" />
                 <input 
@@ -529,8 +557,7 @@ export default function NewTemplatePage() {
                   return v.category === group.id;
                 });
 
-                if (groupItems.length === 0 && !searchTerm) return null;
-                if (groupItems.length === 0 && searchTerm) return null;
+                if (groupItems.length === 0) return null;
 
                 return (
                   <div key={group.id} className="space-y-3">
@@ -561,7 +588,6 @@ export default function NewTemplatePage() {
                               <button 
                                 key={v.key_name}
                                 onClick={() => insertVariable(v.key_name)}
-                                title={`Inserir {{${v.key_name}}}`}
                                 className="w-full group relative flex items-center gap-3 p-3 rounded-2xl border border-zinc-100 bg-white text-left hover:border-[#143361] hover:shadow-md transition-all duration-200"
                               >
                                 <div className="p-1.5 rounded-lg bg-zinc-50 border border-zinc-100 text-zinc-400 group-hover:text-[#143361] group-hover:bg-blue-50 transition-all">
@@ -572,9 +598,6 @@ export default function NewTemplatePage() {
                                     <p className="text-[11px] font-bold text-[#143361] truncate leading-none">
                                       {v.display_label}
                                     </p>
-                                    <span className="text-[8px] px-1 py-0.5 rounded-md bg-zinc-100 text-zinc-400 font-bold uppercase tracking-tighter">
-                                      {v.key_name.includes('data') ? 'Data' : v.key_name.includes('price') ? 'Valor' : 'Texto'}
-                                    </span>
                                   </div>
                                   <p className="text-[9px] font-mono text-zinc-400 group-hover:text-zinc-600 transition-colors">
                                     {"{{"}{v.key_name}{"}}"}
@@ -592,73 +615,11 @@ export default function NewTemplatePage() {
                   </div>
                 );
               })}
-
-              {/* Estado Vazio de Busca */}
-              {searchTerm && filteredVariables.length === 0 && (
-                <div className="py-10 text-center">
-                  <div className="mx-auto w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-2">
-                    <Search size={18} />
-                  </div>
-                  <p className="text-[11px] font-bold text-zinc-500">Nenhum campo encontrado</p>
-                  <p className="text-[10px] text-zinc-400">Tente outro termo de pesquisa</p>
-                </div>
-              )}
-            </div>
-
-            <div className="p-5 border-t border-zinc-100 bg-blue-50/20">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Info size={12} className="text-[#143361] opacity-50" />
-                <span className="text-[9px] font-bold text-[#143361] uppercase">Dica do Especialista</span>
-              </div>
-              <p className="text-[10px] text-[#143361]/60 leading-relaxed font-medium">
-                Clique nos botões para injetar campos dinâmicos no local do cursor. O sistema cuidará do preenchimento posterior.
-              </p>
             </div>
           </div>
 
         </div>
       </main>
-
-      {/* Overlays (Success/Error) */}
-      <AnimatePresence>
-        {success && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#143361]/40 backdrop-blur-sm px-6"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="rounded-[2.5rem] bg-white p-12 text-center shadow-2xl max-w-sm w-full border border-zinc-100"
-            >
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#00A86B] text-white">
-                <CheckCircle2 size={32} />
-              </div>
-              <h2 className="text-xl font-black text-[#143361] uppercase tracking-tight">Publicado com Sucesso</h2>
-              <p className="mt-3 text-sm text-[#143361]/60 font-medium px-4">O modelo está disponível para os utilizadores finais na galeria.</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {error && (
-        <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right duration-500">
-          <div className="flex items-center gap-4 rounded-2xl bg-white border-l-4 border-red-500 p-5 shadow-2xl">
-            <div className="p-2 rounded-full bg-red-50 text-red-500">
-              <AlertCircle size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Falha na Operação</p>
-              <p className="text-xs font-bold text-zinc-900">{error}</p>
-            </div>
-            <button onClick={() => setError(null)} className="ml-4 p-1 hover:bg-zinc-100 rounded-lg text-zinc-400">
-              <Plus size={16} className="rotate-45" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
