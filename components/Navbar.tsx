@@ -54,7 +54,7 @@ export default function Navbar() {
       // Fetch categories with at least one template
       const { data: catData } = await supabase
         .from("categories")
-        .select("id, name, slug, document_templates!inner(id)");
+        .select("id, name, slug, templates!inner(id)");
 
       if (catData) {
         const getIcon = (name: string) => {

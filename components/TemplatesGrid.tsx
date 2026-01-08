@@ -22,7 +22,7 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
       try {
         const supabase = createBrowserSupabase();
         const { data: templData, error } = await supabase
-          .from("document_templates")
+          .from("templates")
           .select(`
             *,
             categories(*),
@@ -30,7 +30,6 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
               companies(*)
             )
           `)
-          .eq("is_active", true)
           .order("created_at", { ascending: false });
 
         if (error) {

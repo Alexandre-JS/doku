@@ -56,11 +56,11 @@ function TemplatesContent() {
       // 1. Fetch Categories that have at least one template
       const { data: catData } = await supabase
         .from("categories")
-        .select("id, name, slug, document_templates!inner(id)");
+        .select("id, name, slug, templates!inner(id)");
 
       // 2. Fetch Templates with Category and Companies
       const { data: templData, error } = await supabase
-        .from("document_templates")
+        .from("templates")
         .select(`
           *,
           categories(*),
@@ -68,7 +68,6 @@ function TemplatesContent() {
             companies(*)
           )
         `)
-        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
       if (error) {

@@ -71,7 +71,7 @@ export default function EditorClient({ template, profileData }: EditorClientProp
               <div className="scale-[0.6] origin-top transform shadow-2xl rounded-lg overflow-hidden border border-slate-200">
                 <DocumentPreview 
                   userData={formData}
-                  template={template.content_html}
+                  template={template.content}
                   price={template.price.toString()}
                   title={template.title}
                   onBack={() => {}} 

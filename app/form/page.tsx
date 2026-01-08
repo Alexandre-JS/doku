@@ -159,17 +159,16 @@ function FormContent() {
 
       const supabase = createBrowserSupabase();
       const { data, error } = await supabase
-        .from("document_templates")
-        .select("content_html, price, form_schema, title")
+        .from("templates")
+        .select("content, price, form_schema, title")
         .eq("slug", slug)
-        .eq("is_active", true)
         .single();
 
       if (error) {
         console.error("Erro ao buscar modelo:", error.message);
       } else {
         setTemplateData({
-          content: data.content_html,
+          content: data.content,
           price: data.price?.toString() || "0",
           form_schema: data.form_schema,
           title: data.title || undefined

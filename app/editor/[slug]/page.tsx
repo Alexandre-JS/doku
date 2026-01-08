@@ -8,10 +8,9 @@ export default async function EditorPage({ params }: { params: Promise<{ slug: s
 
   // 1. Buscar o Template do documento na tabela correta
   const { data: template, error: tError } = await supabase
-    .from('document_templates') // Alterado de 'templates'
+    .from('templates')
     .select('*')
     .eq('slug', slug)
-    .eq('is_active', true) // Garantir que está ativo
     .single();
 
   if (tError || !template) notFound();
