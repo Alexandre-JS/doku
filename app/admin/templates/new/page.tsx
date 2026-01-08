@@ -31,6 +31,21 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Category, Company } from "@/src/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+// Import dinâmico do editor para evitar erros de SSR
+const ReactQuill = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill-new");
+    // Wrapper para permitir o uso de refs com next/dynamic
+    return ({ forwardedRef, ...props }: any) => <RQ ref={forwardedRef} {...props} />;
+  },
+  { 
+    ssr: false,
+    loading: () => <div className="h-[500px] w-full animate-pulse bg-slate-50 rounded-2xl border border-slate-100" />
+  }
+);
 
 // Interface para Variáveis Globais com Agrupamento
 interface GlobalVariable {
@@ -65,12 +80,25 @@ interface AdminFormField {
 export default function NewTemplatePage() {
   const router = useRouter();
   const supabase = createBrowserSupabase();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const quillRef = useRef<any>(null);
   
   // States
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Configuração do Editor - Usando useMemo para evitar re-renders e erros de tipo no align
+  const modules = useMemo(() => ({
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ 'align': [] as any[] }],
+      ['clean']
+    ],
+  }), []);
+
+  const formats = [
+    'bold', 'italic', 'underline', 'align'
+  ];
   
   // Data from DB
   const [categories, setCategories] = useState<Category[]>([]);
@@ -128,7 +156,9 @@ export default function NewTemplatePage() {
 
   // AUTO SCAN: Gera o form_schema baseado no conteúdo do editor
   const generatedSchema = useMemo(() => {
-    const matches = template.content_html.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
+    // Extrair {{variaveis}} filtrando tags HTML que o Quill pode inserir no meio do texto
+    const plainText = template.content_html.replace(/<[^>]*>/g, "");
+    const matches = plainText.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
     const keys = Array.from(new Set(matches.map(m => m.replace(/\{\{\s*|\s*\}\}/g, ""))));
     
     const fields = keys.map(key => {
@@ -164,25 +194,14 @@ export default function NewTemplatePage() {
   };
 
   const insertVariable = (id: string) => {
-    if (!textareaRef.current) return;
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
 
-    const start = textareaRef.current.selectionStart;
-    const end = textareaRef.current.selectionEnd;
-    const text = template.content_html;
-    const before = text.substring(0, start);
-    const after = text.substring(end, text.length);
+    const range = quill.getSelection(true);
     const varTag = `{{${id}}}`;
-
-    const newContent = before + varTag + after;
-    setTemplate({ ...template, content_html: newContent });
-
-    // Reset cursor after insert (deferred)
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(start + varTag.length, start + varTag.length);
-      }
-    }, 10);
+    
+    quill.insertText(range.index, varTag);
+    quill.setSelection(range.index + varTag.length);
   };
 
   // Salvar no Supabase (Transaction-like)
@@ -429,13 +448,39 @@ export default function NewTemplatePage() {
                 </div>
               </div>
 
-              <div className="relative flex-1">
-                <textarea 
-                  ref={textareaRef}
+              <div className="relative flex-1 prose-sm">
+                <style>{`
+                  .ql-container.ql-snow {
+                    border: none !important;
+                    font-family: inherit;
+                  }
+                  .ql-editor {
+                    min-height: 500px;
+                    font-size: 1.125rem;
+                    line-height: 1.75;
+                    color: #1e293b;
+                    padding: 2rem !important;
+                  }
+                  .ql-editor p {
+                    margin-bottom: 1rem;
+                  }
+                  .ql-toolbar.ql-snow {
+                    border: none !important;
+                    border-bottom: 1px solid #f1f5f9 !important;
+                    padding: 0.5rem 1rem !important;
+                    background: #f8fafc;
+                    border-radius: 1rem 1rem 0 0;
+                  }
+                `}</style>
+                <ReactQuill 
+                  forwardedRef={quillRef}
+                  theme="snow"
                   value={template.content_html}
-                  onChange={(e) => setTemplate({ ...template, content_html: e.target.value })}
-                  className="w-full h-full min-h-[500px] p-8 rounded-2xl bg-white border border-slate-100 font-serif text-lg leading-relaxed text-slate-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-100 no-scrollbar"
-                  placeholder="Ex: Eu, {{nome_completo}}, titular do BI nº {{bi_numero}}..."
+                  onChange={(content: string) => setTemplate({ ...template, content_html: content })}
+                  modules={modules}
+                  formats={formats}
+                  placeholder="Comece a escrever o documento oficial... Use {{variavel}} para campos dinâmicos."
+                  className="h-full"
                 />
               </div>
             </div>

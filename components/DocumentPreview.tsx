@@ -38,51 +38,51 @@ export default function DocumentPreview({
   );
 
   // Função para processar o template e destacar dados do usuário com formatação
-  const renderPreview = (template: string, userData: Record<string, string>) => {
-    if (!template) return null;
+  const renderPreviewHTML = (html: string, userData: Record<string, string>) => {
+    if (!html) return "";
     
-    // Divide o template nos placeholders {{key}}
-    const parts = template.split(/(\{\{[^{}]+\}\})/g);
+    // Substitui cada placeholder {{key}} pelo valor formatado
+    let processedHTML = html;
+    const matches = html.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
     
-    return parts.map((part, index) => {
-      if (part.startsWith("{{") && part.endsWith("}}")) {
-        const key = part.slice(2, -2).trim();
-        
-        // Tenta encontrar o valor, suportando variações de camelCase e snake_case
-        const value = userData[key] || 
-                      userData[key.toLowerCase()] || 
-                      userData[key.replace(/([A-Z])/g, "_$1").toLowerCase()] || // biNumber -> bi_number
-                      userData[key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())]; // bi_number -> biNumber
+    matches.forEach(match => {
+      const key = match.replace(/\{\{\s*|\s*\}\}/g, "").trim();
+      const value = userData[key] || 
+                    userData[key.toLowerCase()] || 
+                    userData[key.replace(/([A-Z])/g, "_$1").toLowerCase()] || 
+                    userData[key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())];
 
-        // Pulo do Gato: Se for request_details, aplicamos uma formatação mais formal
-        if (key === 'request_details' || key === 'requestDetails') {
-          return (
-            <span key={index} className="text-blue-800 font-medium italic whitespace-pre-wrap">
-              {value || `[${key.toUpperCase()}]`}
-            </span>
-          );
-        }
-
-        return (
-          <span key={index} className="text-blue-800 font-bold border-b border-blue-200">
-            {value || `[${key.toUpperCase()}]`}
-          </span>
-        );
-      }
-      return part;
+      const replacement = `
+        <span class="text-blue-800 font-bold border-b border-blue-200 decoration-blue-200">
+          ${value || `[${key.toUpperCase()}]`}
+        </span>
+      `;
+      
+      processedHTML = processedHTML.replaceAll(match, replacement);
     });
+    
+    return processedHTML;
   };
 
-  // Detecta se o template já inclui placeholders para cabeçalho/rodapé
-  const templateHasHeaderPlaceholders = typeof template === 'string' && /\{\{\s*(target_authority|destinatary_role|institution_name|target_location|address|subject)\s*\}\}/i.test(template);
-  const templateHasFooterPlaceholders = typeof template === 'string' && /\{\{\s*(current_city|current_date|target_location)\s*\}\}/i.test(template);
+  // Detecta se o template já inclui placeholders ou texto formal para cabeçalho/rodapé
+  const plainText = typeof template === 'string' ? template.replace(/<[^>]*>/g, '') : '';
+  
+  const templateHasHeader = typeof template === 'string' && (
+    /\{\{\s*(target_authority|destinatary_role|institution_name|target_location|address|subject)\s*\}\}/i.test(template) ||
+    /EXMO|EXCELENTÍSSIMO|ILUSTRÍSSIMO|SENHOR|DIRECTOR/i.test(plainText.substring(0, 200).toUpperCase())
+  );
+
+  const templateHasFooter = typeof template === 'string' && (
+    /\{\{\s*(current_city|current_date|target_location)\s*\}\}/i.test(template) ||
+    /Pede\s*Deferimento|ASSINATURA|DECLARANTE|REQUERENTE/i.test(plainText.substring(plainText.length - 300).toUpperCase())
+  );
 
   // Verifica se o template já começa com um título (ex: REQUERIMENTO, DECLARAÇÃO)
   const hasTitleInContent = typeof template === 'string' && 
-    /^\s*(REQUERIMENTO|DECLARAÇÃO|COMPROMISSO|CONTRATO|CERTIDÃO|GUIA|EDITAL)/i.test(template.trim());
+    /^\s*(REQUERIMENTO|DECLARAÇÃO|COMPROMISSO|CONTRATO|CERTIDÃO|GUIA|EDITAL)/i.test(plainText.trim());
 
   // Verifica se é uma declaração ou contrato (que não levam "Exmo Senhor" ou "Assunto" automático)
-  const isDeclarationOrContract = hasTitleInContent && !template.trim().toUpperCase().startsWith('REQUERIMENTO') ||
+  const isDeclarationOrContract = hasTitleInContent && !plainText.trim().toUpperCase().startsWith('REQUERIMENTO') ||
     title?.toLowerCase().includes('declaração') || 
     title?.toLowerCase().includes('compromisso') ||
     title?.toLowerCase().includes('contrato');
@@ -128,7 +128,7 @@ export default function DocumentPreview({
         )}
 
         {/* Cabeçalho de Endereçamento (OFFICIAL e LETTER) */}
-        {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeaderPlaceholders && !isDeclarationOrContract && (
+        {(layoutType === 'OFFICIAL' || layoutType === 'LETTER') && !templateHasHeader && !isDeclarationOrContract && (
           <div className="mb-10 text-[12pt] relative z-10 text-left">
             <p className="font-bold uppercase leading-tight italic">Exmo(a) Senhor(a)</p>
             <p className="font-bold uppercase leading-tight">{getValue('destinatary_role') || getValue('target_authority') || '________________'}</p>
@@ -148,39 +148,42 @@ export default function DocumentPreview({
         )}
 
         {/* Título para DECLARATION */}
-        {layoutType === 'DECLARATION' && (
+        {layoutType === 'DECLARATION' && !templateHasHeader && (
           <div className="mb-12 text-center text-[14pt] font-bold uppercase underline relative z-10">
             {title || "DECLARAÇÃO"}
           </div>
         )}
 
-        {/* Corpo do Texto */}
-        <div className={`text-[12pt] text-justify whitespace-pre-line relative z-10 ${layoutType === 'OFFICIAL' ? 'indent-12' : ''}`}>
-          {renderPreview(template, userData)}
-        </div>
+        {/* Corpo do Texto - Suporta HTML do Quill */}
+        <div 
+          className={`text-[12pt] text-justify relative z-10 official-document-content ${layoutType === 'OFFICIAL' ? 'indent-12' : ''}`}
+          dangerouslySetInnerHTML={{ __html: renderPreviewHTML(template, userData) }}
+        />
 
         {/* Fecho: Pede Deferimento (Só OFFICIAL) */}
-        {layoutType === 'OFFICIAL' && (
+        {layoutType === 'OFFICIAL' && !templateHasFooter && (
           <div className="mt-12 text-center text-[12pt] relative z-10">
             Pede deferimento.
           </div>
         )}
 
         {/* Local e Data (OFFICIAL e DECLARATION) */}
-        {(layoutType === 'OFFICIAL' || layoutType === 'DECLARATION') && !templateHasFooterPlaceholders && (
+        {(layoutType === 'OFFICIAL' || layoutType === 'DECLARATION') && !templateHasFooter && (
           <div className="mt-12 text-[12pt] text-center relative z-10">
             {getValue('current_city') || getValue('target_location') || "__________"}, aos {getValue('current_date') || new Date().toLocaleDateString('pt-PT')}.
           </div>
         )}
 
         {/* Linha de Assinatura */}
-        <div className="mt-8 flex flex-col items-center relative z-10">
-          <p className="text-[12pt] font-bold uppercase mb-8">{getValue('full_name') || ''}</p>
-          <div className="w-64 border-t border-black mb-2"></div>
-          <p className="text-[10pt] text-slate-500">
-            {layoutType === 'DECLARATION' ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)'}
-          </p>
-        </div>
+        {!templateHasFooter && (
+          <div className="mt-8 flex flex-col items-center relative z-10">
+            <p className="text-[12pt] font-bold uppercase mb-8">{getValue('full_name') || ''}</p>
+            <div className="w-64 border-t border-black mb-2"></div>
+            <p className="text-[10pt] text-slate-500">
+              {layoutType === 'DECLARATION' ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)'}
+            </p>
+          </div>
+        )}
       </div>
       </div>
 

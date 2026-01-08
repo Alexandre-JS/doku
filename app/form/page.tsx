@@ -178,8 +178,8 @@ function FormContent() {
         if (data.title) {
           localStorage.setItem("doku_current_doc_title", data.title);
         }
-        if (data.content_html) {
-          localStorage.setItem("doku_current_template_content", data.content_html);
+        if (data.content) {
+          localStorage.setItem("doku_current_template_content", data.content);
         }
       }
       setLoading(false);
