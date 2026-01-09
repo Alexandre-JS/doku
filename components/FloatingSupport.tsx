@@ -10,15 +10,6 @@ export default function FloatingSupport() {
   const [userInput, setUserInput] = useState("");
 
   useEffect(() => {
-    // Abre o suporte automaticamente após 6 segundos
-    const autoOpenTimer = setTimeout(() => {
-      setIsOpen(true);
-    }, 6000);
-
-    return () => clearTimeout(autoOpenTimer);
-  }, []);
-
-  useEffect(() => {
     if (isOpen && step === "idle") {
       const typingTimer = setTimeout(() => {
         setStep("typing");

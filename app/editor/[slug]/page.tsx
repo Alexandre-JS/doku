@@ -1,8 +1,44 @@
 import { createServerSupabase } from '@/src/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import EditorClient from '@/app/editor/[slug]/EditorClient';
+import { Metadata } from 'next';
 
-export default async function EditorPage({ params }: { params: Promise<{ slug: string }> }) {
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createServerSupabase();
+
+  const { data: template } = await supabase
+    .from('templates')
+    .select('title, description, category')
+    .eq('slug', slug)
+    .single();
+
+  if (!template) return { title: 'Documento não encontrado' };
+
+  return {
+    title: `${template.title} | Gerar Online`,
+    description: template.description || `Gere o seu ${template.title} em minutos com o DOKUMOZ. Simples, rápido e juridicamente seguro.`,
+    openGraph: {
+      title: `${template.title} - DOKUMOZ`,
+      description: template.description,
+      type: 'article',
+      images: [
+        {
+          url: `/api/og-template?title=${encodeURIComponent(template.title)}`, // Idealmente você teria uma rota para gerar imagens dinâmicas
+          width: 1200,
+          height: 630,
+          alt: template.title,
+        },
+      ],
+    },
+  };
+}
+
+export default async function EditorPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createServerSupabase();
 
@@ -49,8 +85,32 @@ export default async function EditorPage({ params }: { params: Promise<{ slug: s
     }
   }
 
+  // JSON-LD para o Template específico
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": template.title,
+    "description": template.description,
+    "author": {
+      "@type": "Organization",
+      "name": "DOKUMOZ"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DOKUMOZ",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://documoz.com/logo.png"
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <EditorClient 
         template={template} 
         profileData={profileData} 

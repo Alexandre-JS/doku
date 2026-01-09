@@ -70,7 +70,7 @@ export default function Hero() {
                   <Suspense fallback={<div className="h-16 w-full animate-pulse rounded-full bg-slate-800" />}>
                     <SearchBar 
                       variant="hero" 
-                      placeholder="Ex: Requerimento de DUAT, Contrato de Aluguer..." 
+                      placeholder="Ex: Curriculum Vitae, Carta de Pedido de Emprego, Declaração..." 
                       className="w-full"
                     />
                   </Suspense>
@@ -81,11 +81,11 @@ export default function Hero() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <span className="text-sm font-medium text-slate-500">Acesso rápido:</span>
                 {[
-                  { name: 'BIM', color: 'border-blue-500/50 text-blue-400 hover:bg-blue-500/10' },
-                  { name: 'INSS', color: 'border-orange-500/50 text-orange-400 hover:bg-orange-500/10' },
-                  { name: 'DUAT', color: 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10' },
-                  { name: 'Aluguer', color: 'border-slate-500/50 text-slate-300 hover:bg-slate-500/10' },
-                  { name: 'Trabalho', color: 'border-slate-500/50 text-slate-300 hover:bg-slate-500/10' }
+                  { name: 'Curriculum', color: 'border-blue-500/50 text-blue-400 hover:bg-blue-500/10' },
+                  { name: 'Emprego', color: 'border-slate-500/50 text-slate-300 hover:bg-slate-500/10' },
+                  { name: 'Declaração', color: 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10' },
+                  { name: 'Contrato', color: 'border-blue-500/50 text-blue-400 hover:bg-blue-500/10' },
+                  { name: 'Atestado', color: 'border-slate-500/50 text-slate-300 hover:bg-slate-500/10' }
                 ].map((tag) => (
                   <Link 
                     key={tag.name}
@@ -131,7 +131,7 @@ export default function Hero() {
                 </div>
                 <div className="mt-4 flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-doku-green" />
-                  <span className="text-[10px] font-bold text-slate-900">REQUERIMENTO OFICIAL</span>
+                  <span className="text-[10px] font-bold text-slate-900">CURRICULUM VITAE</span>
                 </div>
               </motion.div>
 
@@ -159,7 +159,7 @@ export default function Hero() {
                 </div>
                 <div className="mt-4 flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  <span className="text-[10px] font-bold text-slate-900">CONTRATO DE ALUGUER</span>
+                  <span className="text-[10px] font-bold text-slate-900">PEDIDO DE EMPREGO</span>
                 </div>
               </motion.div>
 
@@ -186,7 +186,7 @@ export default function Hero() {
                 </div>
                 <div className="mt-4 flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-amber-500" />
-                  <span className="text-[10px] font-bold text-slate-900">DECLARAÇÃO DE HONRA</span>
+                  <span className="text-[10px] font-bold text-slate-900">DECLARAÇÃO DE RESIDÊNCIA</span>
                 </div>
               </motion.div>
             </div>
