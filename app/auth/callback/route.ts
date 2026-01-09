@@ -27,7 +27,29 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // Buscar o perfil para ver se é admin
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let redirectUrl = next;
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, full_name, nuit")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        // Se for admin, manda para admin
+        if (profile?.role === "admin") {
+          redirectUrl = "/admin";
+        } 
+        // Se não tiver perfil ou faltar dados básicos, vai para onboarding (apenas se o alvo for templates ou home)
+        else if ((!profile || !profile.full_name) && (next === "/templates" || next === "/")) {
+          redirectUrl = "/auth/complete-profile";
+        }
+      }
+
+      return NextResponse.redirect(`${origin}${redirectUrl}`);
     }
   }
 

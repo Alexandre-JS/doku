@@ -34,7 +34,47 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Proteção de Rotas
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  // 0. Redirecionar utilizadores logados para longe das páginas de autenticação
+  if (user && (path.startsWith("/auth/login") || path.startsWith("/auth/signup"))) {
+    let next = url.searchParams.get("next") || "/";
+    // Proteção contra Open Redirect: garantir que 'next' seja um caminho relativo (começa com /)
+    if (next.startsWith("http") || next.startsWith("//")) {
+      next = "/";
+    }
+    return NextResponse.redirect(new URL(next, request.url));
+  }
+
+  // 1. Proteção de Checkout, Perfil e Onboarding
+  if (path.startsWith("/checkout") || path.startsWith("/profile") || path.startsWith("/auth/complete-profile")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+  }
+
+  // 2. Proteção do Painel Administrativo (/admin)
+  if (path.startsWith("/admin")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+
+    // Verificar Role na tabela profiles
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.role !== "admin") {
+      // Se não for admin, redireciona para a home
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
 
   return response;
 }

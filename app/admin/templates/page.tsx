@@ -23,6 +23,7 @@ import { createBrowserSupabase } from "@/src/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Toast, { ToastContainer } from "@/components/Toast";
 import { useSearchParams, useRouter } from "next/navigation";
+import { deleteTemplate } from "@/src/lib/admin-actions";
 
 interface TemplateListing {
   id: string;
@@ -111,19 +112,16 @@ export default function AdminTemplatesPage() {
     setIsDeleting(true);
     
     try {
-      const { error } = await supabase
-        .from("templates")
-        .delete()
-        .eq("id", deleteId);
-
-      if (error) throw error;
-
-      setTemplates(prev => prev.filter(t => t.id !== deleteId));
-      setDeleteId(null);
-      addToast("Minuta apagada com sucesso!", "success");
+      const result = await deleteTemplate(deleteId);
+      
+      if (result.success) {
+        setTemplates(prev => prev.filter(t => t.id !== deleteId));
+        setDeleteId(null);
+        addToast("Minuta apagada com sucesso!", "success");
+      }
     } catch (err: any) {
       console.error("Erro ao apagar:", err);
-      addToast("Erro ao apagar a minuta. " + err.message, "error");
+      addToast(err.message || "Erro ao apagar a minuta.", "error");
     } finally {
       setIsDeleting(false);
     }

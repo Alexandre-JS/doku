@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -14,6 +14,7 @@ import {
   Database
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { createBrowserSupabase } from "@/src/lib/supabase";
 
 const menuItems = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -25,6 +26,14 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createBrowserSupabase();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh(); // Garante que o middleware seja reavaliado
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 border-r border-zinc-200 bg-white z-[100]">
@@ -69,7 +78,10 @@ export default function Sidebar() {
 
         {/* Footer */}
         <div className="mt-auto border-t border-zinc-100 pt-6">
-          <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-all">
+          <button 
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-all"
+          >
             <LogOut size={18} />
             Terminar Sessão
           </button>
