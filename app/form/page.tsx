@@ -93,6 +93,75 @@ function FormContent() {
     }
   );
 
+  // Preenchimento automático baseado no perfil do utilizador (Auto-fill)
+  useEffect(() => {
+    const fetchUserProfileAndFill = async () => {
+      const supabase = createBrowserSupabase();
+      const { data: auth } = await supabase.auth.getUser();
+
+      if (!auth?.user) return;
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select(`
+          full_name, 
+          father_name, 
+          mother_name, 
+          bi_number, 
+          nuit, 
+          address_details,
+          phone_number
+        `)
+        .eq("id", auth.user.id)
+        .maybeSingle();
+
+      if (error || !profile) return;
+
+      const newUpdate: Partial<DocumentFormData> = {};
+      let autoFilledCount = 0;
+
+      // Mapeamento de chaves do perfil para IDs do formulário (incluindo variações comuns)
+      const profileToFormMap: Array<{profileKey: string, formKeys: string[]}> = [
+        { profileKey: "full_name", formKeys: ["full_name", "fullName", "nome_completo"] },
+        { profileKey: "father_name", formKeys: ["father_name", "fatherName", "nome_pai"] },
+        { profileKey: "mother_name", formKeys: ["mother_name", "motherName", "nome_mae"] },
+        { profileKey: "bi_number", formKeys: ["bi_number", "biNumber", "num_bi"] },
+        { profileKey: "nuit", formKeys: ["nuit", "num_nuit"] },
+        { profileKey: "address_details", formKeys: ["address", "endereco", "morada"] },
+        { profileKey: "phone_number", formKeys: ["phone", "phone_number", "telemovel"] },
+      ];
+
+      profileToFormMap.forEach(({ profileKey, formKeys }) => {
+        const val = (profile as any)[profileKey];
+        if (val) {
+          formKeys.forEach(formKey => {
+            // Só preenchemos se o campo estiver vazio ou se não houver dados restaurados significativos
+            if (!formData[formKey]) {
+              newUpdate[formKey] = val;
+              autoFilledCount++;
+            }
+          });
+        }
+      });
+
+      if (Object.keys(newUpdate).length > 0) {
+        updateMultiple(newUpdate as Record<string, string>);
+        addToast(
+          "✨ Campos preenchidos automaticamente com base no seu perfil",
+          "info",
+          4500
+        );
+      }
+    };
+
+    // Pequeno delay para garantir que o useFormPersistence já inicializou
+    const timer = setTimeout(() => {
+      fetchUserProfileAndFill();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []); // Executa apenas uma vez ao montar o componente
+
   // Função para adicionar toasts
   const addToast = useCallback(
     (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration = 3000) => {
