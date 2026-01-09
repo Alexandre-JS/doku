@@ -166,14 +166,27 @@ export const generatePDF = (userData: UserData, template: string, title: string,
   const doc = new jsPDF('p', 'mm', 'a4');
   
   const parsedHTML = parseTemplate(template, userData);
-  const plainText = parsedHTML.replace(/<[^>]*>/g, '');
+  const plainText = parsedHTML.replace(/<[^>]*>/g, '').trim();
+  const upperPlainText = plainText.toUpperCase();
 
-  // Detecta se o template já inclui placeholders ou texto fixo para cabeçalho/rodapé
-  const hasFormalHeader = /\{\{\s*(target_authority|destinatary_role|institution_name|target_location|address|subject)\s*\}\}/i.test(template) || 
-                          /EXMO|EXCELENTÍSSIMO|ILUSTRÍSSIMO|SENHOR|DIRECTOR/i.test(plainText.substring(0, 200).toUpperCase());
+  // Detecta se o template já inclui placeholders ou se foi criado manualmente
+  const hasAnyPlaceholders = /\{\{.*\}\}/.test(template);
   
-  const hasFormalFooter = /\{\{\s*(current_city|current_date|target_location)\s*\}\}/i.test(template) ||
-                          /Pede\s*Deferimento|ASSINATURA|DECLARANTE|REQUERENTE/i.test(plainText.substring(plainText.length - 300).toUpperCase());
+  // Header detection: Se já tem "Exmo", ou placeholders de authority, ou se o título já está no início do texto
+  const hasFormalHeader = /EXMO|EXCELENTÍSSIMO|ILUSTRÍSSIMO|DIRECTOR|SENHOR/i.test(plainText.substring(0, 500)) ||
+                          /\{\{\s*(target_authority|destinatary_role|institution_name|subject)\s*\}\}/i.test(template) ||
+                          (title && upperPlainText.substring(0, 300).includes(title.toUpperCase()));
+  
+  // Footer detection: Se tem "Pede deferimento", "Assinatura", ou placeholders de data
+  const hasFormalFooter = /pede\s*deferimento/i.test(plainText) ||
+                          /assinatura/i.test(plainText) ||
+                          /\{\{\s*(current_city|current_date)\s*\}\}/i.test(template) ||
+                          (userData.full_name && upperPlainText.substring(upperPlainText.length - 300).includes(userData.full_name.toUpperCase()));
+
+  // Determinar se devemos adicionar elementos automáticos
+  // Se o template não tem placeholders, assumimos que é um documento fixo e não mexemos
+  const shouldAddAutoHeader = hasAnyPlaceholders && !hasFormalHeader;
+  const shouldAddAutoFooter = hasAnyPlaceholders && !hasFormalFooter;
   
   // Inferir o layout
   const effectiveLayout = layoutType || (
@@ -200,8 +213,8 @@ export const generatePDF = (userData: UserData, template: string, title: string,
   const usableWidth = pageWidth - margin.left - margin.right;
   let y = margin.top;
 
-  // 1. Cabeçalho Automático (Apenas se não foi detectado no template)
-  if (!isDeclaration && !hasFormalHeader) {
+  // 1. Cabeçalho Automático
+  if (!isDeclaration && shouldAddAutoHeader) {
     const destinatary = `${userData.target_authority || userData.destinatary_role || ''}`.toUpperCase();
     const institution = (userData.institution_name || '').toUpperCase();
     const location = userData.address || userData.target_location || '';
@@ -234,7 +247,7 @@ export const generatePDF = (userData: UserData, template: string, title: string,
       doc.line(pageWidth - margin.right - locWidth, y + 1, pageWidth - margin.right, y + 1);
       y += 15;
     }
-  } else if (isDeclaration && !hasFormalHeader) {
+  } else if (isDeclaration && shouldAddAutoHeader) {
     // Título de declaração se não houver no template
     doc.setFont('Times-Roman', 'bold');
     doc.setFontSize(14);
@@ -249,8 +262,8 @@ export const generatePDF = (userData: UserData, template: string, title: string,
   // 3. Corpo do Texto (HTML Renderizado)
   y = renderContent(doc, parsedHTML, margin.left, y, usableWidth);
 
-  // 4. Fecho Automático (Apenas se não foi detectado no template)
-  if (!isDeclaration && !hasFormalFooter) {
+  // 4. Fecho Automático
+  if (!isDeclaration && shouldAddAutoFooter) {
     if (y > pageHeight - margin.bottom - 40) { doc.addPage(); y = margin.top; }
     y += 10;
     doc.setFont('Times-Roman', 'normal');
@@ -260,8 +273,8 @@ export const generatePDF = (userData: UserData, template: string, title: string,
     y += 15;
   }
 
-  // 5. Local e Data Automáticos (Apenas se não foi detectado no template)
-  if (!hasFormalFooter) {
+  // 5. Local e Data Automáticos
+  if (shouldAddAutoFooter) {
     if (y > pageHeight - margin.bottom - 30) { doc.addPage(); y = margin.top; }
     doc.setFont('Times-Roman', 'normal');
     const city = userData.current_city || userData.target_location || '';
@@ -272,8 +285,8 @@ export const generatePDF = (userData: UserData, template: string, title: string,
     y += 20;
   }
 
-  // 6. Assinatura Automática (Apenas se não houver footer formal)
-  if (!hasFormalFooter) {
+  // 6. Assinatura Automática
+  if (shouldAddAutoFooter) {
     if (y > pageHeight - margin.bottom - 20) { doc.addPage(); y = margin.top; }
     doc.setFont('Times-Roman', 'bold');
     const fullName = (userData.full_name || '').toUpperCase();
