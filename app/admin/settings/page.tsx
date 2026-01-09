@@ -142,38 +142,23 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header Admin */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-6">
-            <Link href="/templates" className="text-slate-400 hover:text-slate-900 transition-colors">
-              <ArrowLeft size={20} />
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center text-white">
-                <Settings2 size={18} />
-              </div>
-              <h1 className="text-lg font-black tracking-tight text-slate-900 uppercase">Admin / Definições</h1>
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => {
-              setEditingId(null);
-              setNewItem({ name: "", slug: "", icon: "", logo_url: "" });
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-slate-800"
-          >
-            <Plus size={18} />
-            Nova {activeTab === "categories" ? "Categoria" : "Empresa"}
-          </button>
-        </div>
-      </header>
-      <div className="h-16 w-full" />
+    <div className="bg-[#F8FAFC]">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-black text-[#143361] tracking-tight decoration-doku-green decoration-4 underline-offset-4">Configurações do Sistema</h2>
+        <button 
+          onClick={() => {
+            setEditingId(null);
+            setNewItem({ name: "", slug: "", icon: "", logo_url: "" });
+            setShowModal(true);
+          }}
+          className="flex items-center gap-2 rounded-xl bg-[#143361] px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-slate-800"
+        >
+          <Plus size={18} />
+          Nova {activeTab === "categories" ? "Categoria" : "Empresa"}
+        </button>
+      </div>
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl px-2">
         {/* Success/Error Alerts */}
         <AnimatePresence>
           {success && (

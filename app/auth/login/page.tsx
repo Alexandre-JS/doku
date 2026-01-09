@@ -19,14 +19,16 @@ function LoginForm() {
     setError(null);
     try {
       const supabase = createBrowserSupabase();
-          const redirectUrl = typeof window !== "undefined"
-            ? window.location.origin + redirectTo
-        : redirectTo;
+      
+      // Construir URL de callback para processar a sessão no servidor
+      const callbackUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
+        : `/auth/callback?next=${encodeURIComponent(redirectTo)}`;
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: callbackUrl,
         },
       });
 

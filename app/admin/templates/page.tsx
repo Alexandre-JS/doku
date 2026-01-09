@@ -130,43 +130,8 @@ export default function AdminTemplatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F9] pb-20">
-      {/* Header Admin */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-zinc-200 bg-white/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="p-2 transition-colors hover:bg-zinc-100 rounded-lg text-zinc-500">
-              <ArrowLeft size={18} />
-            </Link>
-            <div className="h-4 w-px bg-zinc-200 mx-1" />
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-widest text-[#143361] uppercase">Gestão</span>
-              <span className="text-zinc-300">/</span>
-              <h1 className="text-sm font-bold text-[#143361]">Lista de Minutas</h1>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-             <Link 
-              href="/admin/settings" 
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#143361] hover:bg-blue-50 transition-all"
-            >
-              <Settings2 size={16} />
-              Configurações
-            </Link>
-            <Link 
-              href="/admin/templates/new"
-              className="flex items-center gap-2 rounded-lg bg-[#00A86B] px-4 py-2 text-xs font-bold text-white shadow-md shadow-emerald-100 transition-all hover:bg-emerald-600 active:scale-[0.98]"
-            >
-              <Plus size={16} />
-              Criar Nova Minuta
-            </Link>
-          </div>
-        </div>
-      </header>
-      <div className="h-14 w-full" />
-
-      <main className="mx-auto max-w-7xl px-6 pt-10">
+    <div className="pb-20">
+      <main className="mx-auto max-w-7xl pt-4">
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-1">
             <h2 className="text-2xl font-black text-[#143361] tracking-tight">Biblioteca de Minutas</h2>
