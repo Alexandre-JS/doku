@@ -60,9 +60,8 @@ export default function SearchBar({
       
       // Buscamos todos os títulos ativos para filtrar localmente com normalização
       const { data, error } = await supabase
-        .from("document_templates")
-        .select("title, slug")
-        .eq("is_active", true);
+        .from("templates")
+        .select("title, slug");
 
       if (!error && data) {
         const normalizedQuery = normalizeText(query);

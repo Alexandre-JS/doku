@@ -1,19 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, FileText } from "lucide-react";
+import { Search, FileText, Building2 } from "lucide-react";
 import Link from "next/link";
 import { createBrowserSupabase } from "../src/lib/supabase";
 import LogoLoading from "./LogoLoading";
-
-interface Template {
-  id: string;
-  title: string;
-  slug: string;
-  price?: string;
-  popular?: boolean;
-  category?: string;
-}
+import { Template } from "../src/types";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 interface TemplatesGridProps {
   limit?: number;
@@ -28,17 +21,32 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
     async function fetchTemplates() {
       try {
         const supabase = createBrowserSupabase();
-        const { data, error } = await supabase
-          .from("document_templates")
-          .select("*")
-          .eq("is_active", true)
+        const { data: templData, error } = await supabase
+          .from("templates")
+          .select(`
+            *,
+            categories(*),
+            template_companies(
+              companies(*)
+            )
+          `)
           .order("created_at", { ascending: false });
 
         if (error) {
-          console.error("Erro ao buscar modelos:", error);
+          console.error("Erro Supabase:", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
           setError(error.message);
         } else {
-          setTemplates(data || []);
+          const formattedTemplates = (templData || []).map((t: any) => ({
+            ...t,
+            category: t.categories, // Mapeia para o singular usado no componente
+            companies: t.template_companies?.map((tc: any) => tc.companies).filter(Boolean) || []
+          }));
+          setTemplates(formattedTemplates);
         }
       } catch (err) {
         console.error("Erro inesperado:", err);
@@ -77,11 +85,24 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
   return (
     <div className="space-y-10">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {displayedTemplates.map((template) => (
-          <Link key={template.id} href={`/form?template=${template.slug}`} className="flex">
-            <div className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:shadow-2xl hover:-translate-y-1 hover:border-doku-green/30 cursor-pointer">
+        {displayedTemplates.map((template) => {
+          const cleanPrice = template.price ? template.price.toString().replace(/\s*MT/gi, '').trim() : '0';
+          const isFree = cleanPrice === '0' || cleanPrice === '';
+          
+          return (
+            <Link key={template.id} href={`/form?template=${template.slug}`} className="flex">
+              <div className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:shadow-2xl hover:-translate-y-1 hover:border-doku-green/30 cursor-pointer">
               {/* Mini Preview / Image */}
               <div className="relative flex aspect-[4/3] items-center justify-center bg-doku-bg overflow-hidden">
+                {/* Category Badge */}
+                {template.category && (
+                  <div className="absolute left-4 top-4 z-40">
+                    <span className="rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-[10px] font-black uppercase tracking-wider text-doku-blue shadow-sm border border-slate-100">
+                      {template.category.name}
+                    </span>
+                  </div>
+                )}
+
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#143361 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
                 
@@ -129,7 +150,7 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
                     <div className="flex flex-col items-center justify-center rounded-full border border-doku-green/20 px-1 py-0.5">
                       <span className="text-[6px] font-bold text-doku-green/60 uppercase">Oficial</span>
                       <span className="text-[10px] font-black text-doku-green">
-                        {template.price ? `${template.price}MT` : "GRÁTIS"}
+                        {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
                       </span>
                     </div>
                   </div>
@@ -144,27 +165,52 @@ export default function TemplatesGrid({ limit }: TemplatesGridProps) {
 
               {/* Content */}
               <div className="flex flex-1 flex-col p-5">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-doku-green">Modelo Verificado</span>
-                  <div className="h-1 w-1 rounded-full bg-slate-300" />
-                  <span className="text-[10px] font-medium text-slate-400">PRONTO A IMPRIMIR</span>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-doku-blue line-clamp-1 group-hover:text-doku-green transition-colors">{template.title}</h3>
+                  <span className="text-[10px] font-black text-doku-green whitespace-nowrap bg-doku-green/5 px-2 py-0.5 rounded-md">
+                    {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
+                  </span>
                 </div>
-                <h3 className="text-sm font-bold text-doku-blue line-clamp-2 group-hover:text-doku-green transition-colors">{template.title}</h3>
-                <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-doku-bg text-doku-blue/40 group-hover:bg-doku-green/10 group-hover:text-doku-green transition-colors">
-                      <FileText size={14} />
+                
+                {template.description && (
+                  <p className="text-[11px] leading-relaxed text-slate-500 line-clamp-2 mb-4">
+                    {template.description}
+                  </p>
+                )}
+
+                <div className="mt-auto flex flex-col gap-3 border-t border-slate-50 pt-4">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Aceites em:</p>
+                  <div className="flex items-center justify-between">
+                    {/* Company Avatars (Avatar Group) */}
+                    <div className="flex -space-x-2.5 overflow-hidden p-1">
+                      {template.companies && template.companies.length > 0 ? (
+                        template.companies.slice(0, 3).map((company) => (
+                          <Avatar 
+                            key={company.id} 
+                            className="h-6 w-6 border-2 border-white shadow-sm transition-transform hover:z-10 hover:scale-110"
+                          >
+                            <AvatarImage src={company.logo_url} alt={company.name} className="object-cover" />
+                            <AvatarFallback className="bg-slate-50 text-[10px] font-bold text-slate-400">
+                              {company.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))
+                      ) : (
+                        <div className="h-6 w-6 rounded-full bg-slate-50 flex items-center justify-center ring-2 ring-white">
+                          <FileText size={10} className="text-slate-300" />
+                        </div>
+                      )}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Ver Detalhes</span>
-                  </div>
-                  <div className="rounded-full bg-doku-blue px-4 py-1.5 text-[10px] font-bold text-white shadow-md transition-all group-hover:bg-doku-green group-hover:scale-105">
-                    GERAR AGORA
+
+                    <div className="rounded-full bg-doku-blue px-4 py-1.5 text-[10px] font-bold text-white shadow-md transition-all group-hover:bg-doku-green group-hover:scale-105">
+                      GERAR
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </Link>
-        ))}
+        )})}
       </div>
 
       {hasMore && (

@@ -17,11 +17,27 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import UserNav from "./UserNav";
 import SearchBar from "./SearchBar";
+import { createBrowserSupabase } from "../src/lib/supabase";
+
+interface NavCategory {
+  name: string;
+  icon: React.ReactNode;
+  href: string;
+}
+
+const chunkArray = (arr: any[], size: number) => {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+};
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [isCompaniesOpen, setIsCompaniesOpen] = useState(false);
+  const [categories, setCategories] = useState<NavCategory[]>([]);
+  const [companies, setCompanies] = useState<{ name: string; logo_url: string; href: string }[]>([]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,18 +47,64 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const categories = [
-    { name: "Imobiliário / DUAT", icon: <Building2 size={16} />, href: "/templates?category=Legal" },
-    { name: "Trabalho / RH", icon: <Briefcase size={16} />, href: "/templates?category=Emprego" },
-    { name: "Concursos Públicos", icon: <Scale size={16} />, href: "/templates?category=Estado" },
-    { name: "Todos os Modelos", icon: <FileText size={16} />, href: "/templates" },
-  ];
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createBrowserSupabase();
+      
+      // Fetch categories with at least one template
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("id, name, slug, templates!inner(id)");
+
+      if (catData) {
+        const getIcon = (name: string) => {
+          const n = name.toLowerCase();
+          if (n.includes("imob") || n.includes("duat") || n.includes("casa")) return <Building2 size={16} />;
+          if (n.includes("trab") || n.includes("rh") || n.includes("emprego")) return <Briefcase size={16} />;
+          if (n.includes("conc") || n.includes("esta") || n.includes("publ")) return <Scale size={16} />;
+          return <FileText size={16} />;
+        };
+
+        const mapped = catData.map((cat: any) => ({
+          name: cat.name,
+          icon: getIcon(cat.name),
+          href: `/templates?category=${cat.name}`
+        }));
+
+        setCategories([
+          ...mapped,
+          { name: "Todos os Modelos", icon: <FileText size={16} />, href: "/templates" }
+        ]);
+      } else {
+        setCategories([
+          { name: "Todos os Modelos", icon: <FileText size={16} />, href: "/templates" }
+        ]);
+      }
+
+      // Fetch companies
+      const { data: compData } = await supabase
+        .from("companies")
+        .select("name, logo_url")
+        .limit(10);
+      
+      if (compData) {
+        setCompanies(compData.map(c => ({
+          name: c.name,
+          logo_url: c.logo_url,
+          href: `/templates?search=${encodeURIComponent(c.name)}`
+        })));
+      }
+    }
+
+    fetchData();
+  }, []);
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-      isScrolled ? "bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-200" : "bg-white border-b border-slate-100"
-    }`}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+    <>
+      <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
+        isScrolled ? "bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-200" : "bg-white border-b border-slate-100"
+      }`}>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Left: Logo & Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
@@ -72,22 +134,70 @@ export default function Navbar() {
                     exit={{ opacity: 0, y: 10 }}
                     onMouseEnter={() => setIsTemplatesOpen(true)}
                     onMouseLeave={() => setIsTemplatesOpen(false)}
-                    className="absolute left-0 top-full w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
+                    className="absolute left-0 top-full flex gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl w-max"
                   >
-                    {categories.map((cat) => (
-                      <Link 
-                        key={cat.name}
-                        href={cat.href}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-doku-bg hover:text-doku-blue"
-                      >
-                        <span className="text-slate-400">{cat.icon}</span>
-                        {cat.name}
-                      </Link>
+                    {chunkArray(categories, 5).map((column, colIdx) => (
+                      <div key={colIdx} className="w-64 space-y-1">
+                        {column.map((cat) => (
+                          <Link 
+                            key={cat.name}
+                            href={cat.href}
+                            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-doku-bg hover:text-doku-blue"
+                          >
+                            <span className="text-slate-400">{cat.icon}</span>
+                            {cat.name}
+                          </Link>
+                        ))}
+                      </div>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+
+            <div className="relative">
+              <button 
+                onMouseEnter={() => setIsCompaniesOpen(true)}
+                onMouseLeave={() => setIsCompaniesOpen(false)}
+                className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-doku-blue"
+              >
+                Empresas
+                <ChevronDown size={14} className={`transition-transform duration-200 ${isCompaniesOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {isCompaniesOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    onMouseEnter={() => setIsCompaniesOpen(true)}
+                    onMouseLeave={() => setIsCompaniesOpen(false)}
+                    className="absolute left-0 top-full flex gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl w-max"
+                  >
+                    {companies.length > 0 ? (
+                      chunkArray(companies, 5).map((column, colIdx) => (
+                        <div key={colIdx} className="w-64 space-y-1">
+                          {column.map((company) => (
+                            <Link 
+                              key={company.name}
+                              href={company.href}
+                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-doku-bg hover:text-doku-blue"
+                            >
+                              <img src={company.logo_url} alt={company.name} className="h-5 w-5 rounded-md object-contain grayscale" />
+                              {company.name}
+                            </Link>
+                          ))}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="p-3 text-xs text-slate-400">Nenhuma empresa encontrada</p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <Link href="/precos" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-doku-blue">Preços</Link>
             <Link href="/faq" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-doku-blue">Suporte</Link>
           </nav>
@@ -157,11 +267,11 @@ export default function Navbar() {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3">Navegação</p>
-                  <Link href="/templates" className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
+                  <Link href="/templates" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
                     <FileText size={20} />
                     Modelos
                   </Link>
-                  <Link href="/precos" className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
+                  <Link href="/precos" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
                     <Plus size={20} />
                     Preços
                   </Link>
@@ -170,12 +280,24 @@ export default function Navbar() {
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3">Categorias</p>
                   {categories.map((cat) => (
-                    <Link key={cat.name} href={cat.href} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500 hover:bg-slate-50">
+                    <Link key={cat.name} href={cat.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500 hover:bg-slate-50">
                       {cat.icon}
                       {cat.name}
                     </Link>
                   ))}
                 </div>
+
+                {companies.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3">Empresas</p>
+                    {companies.map((company) => (
+                      <Link key={company.name} href={company.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500 hover:bg-slate-50">
+                        <img src={company.logo_url} alt={company.name} className="h-5 w-5 rounded-md object-contain grayscale" />
+                        {company.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
 
                 <div className="pt-6 border-t border-slate-100">
                   <a 
@@ -194,5 +316,7 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    <div className="h-16 w-full" />
+    </>
   );
 }

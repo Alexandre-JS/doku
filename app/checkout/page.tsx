@@ -13,19 +13,36 @@ export default function CheckoutPage() {
   const [docTitle, setDocTitle] = useState("Documento");
   const [formData, setFormData] = useState<any>(null);
   const [templateContent, setTemplateContent] = useState("");
+  const [price, setPrice] = useState<number>(0);
 
   useEffect(() => {
     const savedTitle = localStorage.getItem("doku_current_doc_title");
     const savedData = localStorage.getItem("doku_form_data");
     const savedTemplate = localStorage.getItem("doku_current_template_content");
+    const savedPrice = localStorage.getItem("doku_current_price");
 
     if (savedTitle) setDocTitle(savedTitle);
     if (savedData) setFormData(JSON.parse(savedData));
     if (savedTemplate) setTemplateContent(savedTemplate);
+    if (savedPrice) {
+      const cleanPrice = savedPrice.replace(/\s*MT/gi, '').trim();
+      setPrice(Number(cleanPrice) || 0);
+    }
   }, []);
 
   const handleConfirmData = () => {
-    setStep("payment");
+    if (price === 0) {
+      setStep("processing");
+      // Simular um carregamento rápido antes de baixar
+      setTimeout(() => {
+        if (formData && templateContent) {
+          generatePDF(formData, templateContent, docTitle);
+        }
+        setStep("success");
+      }, 1000);
+    } else {
+      setStep("payment");
+    }
   };
 
   const handlePayment = () => {
@@ -140,7 +157,7 @@ export default function CheckoutPage() {
 
                   <div className="rounded-2xl bg-amber-50 p-4 border border-amber-100">
                     <p className="text-sm text-amber-800 font-medium leading-relaxed">
-                      "Confirma que estes dados estão corretos? Não será possível editar após o pagamento."
+                      "Confirma que estes dados estão corretos? Não será possível editar após {price === 0 ? 'gerar o documento' : 'o pagamento'}."
                     </p>
                   </div>
 
@@ -148,7 +165,7 @@ export default function CheckoutPage() {
                     onClick={handleConfirmData}
                     className="w-full rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.98]"
                   >
-                    Confirmar e Ir para Pagamento
+                    {price === 0 ? 'Baixar PDF Grátis' : 'Confirmar e Ir para Pagamento'}
                   </button>
                 </div>
               </section>
@@ -202,7 +219,9 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-between mb-8 p-4 rounded-2xl bg-slate-50 ring-1 ring-slate-100">
                   <span className="font-bold text-slate-600">Total a pagar</span>
-                  <span className="text-2xl font-black text-slate-900">100 MT</span>
+                  <span className="text-2xl font-black text-slate-900">
+                    {price === 0 ? 'Grátis' : `${price} MT`}
+                  </span>
                 </div>
 
                 <button
@@ -233,9 +252,13 @@ export default function CheckoutPage() {
                   <Smartphone size={32} className="text-blue-600" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Processando Pagamento</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                {price === 0 ? 'Gerando seu documento' : 'Processando Pagamento'}
+              </h2>
               <p className="text-slate-500 max-w-xs mx-auto">
-                Por favor, verifique o seu telemóvel e insira o seu PIN para confirmar a transação.
+                {price === 0 
+                  ? 'Aguarde um momento enquanto preparamos o seu documento oficial...' 
+                  : 'Por favor, verifique o seu telemóvel e insira o seu PIN para confirmar a transação.'}
               </p>
             </motion.div>
           )}

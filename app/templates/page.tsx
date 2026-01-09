@@ -11,20 +11,11 @@ import SuggestionBox from "../../components/SuggestionBox";
 import FloatingSupport from "../../components/FloatingSupport";
 import FloatingSuggestion from "../../components/FloatingSuggestion";
 import LogoLoading from "../../components/LogoLoading";
-
-const CATEGORIES = ["Todos", "Emprego", "Estado", "Legal"];
+import { Category, Company, Template } from "../../src/types";
+import { Avatar, AvatarImage, AvatarFallback } from "../../components/ui/avatar";
 
 const normalizeText = (text: string) => 
   text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-interface Template {
-  id: string;
-  title: string;
-  category: string;
-  price: string;
-  popular: boolean;
-  slug: string;
-}
 
 export default function TemplatesPage() {
   return (
@@ -41,7 +32,9 @@ export default function TemplatesPage() {
 function TemplatesContent() {
   const searchParams = useSearchParams();
   const urlSearch = searchParams.get("search") || "";
+  const urlCategory = searchParams.get("category") || "Todos";
   
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -53,35 +46,65 @@ function TemplatesContent() {
   }, [urlSearch]);
 
   useEffect(() => {
-    async function fetchTemplates() {
+    if (urlCategory) setSelectedCategory(urlCategory);
+  }, [urlCategory]);
+
+  useEffect(() => {
+    async function fetchData() {
       const supabase = createBrowserSupabase();
-      const { data, error } = await supabase
-        .from("document_templates")
-        .select("*")
-        .eq("is_active", true)
+      
+      // 1. Fetch Categories that have at least one template
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("id, name, slug, templates!inner(id)");
+
+      // 2. Fetch Templates with Category and Companies
+      const { data: templData, error } = await supabase
+        .from("templates")
+        .select(`
+          *,
+          categories(*),
+          template_companies(
+            companies(*)
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Erro ao buscar modelos:", error.message, error.details, error.hint);
+        console.error("Erro ao buscar modelos:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
       } else {
-        setTemplates(data || []);
+        // Flatten companies and map category
+        const formattedTemplates = (templData || []).map((t: any) => ({
+          ...t,
+          category: t.categories,
+          companies: t.template_companies?.map((tc: any) => tc.companies).filter(Boolean) || []
+        }));
+        setTemplates(formattedTemplates);
       }
+
+      if (catData) setCategories(catData);
       setLoading(false);
     }
 
-    fetchTemplates();
+    fetchData();
   }, []);
 
-  const filteredTemplates = templates.map(t => ({
-    ...t,
-    category: t.category || (
-      t.title.includes("Residência") ? "Legal" :
-      t.title.includes("Compromisso de Honra") ? "Estado" :
-      t.title.includes("Requerimento Geral") ? "Emprego" : "Outros"
-    )
-  })).filter((template) => {
-    const matchesCategory = selectedCategory === "Todos" || template.category === selectedCategory;
-    const matchesSearch = normalizeText(template.title).includes(normalizeText(searchQuery));
+  const filteredTemplates = templates.filter((template) => {
+    const matchesCategory = selectedCategory === "Todos" || template.category?.name === selectedCategory;
+    
+    // Smart Search: Title, Category Name, Company Names
+    const searchTerm = normalizeText(searchQuery);
+    const matchesTitle = normalizeText(template.title).includes(searchTerm);
+    const matchesCat = template.category ? normalizeText(template.category.name).includes(searchTerm) : false;
+    const matchesCompany = template.companies?.some(c => normalizeText(c.name).includes(searchTerm));
+    
+    const matchesSearch = searchTerm === "" || matchesTitle || matchesCat || matchesCompany;
+    
     return matchesCategory && matchesSearch;
   });
 
@@ -92,17 +115,28 @@ function TemplatesContent() {
       <main className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
         {/* Filter Chips */}
         <div className="no-scrollbar flex gap-3 overflow-x-auto pb-8 sm:pb-12">
-          {CATEGORIES.map((category) => (
+          <button
+            key="Todos"
+            onClick={() => setSelectedCategory("Todos")}
+            className={`whitespace-nowrap rounded-full px-6 py-2 text-sm font-medium transition-all min-h-[48px] ${
+              selectedCategory === "Todos"
+                ? "bg-doku-blue text-white"
+                : "bg-white text-doku-blue/60 border border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            Todos
+          </button>
+          {categories.map((category) => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              key={category.id}
+              onClick={() => setSelectedCategory(category.name)}
               className={`whitespace-nowrap rounded-full px-6 py-2 text-sm font-medium transition-all min-h-[48px] ${
-                selectedCategory === category
+                selectedCategory === category.name
                   ? "bg-doku-blue text-white"
                   : "bg-white text-doku-blue/60 border border-slate-200 hover:border-slate-300"
               }`}
             >
-              {category}
+              {category.name}
             </button>
           ))}
         </div>
@@ -167,11 +201,24 @@ function TemplatesContent() {
   );
 }
 
-function TemplateCard({ title, price, popular }: { title: string; price?: string; popular?: boolean }) {
+function TemplateCard({ title, description, price, popular, category, companies }: Template) {
+  const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
+  const isFree = cleanPrice === '0' || cleanPrice === '';
+
   return (
     <div className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:shadow-2xl hover:-translate-y-1 hover:border-doku-green/30 cursor-pointer">
       {/* Mini Preview / Image */}
       <div className="relative flex aspect-[4/3] items-center justify-center bg-doku-bg overflow-hidden">
+        {/* Category Badge - Top Left */}
+        {category && (
+          <div className="absolute left-4 top-4 z-40">
+            <span className="rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-[10px] font-black uppercase tracking-wider text-doku-blue shadow-sm border border-slate-100 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-doku-green" />
+              {category.name}
+            </span>
+          </div>
+        )}
+
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#143361 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
         
@@ -218,7 +265,7 @@ function TemplateCard({ title, price, popular }: { title: string; price?: string
             <div className="flex flex-col items-center justify-center rounded-full border border-doku-green/20 px-1 py-0.5">
               <span className="text-[6px] font-bold text-doku-green/60 uppercase">Oficial</span>
               <span className="text-[10px] font-black text-doku-green">
-                {price ? `${price}MT` : "GRÁTIS"}
+                {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
               </span>
             </div>
           </div>
@@ -233,21 +280,53 @@ function TemplateCard({ title, price, popular }: { title: string; price?: string
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-doku-green">Modelo Verificado</span>
-          <div className="h-1 w-1 rounded-full bg-slate-300" />
-          <span className="text-[10px] font-medium text-slate-400">PRONTO A IMPRIMIR</span>
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-doku-blue line-clamp-1 group-hover:text-doku-green transition-colors">{title}</h3>
+          <span className="text-[10px] font-black text-doku-green whitespace-nowrap bg-doku-green/5 px-2 py-0.5 rounded-md">
+            {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
+          </span>
         </div>
-        <h3 className="text-sm font-bold text-doku-blue line-clamp-2 group-hover:text-doku-green transition-colors">{title}</h3>
-        <div className="mt-4 flex items-center justify-between border-t border-slate-50 pt-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-doku-bg text-doku-blue/40 group-hover:bg-doku-green/10 group-hover:text-doku-green transition-colors">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Ver Detalhes</span>
+        
+        {description && (
+          <p className="text-[11px] leading-relaxed text-slate-500 line-clamp-2 mb-4">
+            {description}
+          </p>
+        )}
+
+        <div className="mt-auto flex items-center justify-between border-t border-slate-50 pt-4">
+          {/* Company Logos (Avatar Group) */}
+          <div className="flex -space-x-3 overflow-hidden p-1">
+            {companies && companies.length > 0 ? (
+              companies.slice(0, 4).map((company) => (
+                <Avatar 
+                  key={company.id} 
+                  className="h-7 w-7 border-2 border-white shadow-sm transition-transform hover:z-10 hover:scale-110"
+                >
+                  <AvatarImage src={company.logo_url} alt={company.name} className="object-cover" />
+                  <AvatarFallback className="bg-doku-blue/5 text-[8px] font-bold text-doku-blue">
+                    {company.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              ))
+            ) : (
+              <div className="flex items-center gap-1.5 opacity-40">
+                <Avatar className="h-6 w-6 border border-slate-100">
+                  <AvatarFallback className="bg-slate-50">
+                    <svg className="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-[8px] font-bold text-slate-400 uppercase">Uso Geral</span>
+              </div>
+            )}
+            {companies && companies.length > 4 && (
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 border-2 border-white shadow-sm text-[8px] font-black text-slate-400 z-0">
+                +{companies.length - 4}
+              </div>
+            )}
           </div>
+
           <div className="rounded-full bg-doku-blue px-4 py-1.5 text-[10px] font-bold text-white shadow-md transition-all group-hover:bg-doku-green group-hover:scale-105">
             GERAR AGORA
           </div>
