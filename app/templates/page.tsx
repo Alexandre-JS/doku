@@ -202,6 +202,9 @@ function TemplatesContent() {
 }
 
 function TemplateCard({ title, description, price, popular, category, companies }: Template) {
+  const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
+  const isFree = cleanPrice === '0' || cleanPrice === '';
+
   return (
     <div className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:shadow-2xl hover:-translate-y-1 hover:border-doku-green/30 cursor-pointer">
       {/* Mini Preview / Image */}
@@ -262,7 +265,7 @@ function TemplateCard({ title, description, price, popular, category, companies 
             <div className="flex flex-col items-center justify-center rounded-full border border-doku-green/20 px-1 py-0.5">
               <span className="text-[6px] font-bold text-doku-green/60 uppercase">Oficial</span>
               <span className="text-[10px] font-black text-doku-green">
-                {price ? `${price}MT` : "GRÁTIS"}
+                {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
               </span>
             </div>
           </div>
@@ -280,7 +283,7 @@ function TemplateCard({ title, description, price, popular, category, companies 
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-sm font-bold text-doku-blue line-clamp-1 group-hover:text-doku-green transition-colors">{title}</h3>
           <span className="text-[10px] font-black text-doku-green whitespace-nowrap bg-doku-green/5 px-2 py-0.5 rounded-md">
-            {price ? `${price}MT` : "GRÁTIS"}
+            {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
           </span>
         </div>
         

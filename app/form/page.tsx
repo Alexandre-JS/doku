@@ -408,7 +408,7 @@ function FormContent() {
                         <DocumentPreview
                           userData={formData}
                           template={currentTemplate}
-                          price={templateData?.price || "0 MT"}
+                          price={templateData?.price || "0"}
                           title={templateData?.title}
                           onBack={() => {}}
                           onConfirm={() => {}}
@@ -480,7 +480,7 @@ function FormContent() {
                 <DocumentPreview
                   userData={formData}
                   template={currentTemplate}
-                  price={templateData?.price || "0 MT"}
+                  price={templateData?.price || "0"}
                   title={templateData?.title}
                   onBack={() => setShowMobilePreview(false)}
                   onConfirm={() => {
@@ -501,7 +501,7 @@ function FormContent() {
         formData={formData}
         templateContent={currentTemplate}
         docTitle={templateData?.title || "Documento"}
-        price={templateData?.price ? `${templateData.price} MT` : "0 MT"}
+        price={templateData?.price || "0"}
         layoutType={
           templateData?.title?.toLowerCase().includes('requerimento') ? 'OFFICIAL' :
           (templateData?.title?.toLowerCase().includes('declaração') || templateData?.title?.toLowerCase().includes('compromisso') || templateData?.title?.toLowerCase().includes('contrato')) ? 'DECLARATION' :

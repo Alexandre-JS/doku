@@ -17,6 +17,12 @@ export default function EditorClient({ template, profileData }: EditorClientProp
   const router = useRouter();
 
   const handleConfirm = () => {
+    // Salvar dados no localStorage antes de ir para o checkout
+    localStorage.setItem("doku_form_data", JSON.stringify(formData));
+    localStorage.setItem("doku_current_template_content", template.content);
+    localStorage.setItem("doku_current_doc_title", template.title);
+    localStorage.setItem("doku_current_price", template.price?.toString() || "0");
+    
     // Lógica para salvar ou ir para checkout
     router.push('/checkout');
   };

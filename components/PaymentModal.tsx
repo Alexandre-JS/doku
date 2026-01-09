@@ -27,6 +27,9 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [userEmail, setUserEmail] = useState(formData?.email || "");
 
+  const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
+  const isFree = cleanPrice === "0" || cleanPrice === "";
+
   // Resetar o modal ao abrir
   useEffect(() => {
     if (isOpen) {
@@ -81,7 +84,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
   };
 
   const handlePayment = () => {
-    if (!phoneNumber || phoneNumber.length < 9) {
+    if (!isFree && (!phoneNumber || phoneNumber.length < 9)) {
       setError("Por favor, insira um número de telefone válido.");
       return;
     }
@@ -89,7 +92,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
     setError("");
     setStep("processing");
     
-    // Simular processamento de pagamento (2 segundos)
+    // Simular processamento de pagamento ou geração (1s para grátis, 2s para pago)
     setTimeout(() => {
       if (formData && templateContent) {
         generatePDF(formData, templateContent, docTitle, layoutType);
@@ -106,7 +109,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
           onSuccess();
         }, 500);
       }
-    }, 2000);
+    }, isFree ? 1000 : 2000);
   };
 
   if (!isOpen) return null;
@@ -157,63 +160,75 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setPaymentMethod("mpesa")}
-                    className={`btn-mpesa group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "mpesa" ? "ring-2 ring-red-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
-                  >
-                    <img src="/m-pesa.png" alt="M-Pesa" className="h-7 w-auto brightness-0 invert" />
-                    {paymentMethod === "mpesa" && (
-                      <div className="absolute right-2 top-2">
-                        <CheckCircle2 size={18} className="text-white" />
-                      </div>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={() => setPaymentMethod("emola")}
-                    className={`btn-emola group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "emola" ? "ring-2 ring-orange-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
-                  >
-                    <img src="/e-mola.png" alt="e-Mola" className="h-7 w-auto brightness-0 invert" />
-                    {paymentMethod === "emola" && (
-                      <div className="absolute right-2 top-2">
-                        <CheckCircle2 size={18} className="text-white" />
-                      </div>
-                    )}
-                  </button>
-                </div>
+                {!isFree && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setPaymentMethod("mpesa")}
+                        className={`btn-mpesa group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "mpesa" ? "ring-2 ring-red-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
+                      >
+                        <img src="/m-pesa.png" alt="M-Pesa" className="h-7 w-auto brightness-0 invert" />
+                        {paymentMethod === "mpesa" && (
+                          <div className="absolute right-2 top-2">
+                            <CheckCircle2 size={18} className="text-white" />
+                          </div>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => setPaymentMethod("emola")}
+                        className={`btn-emola group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "emola" ? "ring-2 ring-orange-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
+                      >
+                        <img src="/e-mola.png" alt="e-Mola" className="h-7 w-auto brightness-0 invert" />
+                        {paymentMethod === "emola" && (
+                          <div className="absolute right-2 top-2">
+                            <CheckCircle2 size={18} className="text-white" />
+                          </div>
+                        )}
+                      </button>
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Número {paymentMethod === "mpesa" ? "Vodacom" : "Movitel"}
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-4 text-slate-400 font-bold">+258</span>
-                    <input
-                      type="tel"
-                      placeholder="8X XXX XXXX"
-                      className={`w-full h-16 rounded-xl border ${error ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} py-4 pl-16 pr-4 text-lg font-bold focus:border-doku-blue focus:outline-none focus:ring-1 focus:ring-doku-blue`}
-                      value={phoneNumber}
-                      onChange={(e) => {
-                        setPhoneNumber(e.target.value);
-                        if (error) setError("");
-                      }}
-                    />
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Número {paymentMethod === "mpesa" ? "Vodacom" : "Movitel"}
+                      </label>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-4 text-slate-400 font-bold">+258</span>
+                        <input
+                          type="tel"
+                          placeholder="8X XXX XXXX"
+                          className={`w-full h-16 rounded-xl border ${error ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} py-4 pl-16 pr-4 text-lg font-bold focus:border-doku-blue focus:outline-none focus:ring-1 focus:ring-doku-blue`}
+                          value={phoneNumber}
+                          onChange={(e) => {
+                            setPhoneNumber(e.target.value);
+                            if (error) setError("");
+                          }}
+                        />
+                      </div>
+                      {error && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-xs font-bold text-red-500 ml-1"
+                        >
+                          {error}
+                        </motion.p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {isFree && (
+                  <div className="rounded-2xl bg-blue-50 p-6 border border-blue-100">
+                    <p className="text-sm text-blue-800 font-medium leading-relaxed text-center">
+                      Este é um modelo gratuito. Clique no botão abaixo para gerar o seu PDF oficial instantaneamente.
+                    </p>
                   </div>
-                  {error && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-xs font-bold text-red-500 ml-1"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-                </div>
+                )}
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 ring-1 ring-slate-100">
                   <span className="font-bold text-slate-600">Total</span>
-                  <span className="text-xl font-black text-slate-900">{price}</span>
+                  <span className="text-xl font-black text-slate-900">{isFree ? 'Grátis' : `${cleanPrice} MT`}</span>
                 </div>
 
                 <div className="flex justify-center pt-2">
@@ -221,7 +236,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                     onClick={handlePayment}
                     className="btn-primary w-full sm:w-auto sm:px-16"
                   >
-                    Pagar Agora
+                    {isFree ? 'Baixar PDF Grátis' : 'Pagar Agora'}
                   </button>
                 </div>
               </motion.div>
@@ -240,9 +255,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                     <Smartphone size={24} className="text-blue-600" />
                   </div>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Processando Pagamento</h2>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">
+                  {isFree ? 'Gerando Documento' : 'Processando Pagamento'}
+                </h2>
                 <p className="text-sm text-slate-500 max-w-[240px] mx-auto">
-                  Verifique o seu telemóvel e insira o seu PIN para confirmar.
+                  {isFree 
+                    ? 'Aguarde um momento enquanto preparamos o seu documento...' 
+                    : 'Verifique o seu telemóvel e insira o seu PIN para confirmar.'}
                 </p>
               </motion.div>
             )}

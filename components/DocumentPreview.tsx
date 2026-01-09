@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, CheckCircle2 } from "lucide-react";
 
 interface DocumentPreviewProps {
   userData: Record<string, string>;
@@ -86,7 +86,8 @@ export default function DocumentPreview({
     title?.toLowerCase().includes('declaração') || 
     title?.toLowerCase().includes('compromisso') ||
     title?.toLowerCase().includes('contrato');
-
+  const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
+  const isFree = cleanPrice === '0' || cleanPrice === '';
   const getValue = (key: string) => {
     return userData[key] || 
            userData[key.toLowerCase()] || 
@@ -144,10 +145,18 @@ export default function DocumentPreview({
           <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_30px_60px_rgba(0,0,0,0.05)]">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="flex flex-col items-center md:items-start">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total a Pagar</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  {isFree ? "Acesso ao Modelo" : "Total a Pagar"}
+                </span>
                 <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-slate-900">{price.replace(' MT', '')}</span>
-                  <span className="text-sm font-bold text-slate-500">MT</span>
+                  {isFree ? (
+                    <span className="text-4xl font-black text-emerald-600">Grátis</span>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-black text-slate-900">{cleanPrice}</span>
+                      <span className="text-sm font-bold text-slate-500">MT</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -160,10 +169,21 @@ export default function DocumentPreview({
                 </button>
                 <button 
                   onClick={onConfirm}
-                  className="w-full sm:w-auto px-10 h-12 rounded-xl bg-slate-900 font-bold text-white shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95"
+                  className={`w-full sm:w-auto px-10 h-12 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 ${
+                    isFree ? "bg-emerald-600 hover:bg-emerald-700" : "bg-slate-900 hover:bg-slate-800"
+                  }`}
                 >
-                  <Lock size={16} />
-                  Confirmar
+                  {isFree ? (
+                    <>
+                      <CheckCircle2 size={16} />
+                      Baixar PDF Grátis
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={16} />
+                      Confirmar
+                    </>
+                  )}
                 </button>
               </div>
             </div>
