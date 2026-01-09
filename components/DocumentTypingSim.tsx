@@ -5,29 +5,31 @@ import { useState, useEffect } from "react";
 
 const DOCUMENTS = [
   {
-    id: "requerimento",
+    id: "curriculum",
     parts: [
-      { text: "EXMO. SENHOR DIRECTOR DO INSTITUTO NACIONAL DE TRANSPORTES TERRESTRES", align: "justify", bold: true },
+      { text: "CURRICULUM VITAE", align: "center", bold: true },
       { text: "\n\n", align: "left" },
-      { text: "Maputo", align: "right", bold: true },
+      { text: "DADOS PESSOAIS", align: "left", bold: true },
+      { text: "\nNome: Alexandre Silva\nEmail: alexandre@exemplo.com\nTelefone: +258 84 000 0000\nResidência: Maputo, Moçambique\n\n", align: "left" },
+      { text: "PERFIL PROFISSIONAL", align: "left", bold: true },
+      { text: "\nProfissional dedicado com mais de 5 anos de experiência na área de gestão...", align: "justify", bold: false }
+    ]
+  },
+  {
+    id: "pedido-emprego",
+    parts: [
+      { text: "A Sua Excia\nDirector dos Recursos Humanos", align: "left", bold: true },
+      { text: "\n\nAssunto: Pedido de Emprego", align: "left", bold: true },
       { text: "\n\n", align: "left" },
-      { text: "Eu, Alexandre José da Silva, de nacionalidade Moçambicana, portador do BI nº 110100234567M, residente no Bairro da Polana Caniço B, venho mui respeitosamente requerer a V. Excia se digne autorizar a renovação da minha carta de condução...", align: "justify", bold: false }
+      { text: "Eu, Maria Lurdes dos Santos, venho por meio desta submeter a minha candidatura para a vaga de Assistente Administrativo, conforme anunciado recentemente...", align: "justify", bold: false }
     ]
   },
   {
     id: "declaracao",
     parts: [
-      { text: "DECLARAÇÃO DE COMPROMISSO DE HONRA", align: "center", bold: true },
+      { text: "DECLARAÇÃO DE RESIDÊNCIA", align: "center", bold: true },
       { text: "\n\n", align: "left" },
-      { text: "Eu, Maria Lurdes dos Santos, solteira, maior, natural de Xai-Xai, residente em Maputo, declaro por minha honra que nunca fui condenada em processo-crime por factos que constituam crime contra o Estado, nem por factos que...", align: "justify", bold: false }
-    ]
-  },
-  {
-    id: "contrato",
-    parts: [
-      { text: "CONTRATO DE ARRENDAMENTO", align: "center", bold: true },
-      { text: "\n\n", align: "left" },
-      { text: "Entre: João Manuel, na qualidade de Senhorio, e Pedro Augusto, na qualidade de Arrendatário, é celebrado o presente contrato que se rege pelas cláusulas seguintes: O imóvel situa-se na Av. Eduardo Mondlane, nº 123...", align: "justify", bold: false }
+      { text: "A Secretaria do Bairro de Polana Caniço B, declara para efeitos de prova que o Sr. João Manuel, portador do BI nº 110100234567M, reside nesta unidade territorial...", align: "justify", bold: false }
     ]
   }
 ];
