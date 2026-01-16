@@ -45,8 +45,9 @@ function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
-  const [templateData, setTemplateData] = useState<{ content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
+  const [templateData, setTemplateData] = useState<{ id: string; content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [toastList, setToastList] = useState<Array<{
     id: string;
     message: string;
@@ -100,6 +101,7 @@ function FormContent() {
       const { data: auth } = await supabase.auth.getUser();
 
       if (!auth?.user) return;
+      setCurrentUser(auth.user);
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -229,7 +231,7 @@ function FormContent() {
       const supabase = createBrowserSupabase();
       const { data, error } = await supabase
         .from("templates")
-        .select("content, price, form_schema, title")
+        .select("id, content, price, form_schema, title")
         .eq("slug", slug)
         .single();
 
@@ -237,6 +239,7 @@ function FormContent() {
         console.error("Erro ao buscar modelo:", error.message);
       } else {
         setTemplateData({
+          id: data.id,
           content: data.content,
           price: data.price?.toString() || "0",
           form_schema: data.form_schema,
@@ -578,6 +581,8 @@ function FormContent() {
           'OFFICIAL'
         }
         onSuccess={handlePaymentSuccess}
+        userId={currentUser?.id}
+        templateId={templateData?.id}
       />
 
       {/* Toast Container */}
