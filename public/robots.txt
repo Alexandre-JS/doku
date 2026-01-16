@@ -1,0 +1,12 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /api
+
+# Host
+Host: https://documoz.com
+
+# Sitemaps
+Sitemap: https://documoz.com/sitemap.xml
