@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight } from "lucide-react";
 import { generatePDF, LayoutType } from "../src/utils/pdfGenerator";
 import { clearSensitiveData } from "../src/utils/cookieManager";
+import { createBrowserSupabase } from "../src/lib/supabase";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -16,9 +17,11 @@ interface PaymentModalProps {
   price: string;
   layoutType?: LayoutType;
   onSuccess?: () => void;
+  userId?: string;
+  templateId?: string;
 }
 
-export default function PaymentModal({ isOpen, onClose, formData, templateContent, docTitle, price, layoutType, onSuccess }: PaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, formData, templateContent, docTitle, price, layoutType, onSuccess, userId, templateId }: PaymentModalProps) {
   const router = useRouter();
   const [step, setStep] = useState<"payment" | "processing" | "success">("payment");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "emola">("mpesa");
@@ -29,6 +32,54 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
 
   const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
   const isFree = cleanPrice === "0" || cleanPrice === "";
+
+  // Polling para status do pagamento
+  const checkStatus = async (reference: string) => {
+    const supabaseInstance = createBrowserSupabase();
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/status/${reference}`);
+        const data = await res.json();
+
+        const isSuccess = data.status === 'SUCCESS' || data.status === 'SETTLED' || data.status === 'COMPLETED';
+        const isFailed = data.status === 'FAILED' || data.status === 'CANCELLED';
+
+        if (isSuccess) {
+          clearInterval(interval);
+          
+          // Atualizar banco de dados
+          await supabaseInstance
+            .from('orders')
+            .update({ status: 'COMPLETED' })
+            .eq('mpesa_ref', reference);
+
+          if (formData && templateContent) {
+            generatePDF(formData, templateContent, docTitle, layoutType);
+          }
+          setStep("success");
+          clearSensitiveData();
+          if (onSuccess) onSuccess();
+        } else if (isFailed) {
+          clearInterval(interval);
+          
+          await supabaseInstance
+            .from('orders')
+            .update({ status: 'FAILED' })
+            .eq('mpesa_ref', reference);
+
+          setError(`O pagamento falhou ou foi cancelado. Status: ${data.status}`);
+          setStep("payment");
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 3000); // Check every 3 seconds
+
+    // Timeout polling after 5 minutes
+    setTimeout(() => {
+      clearInterval(interval);
+    }, 300000);
+  };
 
   // Resetar o modal ao abrir
   useEffect(() => {
@@ -83,7 +134,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
     window.open(`https://wa.me/258847563555?text=${message}`, '_blank');
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!isFree && (!phoneNumber || phoneNumber.length < 9)) {
       setError("Por favor, insira um número de telefone válido.");
       return;
@@ -91,25 +142,66 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
     
     setError("");
     setStep("processing");
-    
-    // Simular processamento de pagamento ou geração (1s para grátis, 2s para pago)
-    setTimeout(() => {
-      if (formData && templateContent) {
-        generatePDF(formData, templateContent, docTitle, layoutType);
+
+    if (isFree) {
+      setTimeout(() => {
+        if (formData && templateContent) {
+          generatePDF(formData, templateContent, docTitle, layoutType);
+        }
+        setStep("success");
+        clearSensitiveData();
+        if (onSuccess) onSuccess();
+      }, 1000);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/payments/mpesa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber,
+          amount: cleanPrice,
+          description: docTitle,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao iniciar pagamento');
       }
-      setStep("success");
-      
-      // Limpar cookies sensíveis após sucesso
-      clearSensitiveData();
-      console.log('[DOKU Security] Cleared sensitive cookies after PDF generation');
-      
-      // Chamar callback de sucesso
-      if (onSuccess) {
-        setTimeout(() => {
-          onSuccess();
-        }, 500);
+
+      // Iniciar polling para verificar status
+      if (data.debito_reference) {
+        // Registrar na tabela orders se houver userId e templateId
+        if (userId && templateId) {
+          const supabaseInstance = createBrowserSupabase();
+          await supabaseInstance.from('orders').insert({
+            user_id: userId,
+            doc_template_id: templateId,
+            status: 'PENDING',
+            amount: parseFloat(cleanPrice),
+            mpesa_ref: data.debito_reference,
+            metadata: {
+              ...formData,
+              payment_method: 'mpesa',
+              debito_transaction_id: data.transaction_id
+            }
+          });
+          console.log('[DOKU] Order recorded in database');
+        }
+
+        checkStatus(data.debito_reference);
+      } else {
+        throw new Error("Referência de pagamento não recebida.");
       }
-    }, isFree ? 1000 : 2000);
+
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      setError(err.message || "Erro ao processar pagamento. Tente novamente.");
+      setStep("payment");
+    }
   };
 
   if (!isOpen) return null;
