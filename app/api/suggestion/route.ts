@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: [process.env.ADMIN_EMAIL || 'info@dokumoz.com'],
-      subject: 'Nova Sugestão de Modelo - DOKU',
+      subject: 'Nova Sugestão de Modelo - Dokumoz',
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #143361;">
           <h2 style="color: #00A86B;">Nova Sugestão Recebida!</h2>
