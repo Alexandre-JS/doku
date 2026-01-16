@@ -278,7 +278,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                         )}
                       </button>
                       
-                      <button
+                      {/* <button
                         onClick={() => setPaymentMethod("emola")}
                         className={`btn-emola group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "emola" ? "ring-2 ring-orange-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
                       >
@@ -288,7 +288,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                             <CheckCircle2 size={18} className="text-white" />
                           </div>
                         )}
-                      </button>
+                      </button> */}
                     </div>
 
                     <div className="space-y-2">
