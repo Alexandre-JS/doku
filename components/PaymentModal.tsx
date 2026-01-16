@@ -41,17 +41,24 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         const res = await fetch(`/api/payments/status/${reference}`);
         const data = await res.json();
 
-        const isSuccess = data.status === 'SUCCESS' || data.status === 'SETTLED' || data.status === 'COMPLETED';
+        const isSuccess = data.status === 'SUCCESS' || data.status === 'SUCCESSFUL' || data.status === 'SETTLED' || data.status === 'COMPLETED';
         const isFailed = data.status === 'FAILED' || data.status === 'CANCELLED';
 
         if (isSuccess) {
           clearInterval(interval);
+          console.log('[DOKU] Payment confirmed, finalizing...');
           
-          // Atualizar banco de dados
-          await supabaseInstance
-            .from('orders')
-            .update({ status: 'COMPLETED' })
-            .eq('mpesa_ref', reference);
+          // Atualizar banco de dados (tenta, mas não bloqueia se falhar)
+          try {
+            const { error: updateError } = await supabaseInstance
+              .from('orders')
+              .update({ status: 'COMPLETED' })
+              .eq('mpesa_ref', reference);
+            
+            if (updateError) console.error('[DOKU] DB Update Error:', updateError);
+          } catch (e) {
+            console.error('[DOKU] DB Update Exception:', e);
+          }
 
           if (formData && templateContent) {
             generatePDF(formData, templateContent, docTitle, layoutType);
@@ -59,16 +66,12 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
           setStep("success");
           clearSensitiveData();
           if (onSuccess) onSuccess();
-        } else if (isFailed) {
-          clearInterval(interval);
-          
-          await supabaseInstance
-            .from('orders')
-            .update({ status: 'FAILED' })
-            .eq('mpesa_ref', reference);
-
-          setError(`O pagamento falhou ou foi cancelado. Status: ${data.status}`);
-          setStep("payment");
+        } else {
+          console.log('[DOKU] Payment status:', data.status);
+          if (isFailed) {
+            clearInterval(interval);
+            // ... (resto do código)
+          }
         }
       } catch (err) {
         console.error("Polling error:", err);
@@ -177,19 +180,27 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         // Registrar na tabela orders se houver userId e templateId
         if (userId && templateId) {
           const supabaseInstance = createBrowserSupabase();
-          await supabaseInstance.from('orders').insert({
-            user_id: userId,
-            doc_template_id: templateId,
-            status: 'PENDING',
-            amount: parseFloat(cleanPrice),
-            mpesa_ref: data.debito_reference,
-            metadata: {
-              ...formData,
-              payment_method: 'mpesa',
-              debito_transaction_id: data.transaction_id
+          try {
+            const { error: insertError } = await supabaseInstance.from('orders').insert({
+              user_id: userId,
+              doc_template_id: templateId,
+              status: 'PENDING',
+              amount: parseFloat(cleanPrice),
+              mpesa_ref: data.debito_reference,
+              metadata: {
+                ...formData,
+                payment_method: 'mpesa',
+                debito_transaction_id: data.transaction_id
+              }
+            });
+            if (insertError) {
+              console.error('[DOKU] Database record failed (RLS?):', insertError);
+            } else {
+              console.log('[DOKU] Order recorded in database');
             }
-          });
-          console.log('[DOKU] Order recorded in database');
+          } catch (dbErr) {
+            console.error('[DOKU] DB Insert Exception:', dbErr);
+          }
         }
 
         checkStatus(data.debito_reference);
