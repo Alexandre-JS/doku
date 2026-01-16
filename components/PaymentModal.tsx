@@ -177,30 +177,30 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
 
       // Iniciar polling para verificar status
       if (data.debito_reference) {
-        // Registrar na tabela orders se houver userId e templateId
-        if (userId && templateId) {
-          const supabaseInstance = createBrowserSupabase();
-          try {
-            const { error: insertError } = await supabaseInstance.from('orders').insert({
-              user_id: userId,
-              doc_template_id: templateId,
-              status: 'PENDING',
-              amount: parseFloat(cleanPrice),
-              mpesa_ref: data.debito_reference,
-              metadata: {
-                ...formData,
-                payment_method: 'mpesa',
-                debito_transaction_id: data.transaction_id
-              }
-            });
-            if (insertError) {
-              console.error('[DOKU] Database record failed (RLS?):', insertError);
-            } else {
-              console.log('[DOKU] Order recorded in database');
+        // Registrar na tabela orders para histórico
+        const supabaseInstance = createBrowserSupabase();
+        try {
+          const { error: insertError } = await supabaseInstance.from('orders').insert({
+            user_id: userId || null, // Permite nulo para convidados
+            doc_template_id: templateId || null,
+            status: 'PENDING',
+            amount: parseFloat(cleanPrice),
+            mpesa_ref: data.debito_reference,
+            metadata: {
+              ...formData,
+              phone_number: phoneNumber, // Captura o telefone do pagamento
+              payment_method: 'mpesa',
+              debito_transaction_id: data.transaction_id,
+              doc_title: docTitle
             }
-          } catch (dbErr) {
-            console.error('[DOKU] DB Insert Exception:', dbErr);
+          });
+          if (insertError) {
+            console.error('[DOKU] Database record failed:', insertError);
+          } else {
+            console.log('[DOKU] Order recorded for tracking');
           }
+        } catch (dbErr) {
+          console.error('[DOKU] DB Insert Exception:', dbErr);
         }
 
         checkStatus(data.debito_reference);

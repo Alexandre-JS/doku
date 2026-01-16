@@ -20,21 +20,29 @@ export default function AdminDashboardHome() {
     templates: 0,
     variables: 0,
     sales: 0,
-    activeUsers: 0
+    dailyDocs: 0
   });
 
   useEffect(() => {
     async function fetchStats() {
-      const [templ, vars] = await Promise.all([
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const [templ, vars, orders, daily] = await Promise.all([
         supabase.from("templates").select("id", { count: "exact" }),
-        supabase.from("global_variables").select("id", { count: "exact" })
+        supabase.from("global_variables").select("id", { count: "exact" }),
+        supabase.from("orders").select("id", { count: "exact" }).eq("status", "COMPLETED"),
+        supabase.from("orders")
+          .select("id", { count: "exact" })
+          .eq("status", "COMPLETED")
+          .gte("created_at", today.toISOString())
       ]);
 
       setStats({
         templates: templ.count || 0,
         variables: vars.count || 0,
-        sales: 42, // Mock por agora
-        activeUsers: 156 // Mock
+        sales: orders.count || 0,
+        dailyDocs: daily.count || 0
       });
     }
     fetchStats();
@@ -43,8 +51,8 @@ export default function AdminDashboardHome() {
   const cards = [
     { name: "Total de Minutas", value: stats.templates, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
     { name: "Variáveis Globais", value: stats.variables, icon: Database, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { name: "Vendas (Mês)", value: `${stats.sales}`, icon: TrendingUp, color: "text-amber-600", bg: "bg-amber-50" },
-    { name: "Utilizadores Ativos", value: stats.activeUsers, icon: Users, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { name: "Total de Vendas", value: stats.sales, icon: TrendingUp, color: "text-amber-600", bg: "bg-amber-50" },
+    { name: "Documentos (Hoje)", value: stats.dailyDocs, icon: Users, color: "text-indigo-600", bg: "bg-indigo-50" },
   ];
 
   return (
