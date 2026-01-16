@@ -53,7 +53,7 @@ export default function Hero() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="mt-4 max-w-xl text-base leading-relaxed text-slate-400 sm:mt-6 sm:text-lg"
             >
-              Encontre e gere documentos oficiais, contratos e requerimentos em segundos. 
+              Encontre e Crie documentos oficiais, contratos e requerimentos em segundos. 
               Simples, rápido e juridicamente seguro.
             </motion.p>
 

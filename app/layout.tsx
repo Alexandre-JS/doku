@@ -18,12 +18,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://documoz.com"),
   // O título deve ter a palavra-chave e o benefício principal
   title: {
-    default: "DOKUMOZ | Minutas, Declarações e Documentos Oficiais em Moçambique",
-    template: "%s | DOKUMOZ"
+    default: "Dokumoz | Minutas, Declarações e Documentos Oficiais em Moçambique",
+    template: "%s | Dokumoz"
   },
   
   description: 
-    "Gere o seu currículo, carta de emprego, declarações de residência e requerimentos oficiais em 2 minutos. Simples, seguro e pronto para imprimir.",
+    "Crie o seu currículo, carta de emprego, declarações de residência e requerimentos oficiais em 2 minutos. Simples, seguro e pronto para imprimir.",
   
   // Palavras-chave que os jovens moçambicanos pesquisam no Google
   keywords: [
@@ -109,7 +109,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "DOKUMOZ",
+    "name": "Dokumoz",
     "operatingSystem": "Any",
     "applicationCategory": "BusinessApplication",
     "offers": {

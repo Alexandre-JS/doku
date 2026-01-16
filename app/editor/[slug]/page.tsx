@@ -21,9 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${template.title} | Gerar Online`,
-    description: template.description || `Gere o seu ${template.title} em minutos com o DOKUMOZ. Simples, rápido e juridicamente seguro.`,
+    description: template.description || `Gere o seu ${template.title} em minutos com o Dokumoz. Simples, rápido e juridicamente seguro.`,
     openGraph: {
-      title: `${template.title} - DOKUMOZ`,
+      title: `${template.title} - Dokumoz`,
       description: template.description,
       type: 'article',
       images: [
@@ -93,11 +93,11 @@ export default async function EditorPage({ params }: Props) {
     "description": template.description,
     "author": {
       "@type": "Organization",
-      "name": "DOKUMOZ"
+      "name": "Dokumoz"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "DOKUMOZ",
+      "name": "Dokumoz",
       "logo": {
         "@type": "ImageObject",
         "url": "https://documoz.com/logo.png"
