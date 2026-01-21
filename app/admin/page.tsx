@@ -22,8 +22,26 @@ export default function AdminDashboardHome() {
     sales: 0,
     dailyDocs: 0
   });
+  const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
+    // Configurar Presence Realtime
+    const channel = supabase.channel('online-users');
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        // Contamos todos os IDs únicos presentes no estado
+        const count = Object.keys(state).length;
+        console.log('[DOKU-Realtime] Presenças detetadas:', count, state);
+        setOnlineCount(count);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[DOKU-Realtime] Inscrito no canal de presença');
+        }
+      });
+
     async function fetchStats() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -46,13 +64,17 @@ export default function AdminDashboardHome() {
       });
     }
     fetchStats();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, [supabase]);
 
   const cards = [
     { name: "Total de Minutas", value: stats.templates, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
     { name: "Variáveis Globais", value: stats.variables, icon: Database, color: "text-emerald-600", bg: "bg-emerald-50" },
     { name: "Total de Vendas", value: stats.sales, icon: TrendingUp, color: "text-amber-600", bg: "bg-amber-50" },
-    { name: "Documentos (Hoje)", value: stats.dailyDocs, icon: Users, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { name: "Online (Tempo Real)", value: onlineCount, icon: Users, color: "text-indigo-600", bg: "bg-indigo-50" },
   ];
 
   return (

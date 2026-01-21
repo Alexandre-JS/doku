@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import CookieBanner from "../components/CookieBanner";
 import NewsletterModal from "../components/NewsletterModal";
+import RealtimePresenceTracker from "../src/hooks/useRealtimePresence";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -134,6 +135,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         {children}
+        <RealtimePresenceTracker />
         <CookieBanner />
         <NewsletterModal />
       </body>
