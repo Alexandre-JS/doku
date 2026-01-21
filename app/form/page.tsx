@@ -81,7 +81,7 @@ function FormContent() {
       current_date: new Date().toISOString().split("T")[0],
     },
     {
-      storageKey: "doku_form_auto_save",
+      storageKey: `doku_form_save_${slug || 'default'}`,
       debounceMs: 500,
       onRestore: (data) => {
         // Mostra toast de recuperação
@@ -354,7 +354,20 @@ function FormContent() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* O preço foi movido para o final do processo para uma experiência mais limpa */}
+            {!currentUser && (
+              <Link 
+                href={`/auth/login?returnTo=/form?template=${slug}`}
+                className="hidden sm:flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900"
+              >
+                Já tem conta? Entrar
+              </Link>
+            )}
+            {currentUser && (
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Perfil Conectado</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
