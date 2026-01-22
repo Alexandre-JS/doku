@@ -16,11 +16,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export interface FormPersistenceOptions {
   storageKey?: string;
   debounceMs?: number;
-  onRestore?: (data: Record<string, string>) => void;
+  onRestore?: (data: Record<string, any>) => void;
 }
 
 interface PersistenceState {
-  data: Record<string, string>;
+  data: Record<string, any>;
   hasRestoredData: boolean;
   isRestoring: boolean;
 }
@@ -29,7 +29,7 @@ interface PersistenceState {
  * Hook para gerenciar persistência automática de formulários
  */
 export function useFormPersistence(
-  initialData: Record<string, string>,
+  initialData: Record<string, any>,
   options: FormPersistenceOptions = {}
 ) {
   const {
@@ -38,7 +38,7 @@ export function useFormPersistence(
     onRestore,
   } = options;
 
-  const [formData, setFormData] = useState<Record<string, string>>(initialData);
+  const [formData, setFormData] = useState<Record<string, any>>(initialData);
   const [hasRestoredData, setHasRestoredData] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isFirstRenderRef = useRef(true);
@@ -53,7 +53,7 @@ export function useFormPersistence(
     try {
       const savedData = localStorage.getItem(storageKey);
       if (savedData) {
-        const parsed = JSON.parse(savedData) as Record<string, string>;
+        const parsed = JSON.parse(savedData) as Record<string, any>;
         
         // Mescla dados salvos com dados iniciais (dados salvos têm prioridade)
         const restoredData = {
@@ -128,7 +128,7 @@ export function useFormPersistence(
    * Atualiza um campo e persiste
    */
   const updateField = useCallback(
-    (field: string, value: string) => {
+    (field: string, value: any) => {
       setFormData((prev) => {
         const updated = { ...prev, [field]: value };
         persistData(updated);
@@ -142,7 +142,7 @@ export function useFormPersistence(
    * Atualiza múltiplos campos
    */
   const updateMultiple = useCallback(
-    (updates: Record<string, string>) => {
+    (updates: Record<string, any>) => {
       setFormData((prev) => {
         const updated = { ...prev, ...updates };
         persistData(updated);

@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Toast, { ToastContainer } from "@/components/Toast";
 import { useSearchParams, useRouter } from "next/navigation";
 import { deleteTemplate } from "@/src/lib/admin-actions";
+import { DashboardHeader, AdminPageContainer } from "@/components/admin/DashboardComponents";
 
 interface TemplateListing {
   id: string;
@@ -128,117 +129,132 @@ export default function AdminTemplatesPage() {
   };
 
   return (
-    <div className="pb-20">
-      <main className="mx-auto max-w-7xl pt-4">
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-black text-[#143361] tracking-tight">Biblioteca de Minutas</h2>
-            <p className="text-sm text-zinc-500 font-medium font-inter">Gerencie todas as minutas disponíveis no sistema.</p>
-          </div>
+    <AdminPageContainer>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      
+      <DashboardHeader 
+        title="Gestão de Minutas" 
+        description={`Tens ${templates.length} minutas publicadas no sistema.`}
+      >
+        <Link 
+          href="/admin/templates/new"
+          className="flex items-center gap-2 rounded-xl bg-[#143361] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-100 hover:bg-[#1a3f75] transition-all active:scale-95"
+        >
+          <Plus size={18} />
+          Nova Minuta
+        </Link>
+      </DashboardHeader>
 
-          {/* Barra de Busca */}
-          <div className="relative w-full max-w-md">
+      {/* Listagem Table */}
+      <div className="overflow-hidden rounded-2xl md:rounded-[2rem] border border-zinc-200 bg-white shadow-sm">
+        <div className="p-6 border-b border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+           {/* Barra de Busca */}
+           <div className="relative w-full max-w-md">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input 
               type="text" 
               placeholder="Pesquisar por título ou categoria..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-zinc-200 rounded-2xl pl-11 pr-4 py-3 text-sm font-medium outline-none focus:border-[#143361] focus:ring-4 focus:ring-blue-50 transition-all shadow-sm"
+              className="w-full bg-zinc-50 border border-zinc-100 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium outline-none focus:border-[#143361] transition-all"
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+             <button className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-bold text-zinc-600 hover:bg-zinc-50 transition-all">
+                <Filter size={14} />
+                Filtrar
+             </button>
           </div>
         </div>
 
-        {/* Listagem Estilo Shadcn UI */}
-        <div className="overflow-hidden rounded-[2rem] border border-zinc-200 bg-white shadow-xl shadow-zinc-200/50">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-zinc-100 bg-zinc-50/50">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Título da Minuta</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Categoria</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Preço</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Criada em</th>
-                  <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-zinc-400">Ações</th>
+        <div className="overflow-x-auto min-w-full">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-zinc-100 bg-zinc-50/50">
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Título da Minuta</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 hidden md:table-cell">Categoria</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Preço</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 hidden lg:table-cell">Criada em</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-zinc-400">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-50">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={5} className="px-6 py-6"><div className="h-4 bg-zinc-100 rounded-full w-full" /></td>
+                  </tr>
+                ))
+              ) : filteredTemplates.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-20 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 mb-4">
+                      <FileText size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-zinc-500">Nenhuma minuta encontrada.</p>
+                    <p className="text-xs text-zinc-400 mt-1">Experimente mudar o termo de pesquisa.</p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-50">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan={5} className="px-6 py-6"><div className="h-4 bg-zinc-100 rounded-full w-full" /></td>
-                    </tr>
-                  ))
-                ) : filteredTemplates.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 mb-4">
-                        <FileText size={24} />
+              ) : (
+                filteredTemplates.map((template) => (
+                  <tr key={template.id} className="group hover:bg-blue-50/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-blue-50 text-[#143361] hidden sm:block">
+                          <FileText size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-[#143361] truncate group-hover:underline cursor-pointer">{template.title}</p>
+                          <p className="text-[10px] font-mono text-zinc-400 truncate">{template.slug}</p>
+                        </div>
                       </div>
-                      <p className="text-sm font-bold text-zinc-500">Nenhuma minuta encontrada.</p>
-                      <p className="text-xs text-zinc-400 mt-1">Experimente mudar o termo de pesquisa.</p>
+                    </td>
+                    <td className="px-6 py-4 hidden md:table-cell">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-zinc-100 text-zinc-500 border border-zinc-200">
+                        {template.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-black text-[#143361] whitespace-nowrap">{parseFloat(template.price || "0").toLocaleString()} MT</p>
+                    </td>
+                    <td className="px-6 py-4 hidden lg:table-cell">
+                      <div className="flex items-center gap-2 text-zinc-500">
+                        <Calendar size={12} />
+                        <span className="text-xs font-medium">
+                          {new Date(template.created_at).toLocaleDateString('pt-PT', { 
+                            day: '2-digit', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link 
+                          href={`/admin/templates/${template.id}`}
+                          className="p-2 rounded-lg text-zinc-400 hover:text-[#143361] hover:bg-white transition-all shadow-sm border border-transparent hover:border-zinc-200"
+                          title="Editar Minuta"
+                        >
+                          <Edit3 size={16} />
+                        </Link>
+                        <button 
+                          onClick={() => setDeleteId(template.id)}
+                          className="p-2 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-white transition-all shadow-sm border border-transparent hover:border-red-100"
+                          title="Apagar Minuta"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  filteredTemplates.map((template) => (
-                    <tr key={template.id} className="group hover:bg-blue-50/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-blue-50 text-[#143361]">
-                            <FileText size={16} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-[#143361] group-hover:underline cursor-pointer">{template.title}</p>
-                            <p className="text-[10px] font-mono text-zinc-400">{template.slug}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-zinc-100 text-zinc-500 border border-zinc-200">
-                          {template.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-black text-[#143361]">{template.price}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-zinc-500">
-                          <Calendar size={12} />
-                          <span className="text-xs font-medium">
-                            {new Date(template.created_at).toLocaleDateString('pt-PT', { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              year: 'numeric' 
-                            })}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link 
-                            href={`/admin/templates/${template.id}`}
-                            className="p-2 rounded-lg text-zinc-400 hover:text-[#143361] hover:bg-white transition-all shadow-sm border border-transparent hover:border-zinc-200"
-                            title="Editar Minuta"
-                          >
-                            <Edit3 size={16} />
-                          </Link>
-                          <button 
-                            onClick={() => setDeleteId(template.id)}
-                            className="p-2 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-white transition-all shadow-sm border border-transparent hover:border-red-100"
-                            title="Apagar Minuta"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      </main>
+      </div>
 
       {/* Modal de Confirmação de Apagar */}
       <AnimatePresence>
@@ -263,14 +279,14 @@ export default function AdminTemplatesPage() {
               <div className="mt-8 flex gap-3">
                 <button 
                   onClick={() => setDeleteId(null)}
-                  className="flex-1 rounded-xl px-4 py-3 text-xs font-bold text-zinc-500 hover:bg-zinc-100 transition-all"
+                  className="flex-1 rounded-xl px-4 py-3 text-xs font-bold text-zinc-500 hover:bg-zinc-100 transition-all font-inter"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="flex-1 rounded-xl bg-red-500 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-red-100 transition-all hover:bg-red-600 disabled:opacity-50"
+                  className="flex-1 rounded-xl bg-red-500 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-red-100 transition-all hover:bg-red-600 disabled:opacity-50 font-inter"
                 >
                   {isDeleting ? "A apagar..." : "Sim, Apagar"}
                 </button>
@@ -279,8 +295,6 @@ export default function AdminTemplatesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <ToastContainer toasts={toasts} onClose={removeToast} />
-    </div>
+    </AdminPageContainer>
   );
 }

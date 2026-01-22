@@ -4,7 +4,7 @@ import React from "react";
 import { ArrowLeft, Lock, CheckCircle2 } from "lucide-react";
 
 interface DocumentPreviewProps {
-  userData: Record<string, string>;
+  userData: Record<string, any>;
   template: string;
   price: string;
   onBack: () => void;
@@ -38,27 +38,43 @@ export default function DocumentPreview({
   );
 
   // Função para processar o template e destacar dados do usuário com formatação
-  const renderPreviewHTML = (html: string, userData: Record<string, string>) => {
+  const renderPreviewHTML = (html: string, userData: Record<string, any>) => {
     if (!html) return "";
     
-    // Substitui cada placeholder {{key}} pelo valor formatado
     let processedHTML = html;
-    const matches = html.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
+
+    // 1. Processar Loops {{#key}} ... {{/key}}
+    const loopRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+    processedHTML = processedHTML.replace(loopRegex, (match, key, content) => {
+      const list = userData[key];
+      if (Array.isArray(list)) {
+        return list.map(item => {
+          let itemContent = content;
+          for (const k in item) {
+            const r = new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g');
+            itemContent = itemContent.replace(r, `<span class="text-blue-800 font-bold border-b border-blue-200">${item[k] || "..."}</span>`);
+          }
+          return itemContent;
+        }).join("");
+      }
+      return "";
+    });
+
+    // 2. Processar variáveis simples
+    const matches = processedHTML.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
     
     matches.forEach(match => {
       const key = match.replace(/\{\{\s*|\s*\}\}/g, "").trim();
-      const value = userData[key] || 
-                    userData[key.toLowerCase()] || 
-                    userData[key.replace(/([A-Z])/g, "_$1").toLowerCase()] || 
-                    userData[key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())];
+      const value = userData[key];
 
-      const replacement = `
-        <span class="text-blue-800 font-bold border-b border-blue-200 decoration-blue-200">
-          ${value || `[${key.toUpperCase()}]`}
-        </span>
-      `;
-      
-      processedHTML = processedHTML.replaceAll(match, replacement);
+      if (typeof value === 'string' || typeof value === 'number') {
+        const replacement = `
+          <span class="text-blue-800 font-bold border-b border-blue-200 decoration-blue-200">
+            ${value || `[${key.toUpperCase()}]`}
+          </span>
+        `;
+        processedHTML = processedHTML.replaceAll(match, replacement);
+      }
     });
     
     return processedHTML;

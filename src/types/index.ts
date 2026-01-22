@@ -10,6 +10,8 @@ export type FormField = {
 
 export type FormSection = {
   section: string;
+  id?: string; // ID para seções repetitivas (opcional)
+  type?: 'default' | 'repeater'; // 'repeater' permite múltiplas entradas
   fields: FormField[];
 };
 

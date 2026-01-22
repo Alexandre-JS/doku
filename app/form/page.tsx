@@ -38,7 +38,7 @@ interface DocumentFormData {
   position_name: string;
   address: string;
   date: string;
-  [key: string]: string;
+  [key: string]: any;
 }
 
 function FormContent() {

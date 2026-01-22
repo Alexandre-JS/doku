@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { createBrowserSupabase } from "@/src/lib/supabase";
+import { DashboardHeader, AdminPageContainer, StatsCard } from "@/components/admin/DashboardComponents";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
 
 export default function AdminSalesPage() {
   const supabase = createBrowserSupabase();
@@ -27,11 +30,12 @@ export default function AdminSalesPage() {
     async function fetchSales() {
       const { data, error } = await supabase
         .from("orders")
-        .select(`
-          *,
-          profiles (full_name)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erro ao buscar vendas:", error);
+      }
 
       if (!error && data) {
         setSalesData(data);
@@ -55,40 +59,36 @@ export default function AdminSalesPage() {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-[#143361] tracking-tight">Monitor de Vendas</h2>
-          <p className="text-sm text-zinc-500 font-medium font-inter">Acompanhe a receita e as transações em tempo real.</p>
-        </div>
-        <button className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-6 py-3 text-sm font-bold text-[#143361] shadow-sm hover:bg-zinc-50 transition-all">
+    <AdminPageContainer>
+      <DashboardHeader 
+        title="Monitor de Vendas" 
+        description="Acompanhe a receita e as transações em tempo real."
+      >
+        <button className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-6 py-2.5 text-sm font-bold text-[#143361] shadow-sm hover:bg-zinc-50 transition-all font-inter">
           <Download size={18} />
           Exportar CSV
         </button>
-      </div>
+      </DashboardHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {statCards.map((stat) => (
-          <div key={stat.name} className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color}`}>
-                <stat.icon size={20} />
-              </div>
-              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                <ArrowUpRight size={10} />
-                +Real-time
-              </span>
-            </div>
-            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{stat.name}</p>
-            <h3 className="mt-1 text-2xl font-black text-[#143361]">{stat.value}</h3>
-          </div>
+      <div className="grid grid-cols-1 gap-4 md:gap-6 sm:grid-cols-3 mb-8">
+        {statCards.map((stat, i) => (
+          <StatsCard 
+            key={stat.name}
+            name={stat.name}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+            bg={stat.bg}
+            index={i}
+            trend="+Real-time"
+          />
         ))}
       </div>
 
       {/* Table */}
-      <div className="rounded-[2rem] border border-zinc-200 bg-white shadow-xl shadow-zinc-200/50 overflow-hidden">
-        <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
+      <div className="rounded-2xl md:rounded-[2rem] border border-zinc-200 bg-white shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative w-full max-w-sm">
                 <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input 
@@ -97,44 +97,69 @@ export default function AdminSalesPage() {
                    className="w-full bg-zinc-50 border border-zinc-100 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium outline-none focus:border-[#143361] transition-all"
                 />
             </div>
+            <div className="flex items-center gap-2">
+                <button className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-bold text-zinc-600 hover:bg-zinc-50 transition-all">
+                    <Filter size={14} />
+                    Filtrar
+                </button>
+            </div>
         </div>
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-zinc-50/50 border-b border-zinc-100">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Cliente / Telefone</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Documento</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Valor</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Referência</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-50">
-            {salesData.map((sale) => (
-              <tr key={sale.id} className="hover:bg-zinc-50/80 transition-colors">
-                <td className="px-6 py-4">
-                  <p className="text-sm font-bold text-[#143361]">{sale.profiles?.full_name || sale.metadata?.full_name || "Convidado"}</p>
-                  <p className="text-[10px] text-zinc-400 font-mono italic">{sale.metadata?.phone_number || "S/ Telefone"}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-zinc-600 truncate max-w-[200px]">{sale.metadata?.doc_title || "Documento"}</p>
-                  <p className="text-[10px] text-zinc-400">{new Date(sale.created_at).toLocaleString('pt-PT')}</p>
-                </td>
-                <td className="px-6 py-4 text-sm font-black text-[#143361]">{sale.amount} MT</td>
-                <td className="px-6 py-4 text-xs font-mono text-zinc-500">{sale.mpesa_ref || "---"}</td>
-                <td className="px-6 py-4 text-right">
-                  <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                    sale.status === 'COMPLETED' 
-                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                      : 'bg-amber-50 text-amber-600 border border-amber-100'
-                  }`}>
-                    {sale.status === 'COMPLETED' ? 'Pago' : 'Pendente'}
-                  </span>
-                </td>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-zinc-50/50 border-b border-zinc-100">
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Cliente / Telefone</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Documento</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Valor</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">Referência</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 text-right">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-zinc-50">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={5} className="px-6 py-6"><div className="h-4 bg-zinc-100 rounded-full w-full" /></td>
+                  </tr>
+                ))
+              ) : salesData.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-20 text-center">
+                    <p className="text-sm font-bold text-zinc-500">Nenhuma venda registada.</p>
+                  </td>
+                </tr>
+              ) : (
+                salesData.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-zinc-50/80 transition-colors group">
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-bold text-[#143361]">{sale.profiles?.full_name || sale.metadata?.full_name || "Convidado"}</p>
+                      <p className="text-[10px] text-zinc-400 font-mono italic">{sale.metadata?.phone_number || "S/ Telefone"}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-medium text-zinc-600 truncate max-w-[200px]">{sale.metadata?.doc_title || "Documento"}</p>
+                      <p className="text-[10px] text-zinc-400">
+                        {format(new Date(sale.created_at), "dd MMM yyyy, HH:mm", { locale: pt })}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-black text-[#143361]">{sale.amount} MT</td>
+                    <td className="px-6 py-4 text-xs font-mono text-zinc-500">{sale.mpesa_ref || sale.payment_reference || "---"}</td>
+                    <td className="px-6 py-4 text-right">
+                      <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                        sale.status === 'COMPLETED' 
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                          : 'bg-amber-50 text-amber-600 border border-amber-100'
+                      }`}>
+                        {sale.status === 'COMPLETED' ? 'Pago' : 'Pendente'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </AdminPageContainer>
   );
 }

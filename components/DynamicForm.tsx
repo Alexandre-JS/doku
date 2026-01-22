@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { FormSection } from '../src/types';
-import { HelpCircle, Info, ChevronRight, ChevronLeft } from 'lucide-react';
+import { HelpCircle, Info, ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react';
 
 interface Props {
   schema: FormSection[];
@@ -43,9 +43,39 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
   const isLastSection = currentSectionIdx === normalizedSchema.length - 1;
   const isFirstSection = currentSectionIdx === 0;
 
+  const handleRepeaterChange = (sectionId: string, index: number, fieldId: string, value: string) => {
+    const sectionData = [...(formData[sectionId] || [])];
+    if (!sectionData[index]) sectionData[index] = {};
+    sectionData[index] = { ...sectionData[index], [fieldId]: value };
+    
+    const newData = { ...formData, [sectionId]: sectionData };
+    setFormData(newData);
+    if (onChange) onChange(newData);
+  };
+
+  const addRepeaterItem = (sectionId: string) => {
+    const sectionData = [...(formData[sectionId] || []), {}];
+    const newData = { ...formData, [sectionId]: sectionData };
+    setFormData(newData);
+    if (onChange) onChange(newData);
+  };
+
+  const removeRepeaterItem = (sectionId: string, index: number) => {
+    const sectionData = [...(formData[sectionId] || [])];
+    sectionData.splice(index, 1);
+    const newData = { ...formData, [sectionId]: sectionData };
+    setFormData(newData);
+    if (onChange) onChange(newData);
+  };
+
   const validateSection = (sectionIdx: number) => {
     const newErrors: Record<string, string> = {};
     const section = normalizedSchema[sectionIdx];
+
+    if (section.type === 'repeater') {
+      // Validação básica para repetidores (pelo menos uma entrada se obrigatório - opcional)
+      return true; 
+    }
 
     section.fields?.forEach((field) => {
       const value = String(formData[field.id] || '').trim();
@@ -151,7 +181,52 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-          {activeSection.fields?.map((field) => (
+          {activeSection.type === 'repeater' ? (
+            <div className="md:col-span-2 space-y-6">
+              {(formData[activeSection.id || ''] || [{}])?.map((item: any, idx: number) => (
+                <div key={idx} className="relative p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Entrada #{idx + 1}</span>
+                    <button 
+                      onClick={() => removeRepeaterItem(activeSection.id || '', idx)}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {activeSection.fields.map(field => (
+                      <div key={field.id} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                        <label className="text-[12px] font-bold text-slate-600 mb-1 block">{field.label}</label>
+                        {field.type === 'textarea' ? (
+                          <textarea
+                            value={item[field.id] || ''}
+                            onChange={(e) => handleRepeaterChange(activeSection.id || '', idx, field.id, e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:border-emerald-500 focus:bg-white outline-none transition-all resize-none text-sm"
+                            rows={3}
+                          />
+                        ) : (
+                          <input
+                            type={field.type}
+                            value={item[field.id] || ''}
+                            onChange={(e) => handleRepeaterChange(activeSection.id || '', idx, field.id, e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={() => addRepeaterItem(activeSection.id || '')}
+                className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all font-bold text-sm"
+              >
+                <Plus size={18} />
+                Adicionar mais um item
+              </button>
+            </div>
+          ) : activeSection.fields?.map((field) => (
             <div 
               key={field.id} 
               className={`group flex flex-col space-y-1.5 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}

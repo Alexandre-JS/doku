@@ -9,12 +9,18 @@ import {
   ArrowUpRight,
   Clock,
   ChevronRight,
-  LayoutDashboard
+  LayoutDashboard,
+  Plus,
+  ArrowRight
 } from "lucide-react";
 import { createBrowserSupabase } from "@/src/lib/supabase";
 import { motion } from "framer-motion";
+import { DashboardHeader, StatsCard, AdminPageContainer } from "@/components/admin/DashboardComponents";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import { pt } from "date-fns/locale";
 
-export default function AdminDashboardHome() {
+export default function AdminDashboard() {
   const supabase = createBrowserSupabase();
   const [stats, setStats] = useState({
     templates: 0,
@@ -22,6 +28,7 @@ export default function AdminDashboardHome() {
     sales: 0,
     dailyDocs: 0
   });
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
@@ -46,14 +53,22 @@ export default function AdminDashboardHome() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [templ, vars, orders, daily] = await Promise.all([
+      const [templ, vars, orders, daily, recentOrders, recentTemplates] = await Promise.all([
         supabase.from("templates").select("id", { count: "exact" }),
         supabase.from("global_variables").select("id", { count: "exact" }),
         supabase.from("orders").select("id", { count: "exact" }).eq("status", "COMPLETED"),
         supabase.from("orders")
           .select("id", { count: "exact" })
           .eq("status", "COMPLETED")
-          .gte("created_at", today.toISOString())
+          .gte("created_at", today.toISOString()),
+        supabase.from("orders")
+          .select("id, created_at, amount, status, metadata")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase.from("templates")
+          .select("id, created_at, title")
+          .order("created_at", { ascending: false })
+          .limit(5)
       ]);
 
       setStats({
@@ -62,7 +77,17 @@ export default function AdminDashboardHome() {
         sales: orders.count || 0,
         dailyDocs: daily.count || 0
       });
+
+      // Combine and sort activities
+      const combined = [
+        ...(recentOrders.data || []).map((o: any) => ({ ...o, type: 'order' })),
+        ...(recentTemplates.data || []).map((t: any) => ({ ...t, type: 'template' }))
+      ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 8);
+
+      setRecentActivity(combined);
     }
+
     fetchStats();
 
     return () => {
@@ -78,125 +103,135 @@ export default function AdminDashboardHome() {
   ];
 
   return (
-    <div className="space-y-8">
+    <AdminPageContainer>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-[#143361] tracking-tight">Dashboard Overview</h2>
-          <p className="text-sm text-zinc-500 font-medium">Bem-vindo ao painel de controlo da plataforma DOKU.</p>
-        </div>
-        <div className="flex gap-2">
-            <button className="rounded-xl bg-white border border-zinc-200 px-4 py-2 text-xs font-bold text-[#143361] shadow-sm hover:bg-zinc-50 transition-all">Exportar Relatório</button>
-        </div>
-      </div>
+      <DashboardHeader 
+        title="Painel de Controlo" 
+        description="Gestão centralizada da plataforma DOKU."
+      >
+        <button className="rounded-xl bg-white border border-zinc-200 px-4 py-2 text-xs font-bold text-[#143361] shadow-sm hover:bg-zinc-50 transition-all">
+          Exportar Relatório
+        </button>
+      </DashboardHeader>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
+          <StatsCard 
             key={card.name}
-            className="group rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm hover:shadow-md transition-all cursor-default"
-          >
-            <div className="flex items-start justify-between">
-              <div className={`p-2.5 rounded-xl ${card.bg} ${card.color}`}>
-                <card.icon size={20} />
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                <ArrowUpRight size={10} />
-                +12.5%
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-none">{card.name}</p>
-              <h3 className="mt-1 text-3xl font-black text-[#143361]">{card.value}</h3>
-            </div>
-          </motion.div>
+            name={card.name}
+            value={card.value}
+            icon={card.icon}
+            color={card.color}
+            bg={card.bg}
+            index={i}
+          />
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 mt-8">
         {/* Recent Activity */}
-        <div className="lg:col-span-8 rounded-[2rem] border border-zinc-200 bg-white p-8 shadow-sm">
+        <div className="lg:col-span-8 rounded-[1.5rem] md:rounded-[2rem] border border-zinc-200 bg-white p-6 md:p-8 shadow-sm overflow-hidden">
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-lg font-black text-[#143361] tracking-tight flex items-center gap-2">
                  <Clock size={20} className="text-zinc-400" />
-                 Actividade Recente
+                 Atividade Recente
               </h3>
-              <button className="text-xs font-bold text-[#143361] hover:underline">Ver tudo</button>
+              <Link href="/admin/sales" className="text-xs font-bold text-[#143361] hover:underline flex items-center gap-1">
+                Ver tudo <ArrowRight size={12} />
+              </Link>
            </div>
            
-           <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group hover:border-[#143361]/20 transition-all">
-                   <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-zinc-200 text-[#143361]">
-                         <FileText size={16} />
-                      </div>
-                      <div>
-                         <p className="text-sm font-bold text-[#143361]">Nova Minuta Publicada</p>
-                         <p className="text-xs text-zinc-500 font-medium font-inter">"Contrato de Arrendamento Comercial" adicionado por Alexandre.</p>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Há 2 horas</span>
-                      <ChevronRight size={14} className="text-zinc-300 group-hover:text-[#143361] transition-colors" />
-                   </div>
+           <div className="space-y-3">
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity) => (
+                  <Link 
+                    key={activity.id} 
+                    href={activity.type === 'template' ? `/admin/templates/${activity.id}` : '/admin/sales'}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group hover:border-[#143361]/20 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-4">
+                        <div className={`h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center border border-zinc-200 ${
+                          activity.type === 'template' 
+                            ? 'text-blue-500' 
+                            : activity.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'
+                        }`}>
+                          {activity.type === 'template' ? <Plus size={16} /> : <FileText size={16} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-[#143361] truncate">
+                            {activity.type === 'template' 
+                              ? 'Nova Minuta Criada'
+                              : (activity.metadata?.full_name || activity.metadata?.nome_completo || 'Usuário Anônimo')
+                            }
+                          </p>
+                          <p className="text-xs text-zinc-500 font-medium truncate">
+                            {activity.type === 'template'
+                              ? activity.title
+                              : (activity.metadata?.doc_title || activity.metadata?.template_name || 'Documento gerado')
+                            }
+                          </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                        <div className="text-right hidden sm:block">
+                          {activity.type === 'order' && (
+                            <p className="text-xs font-bold text-[#143361]">
+                              {new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(activity.amount)}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                            {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true, locale: pt })}
+                          </p>
+                        </div>
+                        <ChevronRight size={14} className="text-zinc-300 group-hover:text-[#143361] transition-colors" />
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-12 text-zinc-400 italic">
+                  Nenhuma atividade recente encontrada.
                 </div>
-              ))}
+              )}
            </div>
         </div>
 
         {/* Quick Links */}
         <div className="lg:col-span-4 space-y-6">
-            <div className="rounded-[2rem] bg-[#143361] p-8 text-white shadow-xl shadow-blue-100">
-               <h3 className="text-lg font-bold mb-4">Suporte Admin</h3>
-               <p className="text-sm text-blue-100 font-medium mb-6">Precisa de ajuda com o sistema ou quer solicitar novas funcionalidades?</p>
+            <div className="rounded-[1.5rem] md:rounded-[2rem] bg-[#143361] p-8 text-white shadow-xl shadow-blue-100">
+               <h3 className="text-lg font-bold mb-2">Suporte Admin</h3>
+               <p className="text-sm text-blue-100/80 font-medium mb-6">Precisa de ajuda com o sistema ou suporte técnico?</p>
                <a 
                  href="https://wa.me/258867563555" 
+                 target="_blank"
+                 rel="noopener noreferrer"
                  className="flex items-center justify-center gap-2 w-full py-4 bg-[#00A86B] rounded-2xl font-bold text-sm shadow-lg hover:bg-emerald-600 transition-all active:scale-95"
                >
                  Contactar Developer
                </a>
             </div>
 
-            <div className="rounded-[2rem] border border-zinc-200 bg-white p-8">
-               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">Atalhos Úteis</h3>
+            <div className="rounded-[1.5rem] md:rounded-[2rem] border border-zinc-200 bg-white p-8 shadow-sm">
+               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">Atalhos Rápidos</h3>
                <div className="grid grid-cols-2 gap-3">
-                  <button className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 transition-all border border-zinc-100">
-                     <Plus size={16} className="text-[#143361]" />
-                     <span className="text-[10px] font-bold text-[#143361]">Nova Minuta</span>
-                  </button>
-                  <button className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 transition-all border border-zinc-100">
-                     <Database size={16} className="text-[#143361]" />
-                     <span className="text-[10px] font-bold text-[#143361]">Variáveis</span>
-                  </button>
+                  <Link 
+                    href="/admin/templates/new"
+                    className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-all border border-zinc-100"
+                  >
+                     <Plus size={20} className="text-[#143361]" />
+                     <span className="text-[10px] font-bold text-[#143361] uppercase">Nova Minuta</span>
+                  </Link>
+                  <Link 
+                    href="/admin/variables"
+                    className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-all border border-zinc-100"
+                  >
+                     <Database size={20} className="text-[#143361]" />
+                     <span className="text-[10px] font-bold text-[#143361] uppercase">Variáveis</span>
+                  </Link>
                </div>
             </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Plus({ size, className }: { size: number, className: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
+    </AdminPageContainer>
   );
 }
