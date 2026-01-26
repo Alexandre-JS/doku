@@ -11,9 +11,10 @@ import {
   Users, 
   LogOut,
   ChevronRight,
-  Database
+  Database,
+  X
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { createBrowserSupabase } from "@/src/lib/supabase";
 
 const menuItems = [
@@ -24,7 +25,12 @@ const menuItems = [
   { name: "Vendas", href: "/admin/sales", icon: TrendingUp },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createBrowserSupabase();
@@ -36,15 +42,41 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-zinc-200 bg-white z-[100]">
-      <div className="flex flex-col h-full p-6">
-        {/* Logo */}
-        <div className="mb-10 px-2 flex items-center gap-3">
-          <div className="h-8 w-8 bg-[#143361] rounded-xl flex items-center justify-center text-white">
-            <span className="font-black text-sm">D</span>
+    <>
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[110] bg-black/20 backdrop-blur-sm lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      <aside 
+        className={`fixed left-0 top-0 h-full w-64 border-r border-zinc-200 bg-white transition-transform duration-300 z-[120] lg:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full p-6">
+          {/* Logo & Close */}
+          <div className="mb-10 px-2 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-[#143361] rounded-xl flex items-center justify-center text-white">
+                <span className="font-black text-sm">D</span>
+              </div>
+              <span className="font-black text-lg tracking-tight text-[#143361]">DOKU <span className="text-zinc-400 font-medium text-xs">Admin</span></span>
+            </Link>
+            <button 
+              onClick={onClose}
+              className="p-2 -mr-2 text-zinc-400 hover:text-zinc-600 lg:hidden"
+            >
+              <X size={20} />
+            </button>
           </div>
-          <span className="font-black text-lg tracking-tight text-[#143361]">DOKU <span className="text-zinc-400 font-medium text-xs">Admin</span></span>
-        </div>
 
         {/* Menu */}
         <nav className="flex-1 space-y-1">
@@ -88,5 +120,7 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }
+

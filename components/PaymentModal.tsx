@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight } from "lucide-react";
+import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight, CloudUpload, AlertTriangle, User } from "lucide-react";
 import { generatePDF, LayoutType } from "../src/utils/pdfGenerator";
 import { clearSensitiveData } from "../src/utils/cookieManager";
 import { createBrowserSupabase } from "../src/lib/supabase";
@@ -29,6 +29,71 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
   const [error, setError] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [userEmail, setUserEmail] = useState(formData?.email || "");
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  const supabase = createBrowserSupabase();
+
+  const handleUploadAndSave = async (pdfBlob: Blob, currentOrderId: string) => {
+    if (!userId) return;
+
+    try {
+      const fileName = `${userId}/${currentOrderId}_${Date.now()}.pdf`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, pdfBlob);
+
+      if (uploadError) throw uploadError;
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      const { error: dbError } = await supabase
+        .from('user_documents')
+        .insert({
+          user_id: userId,
+          order_id: currentOrderId,
+          file_path: uploadData.path,
+          template_id: templateId,
+          title: docTitle,
+          expires_at: expiresAt.toISOString()
+        });
+
+      if (dbError) throw dbError;
+      console.log('[DOKU] Documento arquivado na nuvem com sucesso.');
+    } catch (err) {
+      console.error('[DOKU] Falha ao salvar documento na nuvem:', err);
+    }
+  };
+
+  const handlePaymentSuccessLogic = async (reference: string) => {
+    // Buscar a ordem criada anteriormente para obter o ID se ainda não o temos
+    let currentOrderId = orderId;
+    
+    if (!currentOrderId) {
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('mpesa_ref', reference)
+        .single();
+      
+      currentOrderId = orderData?.id || null;
+      if (currentOrderId) setOrderId(currentOrderId);
+    }
+
+    if (formData && templateContent) {
+      const doc = generatePDF(formData, templateContent, docTitle, layoutType, true);
+      
+      if (userId && currentOrderId) {
+        const pdfBlob = doc.output('blob');
+        await handleUploadAndSave(pdfBlob, currentOrderId);
+      }
+    }
+    
+    setStep("success");
+    clearSensitiveData();
+    if (onSuccess) onSuccess();
+  };
 
   const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
   const isFree = cleanPrice === "0" || cleanPrice === "";
@@ -48,24 +113,16 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
           clearInterval(interval);
           console.log('[DOKU] Payment confirmed, finalizing...');
           
-          // Atualizar banco de dados (tenta, mas não bloqueia se falhar)
           try {
-            const { error: updateError } = await supabaseInstance
+            await supabase
               .from('orders')
               .update({ status: 'COMPLETED' })
               .eq('mpesa_ref', reference);
-            
-            if (updateError) console.error('[DOKU] DB Update Error:', updateError);
           } catch (e) {
             console.error('[DOKU] DB Update Exception:', e);
           }
 
-          if (formData && templateContent) {
-            generatePDF(formData, templateContent, docTitle, layoutType);
-          }
-          setStep("success");
-          clearSensitiveData();
-          if (onSuccess) onSuccess();
+          await handlePaymentSuccessLogic(reference);
         } else {
           console.log('[DOKU] Payment status:', data.status);
           if (isFailed) {
@@ -147,9 +204,39 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
     setStep("processing");
 
     if (isFree) {
-      setTimeout(() => {
+      let currentOrderId = orderId;
+      // Registrar na tabela orders para histórico, mesmo sendo gratuito
+      try {
+        const { data: orderData } = await supabase.from('orders').insert({
+          user_id: userId || null,
+          doc_template_id: templateId || null,
+          status: 'COMPLETED',
+          amount: 0,
+          mpesa_ref: `FREE_${Date.now()}`,
+          metadata: {
+            ...formData,
+            payment_method: 'free',
+            doc_title: docTitle
+          }
+        }).select('id').single();
+        
+        if (orderData) {
+          currentOrderId = orderData.id;
+          setOrderId(currentOrderId);
+        }
+      } catch (dbErr) {
+        console.error('[DOKU] DB Free record failed:', dbErr);
+      }
+
+      setTimeout(async () => {
         if (formData && templateContent) {
-          generatePDF(formData, templateContent, docTitle, layoutType);
+          const doc = generatePDF(formData, templateContent, docTitle, layoutType, true);
+          
+          // Se estiver logado, salvar na nuvem mesmo sendo grátis
+          if (userId && currentOrderId) {
+            const pdfBlob = doc.output('blob');
+            await handleUploadAndSave(pdfBlob, currentOrderId);
+          }
         }
         setStep("success");
         clearSensitiveData();
@@ -178,9 +265,8 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
       // Iniciar polling para verificar status
       if (data.debito_reference) {
         // Registrar na tabela orders para histórico
-        const supabaseInstance = createBrowserSupabase();
         try {
-          const { error: insertError } = await supabaseInstance.from('orders').insert({
+          const { data: orderData, error: insertError } = await supabase.from('orders').insert({
             user_id: userId || null, // Permite nulo para convidados
             doc_template_id: templateId || null,
             status: 'PENDING',
@@ -193,11 +279,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
               debito_transaction_id: data.transaction_id,
               doc_title: docTitle
             }
-          });
+          }).select('id').single();
+          
           if (insertError) {
             console.error('[DOKU] Database record failed:', insertError);
-          } else {
-            console.log('[DOKU] Order recorded for tracking');
+          } else if (orderData) {
+            console.log('[DOKU] Order recorded for tracking:', orderData.id);
+            setOrderId(orderData.id);
           }
         } catch (dbErr) {
           console.error('[DOKU] DB Insert Exception:', dbErr);
@@ -263,6 +351,20 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
+                {!userId && (
+                  <div className="rounded-2xl bg-amber-50 p-4 border border-amber-200">
+                    <div className="flex gap-3">
+                      <User className="text-amber-600 shrink-0" size={20} />
+                      <div>
+                        <p className="text-xs font-bold text-amber-900 uppercase">Dica de Segurança</p>
+                        <p className="text-[11px] text-amber-800 leading-relaxed mt-1">
+                          Como visitante, não poderemos guardar uma cópia deste documento. 
+                          <button onClick={() => router.push(`/auth/signup?returnTo=${encodeURIComponent(window.location.href)}`)} className="ml-1 underline font-black text-amber-900">Crie conta</button> para ter acesso por 30 dias e evitar pagar novamente se precisar de uma cópia.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {!isFree && (
                   <>
                     <div className="grid grid-cols-2 gap-4">
@@ -381,6 +483,32 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900">Sucesso!</h2>
                 <p className="mt-2 text-sm text-slate-600">Documento gerado e baixado com sucesso!</p>
+
+                {/* Mensagens de persistência e incentivo ao registro */}
+                {!userId ? (
+                  <div className="mt-6 w-full space-y-4">
+                    <div className="rounded-xl bg-red-50 p-4 border border-red-100 flex items-start gap-3 text-left">
+                      <AlertTriangle className="text-red-500 shrink-0" size={18} />
+                      <p className="text-[11px] font-medium text-red-800">
+                        <strong>Atenção:</strong> Como não está logado, não teremos cópia de segurança deste ficheiro. Guarde-o bem.
+                        Se o perder, poderá ter de pagar novamente por uma nova cópia (ou gerar de novo se for grátis).
+                      </p>
+                    </div>
+                    
+                    <button 
+                      onClick={() => router.push(`/auth/signup?claimOrder=${orderId}&returnTo=/profile`)}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#143361] py-4 font-bold text-white shadow-lg transition-all hover:bg-slate-800 active:scale-95"
+                    >
+                      <CloudUpload size={20} />
+                      Guardar documento na Nuvem (Grátis)
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-xl bg-emerald-50 p-4 border border-emerald-100 flex items-center gap-3">
+                    <ShieldCheck className="text-emerald-600" size={20} />
+                    <p className="text-xs font-bold text-emerald-800">Cópia de segurança guardada no seu perfil por 30 dias.</p>
+                  </div>
+                )}
 
                 <div className="mt-8 w-full space-y-5">
                   {/* <div className="text-left">

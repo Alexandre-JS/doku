@@ -123,13 +123,15 @@ function SignupForm() {
     setLoading(true);
     try {
       const supabase = createBrowserSupabase();
+      const callbackUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
+        : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
+      
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: typeof window !== "undefined"
-            ? window.location.origin + "/auth/callback?next=" + redirectTo
-            : undefined,
+          emailRedirectTo: callbackUrl,
         },
       });
 

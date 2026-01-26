@@ -1,16 +1,38 @@
 import jsPDF from 'jspdf';
 
 interface UserData {
-  [key: string]: string;
+  [key: string]: any;
 }
 
 // Função para substituir placeholders no texto e limpar HTML
 const parseTemplate = (template: string, userData: UserData): string => {
   let parsed = template;
+
+  // 1. Processar Loops {{#key}} ... {{/key}}
+  const loopRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+  parsed = parsed.replace(loopRegex, (match, key, content) => {
+    const list = userData[key];
+    if (Array.isArray(list)) {
+      return list.map(item => {
+        let itemContent = content;
+        for (const k in item) {
+          const r = new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g');
+          itemContent = itemContent.replace(r, item[k] || "");
+        }
+        return itemContent;
+      }).join("");
+    }
+    return "";
+  });
+
+  // 2. Processar variáveis simples
   for (const key in userData) {
-    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-    parsed = parsed.replace(regex, userData[key] || "");
+    if (typeof userData[key] === 'string' || typeof userData[key] === 'number') {
+      const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
+      parsed = parsed.replace(regex, String(userData[key] || ""));
+    }
   }
+
   // Limpa placeholders não preenchidos
   parsed = parsed.replace(/\{\{[^}]+\}\}/g, "");
   

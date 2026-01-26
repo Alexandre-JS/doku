@@ -37,6 +37,7 @@ import { Category, Company } from "@/src/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
+import { DashboardHeader, AdminPageContainer } from "@/components/admin/DashboardComponents";
 
 // Import dinâmico do editor para evitar erros de SSR
 const ReactQuill = dynamic(
@@ -159,26 +160,62 @@ export default function NewTemplatePage() {
 
   // AUTO SCAN: Gera o form_schema baseado no conteúdo do editor
   const generatedSchema = useMemo(() => {
-    // Extrair {{variaveis}} filtrando tags HTML que o Quill pode inserir no meio do texto
     const plainText = template.content_html.replace(/<[^>]*>/g, "");
-    const matches = plainText.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
-    const keys = Array.from(new Set(matches.map(m => m.replace(/\{\{\s*|\s*\}\}/g, ""))));
     
-    const fields = keys.map(key => {
-      const globalVar = globalVariables.find(v => v.key_name === key);
-      return {
+    // 1. Detectar Loops {{#key}} ... {{/key}} para seções repetitivas
+    const loopRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+    const loops = [...plainText.matchAll(loopRegex)];
+    
+    const sections: any[] = [];
+    let textForNormalKeys = plainText;
+
+    loops.forEach(loop => {
+      const key = loop[1];
+      const innerContent = loop[2];
+      
+      // Remove o bloco do loop do texto que será usado para chaves normais
+      textForNormalKeys = textForNormalKeys.replace(loop[0], "");
+
+      // Encontrar campos dentro do loop
+      const innerMatches = innerContent.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
+      const innerKeys = Array.from(new Set(innerMatches.map(m => m.replace(/\{\{\s*|\s*\}\}/g, ""))));
+
+      sections.push({
         id: key,
-        label: globalVar ? globalVar.display_label : key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
-        type: key.includes("data") ? "date" : key.includes("descricao") ? "textarea" : "text",
-        required: true,
-        source: globalVar?.category === 'profile' ? 'profile' : 'user_input'
-      };
+        section: key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        type: 'repeater',
+        fields: innerKeys.map(k => ({
+          id: k,
+          label: k.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+          type: "text",
+          required: true
+        }))
+      });
     });
 
-    return [{
-      section: "Dados do Documento",
-      fields: fields
-    }];
+    // 2. Detectar variáveis normais (fora de loops)
+    const matches = textForNormalKeys.match(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g) || [];
+    const normalKeys = Array.from(new Set(matches.map(m => m.replace(/\{\{\s*|\s*\}\}/g, ""))));
+    
+    if (normalKeys.length > 0) {
+      const fields = normalKeys.map(key => {
+        const globalVar = globalVariables.find(v => v.key_name === key);
+        return {
+          id: key,
+          label: globalVar ? globalVar.display_label : key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+          type: key.includes("data") ? "date" : key.includes("descricao") ? "textarea" : "text",
+          required: true,
+          source: globalVar?.category === 'profile' ? 'profile' : 'user_input'
+        };
+      });
+
+      sections.unshift({
+        section: "Dados Gerais",
+        fields: fields
+      });
+    }
+
+    return sections;
   }, [template.content_html, globalVariables]);
 
   // Gerar slug automaticamente
@@ -264,83 +301,67 @@ export default function NewTemplatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F9] pb-10">
-      {/* Header Fixo e Moderno */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-zinc-200 bg-white/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Link href="/admin/templates" className="p-2 transition-colors hover:bg-zinc-100 rounded-lg text-zinc-500">
-              <ArrowLeft size={18} />
-            </Link>
-            <div className="h-4 w-px bg-zinc-200 mx-1" />
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">Document Engine</span>
-              <span className="text-zinc-300">/</span>
-              <h1 className="text-sm font-bold text-[#143361] truncate max-w-[200px]">
-                {template.title || "Novo Modelo"}
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-[#143361] hover:bg-blue-50 transition-all">
-              <Save size={14} />
-              Guardar Rascunho
-            </button>
-            <button 
-              onClick={handleSave}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-lg bg-[#00A86B] px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-100 transition-all hover:bg-emerald-600 disabled:opacity-50"
-            >
-              <CheckCircle2 size={14} />
-              {loading ? "A publicar..." : "Publicar Modelo"}
-            </button>
-          </div>
+    <AdminPageContainer>
+      <DashboardHeader 
+        title={template.title || "Novo Modelo"} 
+        description="Configure os detalhes técnicos e o conteúdo dinâmico do seu modelo de documento."
+      >
+        <div className="flex items-center gap-3">
+          <button className="hidden sm:flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-[#143361] hover:bg-blue-50 transition-all">
+            <Save size={14} />
+            Guardar Rascunho
+          </button>
+          <button 
+            onClick={handleSave}
+            disabled={loading}
+            className="flex items-center gap-2 rounded-xl bg-[#00A86B] px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-100 transition-all hover:bg-[#008f5a] active:scale-95 disabled:opacity-50"
+          >
+            <CheckCircle2 size={14} />
+            {loading ? "A publicar..." : "Publicar Modelo"}
+          </button>
         </div>
-      </header>
-      <div className="h-14 w-full" />
+      </DashboardHeader>
 
-      <main className="mx-auto max-w-[1600px] px-6 pt-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 h-[calc(100vh-100px)]">
-          
-          {/* 1. PAINEL ESQUERDO: Ficha Técnica (2/12) */}
-          <div className="lg:col-span-2 space-y-4 flex flex-col overflow-y-auto no-scrollbar pb-10">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Layout size={14} className="text-zinc-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Ficha Técnica</h3>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:h-[calc(100vh-220px)]">
+        
+        {/* 1. PAINEL ESQUERDO: Ficha Técnica (2/12) */}
+        <div className="lg:col-span-2 space-y-4 flex flex-col overflow-y-auto no-scrollbar pb-10">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Layout size={14} className="text-zinc-400" />
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Ficha Técnica</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2 ml-1">Título da Minuta</label>
+                <input 
+                  type="text" 
+                  value={template.title}
+                  onChange={handleTitleChange}
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs font-bold focus:border-[#143361] transition-all outline-none"
+                  placeholder="Ex: Contrato de Arrendamento"
+                />
               </div>
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-[9px] font-bold uppercase text-zinc-400 mb-1 ml-1">Título da Minuta</label>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2 ml-1">Preço (MT)</label>
                   <input 
-                    type="text" 
-                    value={template.title}
-                    onChange={handleTitleChange}
-                    className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium focus:border-zinc-900 transition-all outline-none"
-                    placeholder="Ex: Contrato de Arrendamento"
+                    type="number" 
+                    value={template.price}
+                    onChange={(e) => setTemplate({ ...template, price: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs font-black outline-none"
                   />
                 </div>
-
-                <div className="grid grid-cols-1 gap-3">
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase text-zinc-400 mb-1 ml-1">Preço (MT)</label>
-                    <input 
-                      type="number" 
-                      value={template.price}
-                      onChange={(e) => setTemplate({ ...template, price: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-bold outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase text-zinc-400 mb-1 ml-1">Categoria</label>
-                    <select 
-                       value={template.category_id}
-                       onChange={(e) => setTemplate({ ...template, category_id: e.target.value })}
-                       className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium outline-none cursor-pointer"
-                    >
-                      {categories.map(cat => (
+                <div>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2 ml-1">Categoria</label>
+                  <select 
+                      value={template.category_id}
+                      onChange={(e) => setTemplate({ ...template, category_id: e.target.value })}
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs font-bold outline-none cursor-pointer"
+                  >
+                    {categories.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
@@ -421,7 +442,7 @@ export default function NewTemplatePage() {
                       {generatedSchema[0].fields.length === 0 ? (
                         <p className="text-[10px] text-zinc-500 italic">Nenhuma variável detectada</p>
                       ) : (
-                        generatedSchema[0].fields.map(f => (
+                        generatedSchema[0].fields.map((f: any) => (
                           <div key={f.id} className="flex items-center justify-between py-1 border-b border-white/5 last:border-0">
                             <span className="text-[9px] font-mono text-zinc-400">{"{{"}{f.id}{"}}"}</span>
                             <span className={`text-[8px] px-1.5 py-0.5 rounded uppercase font-bold ${f.source === 'profile' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
@@ -617,7 +638,6 @@ export default function NewTemplatePage() {
           </div>
 
         </div>
-      </main>
 
       {/* Overlays (Success/Error) */}
       <AnimatePresence>
@@ -659,6 +679,6 @@ export default function NewTemplatePage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminPageContainer>
   );
 }
