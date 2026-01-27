@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FormSection } from '../src/types';
-import { HelpCircle, Info, ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react';
+import { HelpCircle, Info, ChevronRight, ChevronLeft, Plus, Trash2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   schema: FormSection[];
@@ -16,6 +17,13 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+
+  // Função para verificar se um campo está preenchido
+  const isFieldFilled = (fieldId: string) => {
+    const val = formData[fieldId];
+    if (Array.isArray(val)) return val.length > 0;
+    return val && String(val).trim().length > 0;
+  };
 
   // Sincroniza o estado se o initialData mudar (ex: vindo do servidor)
   React.useEffect(() => {
@@ -170,21 +178,21 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
         </div>
       )}
 
-      <div key={currentSectionIdx} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-            <span className="text-sm font-bold">{currentSectionIdx + 1}</span>
+      <fieldset key={currentSectionIdx} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 border-none p-0 m-0">
+        <legend className="flex items-center gap-2 pb-2 w-full mb-4">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500 text-white text-[10px] font-black">
+            {currentSectionIdx + 1}
           </div>
-          <h3 className="font-display text-lg font-bold tracking-tight text-slate-800">
+          <span className="text-sm font-bold uppercase tracking-widest text-slate-400">
             {activeSection.section}
-          </h3>
-        </div>
+          </span>
+        </legend>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
           {activeSection.type === 'repeater' ? (
             <div className="md:col-span-2 space-y-6">
               {(formData[activeSection.id || ''] || [{}])?.map((item: any, idx: number) => (
-                <div key={idx} className="relative p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                <div key={idx} className="relative p-6 rounded-2xl border border-slate-100 bg-slate-50/30 space-y-4 animate-in fade-in zoom-in-95 duration-300">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Entrada #{idx + 1}</span>
                     <button 
@@ -201,16 +209,28 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
                         {field.type === 'textarea' ? (
                           <textarea
                             value={item[field.id] || ''}
+                            onFocus={() => setFocusedField(`${field.id}-${idx}`)}
+                            onBlur={() => setFocusedField(null)}
                             onChange={(e) => handleRepeaterChange(activeSection.id || '', idx, field.id, e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:border-emerald-500 focus:bg-white outline-none transition-all resize-none text-sm"
+                            className={`w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 outline-none transition-all resize-none text-sm ${
+                              focusedField === `${field.id}-${idx}` 
+                                ? 'border-emerald-500 bg-white ring-4 ring-emerald-500/10' 
+                                : 'focus:border-emerald-500 focus:bg-white'
+                            }`}
                             rows={3}
                           />
                         ) : (
                           <input
                             type={field.type}
                             value={item[field.id] || ''}
+                            onFocus={() => setFocusedField(`${field.id}-${idx}`)}
+                            onBlur={() => setFocusedField(null)}
                             onChange={(e) => handleRepeaterChange(activeSection.id || '', idx, field.id, e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm"
+                            className={`w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 outline-none transition-all text-sm ${
+                              focusedField === `${field.id}-${idx}` 
+                                ? 'border-emerald-500 bg-white ring-4 ring-emerald-500/10' 
+                                : 'focus:border-emerald-500 focus:bg-white'
+                            }`}
                           />
                         )}
                       </div>
@@ -226,95 +246,124 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
                 Adicionar mais um item
               </button>
             </div>
-          ) : activeSection.fields?.map((field) => (
-            <div 
-              key={field.id} 
-              className={`group flex flex-col space-y-1.5 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}
-            >
-              <div className="flex items-center justify-between px-1">
-                <label htmlFor={field.id} className="text-[13px] font-semibold text-slate-700 transition-colors group-focus-within:text-emerald-600">
-                  {field.label}
-                  {field.required !== false && <span className="ml-1 text-red-400">*</span>}
-                </label>
-                {field.id === 'bi_number' && (
-                  <div className="group/info relative cursor-help">
-                    <HelpCircle size={14} className="text-slate-300" />
-                    <div className="absolute right-0 top-6 z-20 hidden w-48 rounded-lg bg-slate-800 p-2 text-[10px] text-white shadow-xl group-hover/info:block">
-                      Formato: 12 números + 1 letra. Ex: 123456789012A
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="relative">
-                {field.type === 'textarea' ? (
-                  <textarea
-                    id={field.id}
-                    placeholder={field.placeholder}
-                    value={formData[field.id] || ''}
-                    onFocus={() => setFocusedField(field.id)}
-                    onBlur={() => setFocusedField(null)}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                    required={field.required !== false}
-                    rows={4}
-                    className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none resize-none text-slate-900 placeholder:text-slate-400 ${
-                      errors[field.id] 
-                        ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50/50'
-                    }`}
-                  />
-                ) : field.type === 'select' ? (
-                  <select
-                    id={field.id}
-                    value={formData[field.id] || ''}
-                    onFocus={() => setFocusedField(field.id)}
-                    onBlur={() => setFocusedField(null)}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                    required={field.required !== false}
-                    className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none text-slate-900 appearance-none ${
-                      errors[field.id] 
-                        ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50/50'
-                    }`}
-                  >
-                    <option value="" disabled>{field.placeholder || `Selecione ${field.label}`}</option>
-                    {field.options?.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    id={field.id}
-                    type={field.type || 'text'}
-                    placeholder={field.placeholder}
-                    value={formData[field.id] || ''}
-                    onFocus={() => setFocusedField(field.id)}
-                    onBlur={() => setFocusedField(null)}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                    required={field.required !== false}
-                    className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none text-slate-900 placeholder:text-slate-400 ${
-                      errors[field.id] 
-                        ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50/50'
-                    }`}
-                  />
-                )}
+          ) : (
+            <AnimatePresence initial={false}>
+              {activeSection.fields?.map((field, index) => {
+                // Lógica de Visibilidade Dinâmica:
+                // Um campo só aparece se o anterior (se obrigatório) estiver preenchido
+                // ou se já houver algum dado nele (caso tenha sido restaurado)
+                const prevRequiredFields = activeSection.fields.slice(0, index).filter(f => f.required !== false);
+                const allPrevRequiredFilled = prevRequiredFields.every(f => isFieldFilled(f.id));
+                const hasValue = isFieldFilled(field.id);
                 
-                {focusedField === field.id && !errors[field.id] && (
-                  <div className="absolute -bottom-px left-8 right-8 h-0.5 bg-emerald-500 rounded-full blur-[1px] opacity-20" />
-                )}
-              </div>
+                // Sempre mostramos o primeiro campo, campos que já têm valor, 
+                // ou o próximo campo disponível após os obrigatórios anteriores estarem prontos
+                const isVisible = index === 0 || hasValue || allPrevRequiredFilled;
 
-              {errors[field.id] && (
-                <span className="flex items-center gap-1.5 px-1 text-[11px] font-medium text-red-500 animate-in fade-in slide-in-from-top-1">
-                  <Info size={12} />
-                  {errors[field.id]}
-                </span>
-              )}
-            </div>
-          ))}
+                if (!isVisible) return null;
+
+                return (
+                  <motion.div 
+                    key={field.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.05 }}
+                    className={`group flex flex-col space-y-1.5 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}
+                  >
+                    <div className="flex items-center justify-between px-1">
+                      <label htmlFor={field.id} className="text-[13px] font-semibold text-slate-700 transition-colors group-focus-within:text-emerald-600">
+                        {field.label}
+                        {field.required !== false && <span className="ml-1 text-red-400">*</span>}
+                      </label>
+                      {field.id === 'bi_number' && (
+                        <div className="group/info relative cursor-help">
+                          <HelpCircle size={14} className="text-slate-300" />
+                          <div className="absolute right-0 top-6 z-20 hidden w-48 rounded-lg bg-slate-800 p-2 text-[10px] text-white shadow-xl group-hover/info:block">
+                            Formato: 12 números + 1 letra. Ex: 123456789012A
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      {field.type === 'textarea' ? (
+                        <textarea
+                          id={field.id}
+                          placeholder={field.placeholder}
+                          value={formData[field.id] || ''}
+                          onFocus={() => setFocusedField(field.id)}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => handleChange(field.id, e.target.value)}
+                          required={field.required !== false}
+                          rows={4}
+                          className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none resize-none text-slate-900 placeholder:text-slate-400 ${
+                            errors[field.id] 
+                              ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
+                              : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10'
+                          }`}
+                        />
+                      ) : field.type === 'select' ? (
+                        <select
+                          id={field.id}
+                          value={formData[field.id] || ''}
+                          onFocus={() => setFocusedField(field.id)}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => handleChange(field.id, e.target.value)}
+                          required={field.required !== false}
+                          className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none text-slate-900 appearance-none ${
+                            errors[field.id] 
+                              ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
+                              : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10'
+                          }`}
+                        >
+                          <option value="" disabled>{field.placeholder || `Selecione ${field.label}`}</option>
+                          {field.options?.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          id={field.id}
+                          type={field.type || 'text'}
+                          placeholder={field.placeholder}
+                          value={formData[field.id] || ''}
+                          onFocus={() => setFocusedField(field.id)}
+                          onBlur={() => setFocusedField(null)}
+                          onChange={(e) => handleChange(field.id, e.target.value)}
+                          required={field.required !== false}
+                          className={`w-full px-4 py-3.5 rounded-2xl border bg-slate-50/30 transition-all outline-none text-slate-900 placeholder:text-slate-400 ${
+                            errors[field.id] 
+                              ? 'border-red-300 bg-red-50/30 focus:border-red-500' 
+                              : 'border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10'
+                          }`}
+                        />
+                      )}
+                      
+                      {focusedField === field.id && !errors[field.id] && (
+                        <div className="absolute -inset-[3px] border-2 border-emerald-500/20 rounded-[1.4rem] pointer-events-none animate-in fade-in duration-300" />
+                      )}
+
+                      {/* Indicador de Completo */}
+                      {hasValue && !focusedField && !errors[field.id] && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 animate-in zoom-in duration-300 pointer-events-none">
+                          <CheckCircle2 size={18} />
+                        </div>
+                      )}
+                    </div>
+
+                    {errors[field.id] && (
+                      <span className="flex items-center gap-1.5 px-1 text-[11px] font-medium text-red-500 animate-in fade-in slide-in-from-top-1">
+                        <Info size={12} />
+                        {errors[field.id]}
+                      </span>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
         </div>
-      </div>
+      </fieldset>
 
       <div className="pt-8 flex flex-col sm:flex-row gap-4">
         {!isFirstSection && (

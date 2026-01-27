@@ -13,6 +13,7 @@ interface DocumentPreviewProps {
   isReadOnly?: boolean;
   title?: string;
   layoutType?: 'OFFICIAL' | 'DECLARATION' | 'LETTER';
+  isPaid?: boolean;
 }
 
 export default function DocumentPreview({
@@ -25,6 +26,7 @@ export default function DocumentPreview({
   isReadOnly = false,
   title,
   layoutType: propLayoutType,
+  isPaid = false,
 }: DocumentPreviewProps) {
   
   const effectiveHideControls = hideControls || isReadOnly;
@@ -112,96 +114,105 @@ export default function DocumentPreview({
   };
 
   return (
-    <div className={`flex flex-col items-center w-full h-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-transparent pb-10"}`}>
+    <div className={`flex flex-col items-center w-full h-full ${effectiveHideControls ? "bg-white" : "bg-slate-50/50"}`}>
       
-      {/* Container de Escalonamento Inteligente com Scroll Interno */}
-      <div className={`w-full flex-1 flex justify-center p-4 sm:p-8 overflow-y-auto overflow-x-hidden no-scrollbar ${!effectiveHideControls ? "bg-slate-100/40 rounded-[2.5rem]" : ""}`}>
+      {/* Container do Documento com Scroll */}
+      <div className="w-full flex-1 overflow-y-auto no-scrollbar py-4 px-2 sm:px-6 flex justify-center">
         
-        {/* Wrapper do Escalonamento: Resolve o problema de "Folha esticada" */}
-        <div className="flex justify-center w-full min-h-min py-6 sm:py-10">
-          <div 
-            className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative origin-top scale-[0.38] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.85] xl:scale-[0.95] 2xl:scale-100 transition-all duration-700 font-serif border border-slate-200 shrink-0"
-            style={{
-              width: '210mm',
-              minHeight: '297mm',
-              padding: '25mm 22mm 20mm 25mm', 
-              boxSizing: 'border-box',
-              lineHeight: '1.6',
-              color: '#1e293b', 
-            }}
-          >
-          {/* Marca de Água Profissional */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 opacity-[0.03]">
-            <div className="absolute inset-[-50%] flex flex-wrap items-center justify-center content-center rotate-[-30deg]">
-              {Array(80).fill(null).map((_, i) => (
-                <span key={i} className="m-12 text-3xl font-black tracking-widest whitespace-nowrap text-slate-800 uppercase">
-                  DOKU PREVIEW
+        {/* A4 Document Wrapper */}
+        <div 
+          className={`bg-white shadow-xl relative font-serif border border-slate-200 shrink-0 transition-transform duration-500 origin-top ${
+            !isPaid && !isFree ? "select-none" : ""
+          } scale-[0.4] sm:scale-[0.6] md:scale-[0.7] lg:scale-[0.85] xl:scale-100`}
+          style={{
+            width: '210mm',
+            minHeight: '297mm',
+            padding: '30mm 25mm', 
+            boxSizing: 'border-box',
+            lineHeight: '1.5',
+            color: '#1a1a1a', 
+          }}
+        >
+          {/* Marca de Água Simplificada */}
+          {!isPaid && !isFree && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+              <div className="absolute inset-0 flex items-center justify-center rotate-[-45deg] opacity-[0.03]">
+                <span className="text-[120px] font-black tracking-tighter whitespace-nowrap text-slate-900">
+                  DOKUMOZ
                 </span>
-              ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Corpo do Texto - Agora ÚNICA fonte de verdade */}
+          {/* Conteúdo do Documento */}
           <div 
-            className="text-[12pt] text-justify relative z-10 official-document-content"
+            className="text-[12pt] text-justify relative z-10"
             style={{ 
               wordBreak: 'break-word',
-              overflowWrap: 'break-word'
+              overflowWrap: 'break-word',
+              fontFamily: 'Times New Roman, serif'
             }}
             dangerouslySetInnerHTML={{ __html: renderPreviewHTML(template, userData) }}
           />
 
-          </div>
+          {/* Overlay de Proteção Minimalista */}
+          {!isPaid && !isFree && (
+            <div className="absolute inset-x-0 bottom-0 top-[40%] z-20 pointer-events-none overflow-hidden">
+               <div className="absolute inset-0 bg-white/60 backdrop-blur-[4px] [mask-image:linear-gradient(to_bottom,transparent,black_20%)]" />
+               <div className="absolute inset-x-0 bottom-20 flex flex-col items-center justify-center p-10 text-center pointer-events-auto">
+                  <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce">
+                    <Lock size={18} className="text-emerald-400" />
+                    <span className="text-sm font-bold tracking-tight">Efectue o pagamento para desbloquear</span>
+                  </div>
+               </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Seção Final de Ações */}
+      {/* Ações (Apenas se não for ReadOnly/Review) */}
       {!effectiveHideControls && (
-        <div className="mt-12 mb-20 w-full max-w-3xl px-4">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_30px_60px_rgba(0,0,0,0.05)]">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex flex-col items-center md:items-start">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  {isFree ? "Acesso ao Modelo" : "Total a Pagar"}
-                </span>
-                <div className="mt-1 flex items-baseline gap-1">
-                  {isFree ? (
-                    <span className="text-4xl font-black text-emerald-600">Grátis</span>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-black text-slate-900">{cleanPrice}</span>
-                      <span className="text-sm font-bold text-slate-500">MT</span>
-                    </>
-                  )}
-                </div>
+        <div className="w-full border-t border-slate-200 bg-white p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="text-center sm:text-left">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total a Pagar</p>
+              <div className="flex items-baseline gap-1">
+                {isFree ? (
+                  <span className="text-3xl font-black text-emerald-600">Grátis</span>
+                ) : (
+                  <>
+                    <span className="text-3xl font-black text-slate-900">{cleanPrice}</span>
+                    <span className="text-sm font-bold text-slate-500">MT</span>
+                  </>
+                )}
               </div>
+            </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                <button 
-                  onClick={onBack}
-                  className="w-full sm:w-auto px-8 h-12 rounded-xl border border-slate-200 font-bold text-slate-500 hover:bg-slate-50 transition-all active:scale-95"
-                >
-                  Editar
-                </button>
-                <button 
-                  onClick={onConfirm}
-                  className={`w-full sm:w-auto px-10 h-12 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                    isFree ? "bg-emerald-600 hover:bg-emerald-700" : "bg-slate-900 hover:bg-slate-800"
-                  }`}
-                >
-                  {isFree ? (
-                    <>
-                      <CheckCircle2 size={16} />
-                      Baixar PDF Grátis
-                    </>
-                  ) : (
-                    <>
-                      <Lock size={16} />
-                      Confirmar
-                    </>
-                  )}
-                </button>
-              </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button 
+                onClick={onBack}
+                className="flex-1 sm:flex-none px-6 h-11 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-95"
+              >
+                Editar
+              </button>
+              <button 
+                onClick={onConfirm}
+                className={`flex-1 sm:flex-none px-8 h-11 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 ${
+                  isFree ? "bg-emerald-600 hover:bg-emerald-700" : "bg-slate-900 hover:bg-slate-800"
+                }`}
+              >
+                {isFree ? (
+                  <>
+                    <CheckCircle2 size={16} />
+                    Download Grátis
+                  </>
+                ) : (
+                  <>
+                    <Lock size={16} />
+                    Pagar e Baixar
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

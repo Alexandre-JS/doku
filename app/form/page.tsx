@@ -5,6 +5,7 @@ import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck, X } from
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
+import DocumentInlineEditor from "../../components/DocumentInlineEditor";
 import DynamicForm from "../../components/DynamicForm";
 import PaymentModal from "../../components/PaymentModal";
 import { ToastContainer } from "../../components/Toast";
@@ -48,6 +49,7 @@ function FormContent() {
   const [templateData, setTemplateData] = useState<{ id: string; content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'COMPLETED'>('PENDING');
   const [toastList, setToastList] = useState<Array<{
     id: string;
     message: string;
@@ -260,8 +262,8 @@ function FormContent() {
     fetchTemplate();
   }, [slug]);
 
-  const handleFormChange = (newData: DocumentFormData) => {
-    updateMultiple(newData);
+  const handleFormChange = (newData: Record<string, any>) => {
+    updateMultiple(newData as DocumentFormData);
   };
 
   const handleFormSubmit = (data: DocumentFormData) => {
@@ -271,6 +273,7 @@ function FormContent() {
   };
 
   const handlePaymentSuccess = useCallback(() => {
+    setPaymentStatus('COMPLETED');
     // Limpa dados salvos após sucesso
     clearSavedData();
     // Limpa sessão de checkout
@@ -373,161 +376,29 @@ function FormContent() {
       </header>
 
       <main className="relative mx-auto max-w-[1440px] px-6 lg:px-12 pt-4 pb-12">
-        {/* Cabeçalho do Documento - Ocupa a largura total ou limitada para leitura */}
-        <div className="mb-8 max-w-5xl animate-in fade-in slide-in-from-top-4 duration-1000">
+        {/* Cabeçalho do Documento - Agora mais sutil por conta do Editor Inline */}
+        <div className="mb-12 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50/50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-              </span>
-              Gerador Inteligente DOKU
-            </div>
-            
             <h1 className="font-display text-4xl font-black leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
               {templateData?.title || "Preencher Documento"}
             </h1>
-            
-            <div className="flex flex-wrap items-center gap-6 pt-1">
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500">
-                  <Check size={12} strokeWidth={3} />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Tempo: 2 min</span>
-              </div>
-              
-              <div className="h-4 w-px bg-slate-200" />
-              
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <ShieldCheck size={12} strokeWidth={3} />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Juridicamente Revisitado</span>
-              </div>
-
-              <div className="h-4 w-px bg-slate-200" />
-
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                  <FileText size={12} strokeWidth={3} />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-blue-600">PDF em Alta Definição</span>
-              </div>
-            </div>
-
-            <p className="text-xl leading-relaxed text-slate-500 max-w-2xl font-medium">
-              Complete os campos abaixo. Nosso sistema organiza seus dados automaticamente no padrão oficial de Moçambique.
+            <p className="text-lg leading-relaxed text-slate-500 max-w-2xl mx-auto font-medium">
+              O editor agora é o próprio documento. Clique sobre os espaços sublinhados para começar a preencher.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 items-start">
-          {/* Coluna da Esquerda: Formulário (Mais compacta) */}
-          <div className={`lg:col-span-5 ${currentStep === 1 ? 'hidden lg:block' : ''}`}>
-            <div className="space-y-8 pb-20">
-              <div className="relative rounded-[2.5rem] border border-slate-200 bg-white p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)]">
-                <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-50 rounded-full blur-3xl -z-10 opacity-50" />
-                <DynamicForm 
-                  schema={templateData?.form_schema || []} 
-                  initialData={formData} 
-                  onChange={handleFormChange}
-                  onNext={handleFormSubmit} 
-                />
-              </div>
-
-              {/* Botão Flutuante Mobile para Ver Prévia */}
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 lg:hidden">
-                <button
-                  onClick={() => setShowMobilePreview(true)}
-                  className="flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-bold text-white shadow-2xl ring-1 ring-white/10 active:scale-95"
-                >
-                  <FileText size={18} className="text-emerald-400" />
-                  Ver Documento
-                  <div className="h-4 w-px bg-white/20 mx-1" />
-                  <span className="text-slate-400">Gratis</span>
-                </button>
-              </div>
-
-              <div className="flex items-start gap-5 rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-emerald-400 ring-1 ring-white/20">
-                  <ShieldCheck size={28} />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-white tracking-tight">Privacidade Total Garantida</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-400 font-medium">
-                    Seus dados pessoais nunca são armazenados. A geração do documento ocorre de forma efêmera e segura.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Coluna da Direita: Preview (Documento) */}
-          <div className={`lg:col-span-7 ${currentStep === 0 ? 'hidden lg:block' : ''}`}>
-            <div className="lg:sticky lg:top-8 pb-10 h-[calc(100vh-64px)] max-h-[900px]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="relative h-full w-full"
-                >
-                  {currentStep === 0 ? (
-                    <div className="group/preview relative h-full w-full">
-                      {/* Efeito Glow de Fundo */}
-                      <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-500/5 to-blue-500/5 rounded-[3rem] blur-2xl opacity-0 group-hover/preview:opacity-100 transition-opacity duration-700" />
-                      
-                      {/* Badge Superior */}
-                      <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-slate-900 border border-slate-700/50 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">
-                        Live Preview
-                      </div>
-                      
-                      <div className="relative h-full rounded-[2.5rem] border border-slate-200 bg-[#EBEEF2] p-0 sm:p-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-700 group-hover/preview:scale-[1.01] flex flex-col">
-                        {/* Pontilhado técnico */}
-                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                             style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
-                        
-                        <DocumentPreview
-                          userData={formData}
-                          template={currentTemplate}
-                          price={templateData?.price || "0"}
-                          title={templateData?.title}
-                          onBack={() => {}}
-                          onConfirm={() => {}}
-                          isReadOnly={true}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative h-full w-full">
-                      {/* Badge Superior Revisão */}
-                      <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-emerald-600 border border-emerald-500 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">
-                        Revisão Final
-                      </div>
-                      
-                      <div className="relative h-full rounded-[2.5rem] border-2 border-emerald-100 bg-white p-0 sm:p-2 shadow-2xl overflow-hidden flex flex-col">
-                         {/* Padrão sutil para revisão */}
-                         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
-                                 style={{ backgroundImage: 'radial-gradient(#10b981 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
-
-                        <DocumentPreview
-                          userData={formData}
-                          template={currentTemplate}
-                          price={templateData?.price || "0 MT"}
-                          title={templateData?.title}
-                          onBack={() => setCurrentStep(0)}
-                          onConfirm={() => setIsPaymentModalOpen(true)}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
+        <div className="w-full">
+          <DocumentInlineEditor
+            template={templateData?.content || ""}
+            schema={templateData?.form_schema}
+            initialData={formData}
+            onChange={handleFormChange}
+            price={templateData?.price || "0"}
+            isPaid={paymentStatus === 'COMPLETED'}
+            onConfirm={() => setIsPaymentModalOpen(true)}
+            title={templateData?.title}
+          />
         </div>
       </main>
 
@@ -573,6 +444,7 @@ function FormContent() {
                     handleFormSubmit(formData as DocumentFormData);
                   }}
                   isReadOnly={currentStep === 0}
+                  isPaid={paymentStatus === 'COMPLETED'}
                 />
               </div>
             </motion.div>
