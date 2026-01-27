@@ -304,8 +304,63 @@ function FormContent() {
 
   const currentTemplate = templateData?.content || "";
 
+  // Extrair ordem das variáveis no documento e agrupar para preenchimento gradual
+  const gradualSchema = (() => {
+    if (!templateData?.form_schema) return [];
+    if (!currentTemplate) return templateData.form_schema;
+    
+    // 1. Encontrar todas as variáveis no template na ordem em que aparecem
+    const matches = Array.from(currentTemplate.matchAll(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g));
+    const variableOrder = [...new Set(matches.map(m => m[1]))]; // Remove duplicatas mantendo a ordem
+    
+    // 2. Coletar todos os campos disponíveis no schema original
+    const allFieldsMap = new Map<string, any>();
+    templateData.form_schema.forEach(section => {
+      section.fields?.forEach(field => {
+        allFieldsMap.set(field.id, field);
+      });
+    });
+
+    // 3. Ordenar campos conforme aparecem no documento
+    const sortedFields = variableOrder
+      .map(id => allFieldsMap.get(id))
+      .filter(f => f !== undefined);
+
+    // 4. Adicionar campos que estão no schema mas não no template (se houver)
+    const extraFields = Array.from(allFieldsMap.values())
+      .filter(f => !variableOrder.includes(f.id));
+    
+    const finalFields = [...sortedFields, ...extraFields];
+
+    // 5. Agrupar em passos graduais (máximo de 4 campos por passo)
+    const ITEMS_PER_STEP = 4;
+    const gradualSteps: FormSection[] = [];
+    
+    for (let i = 0; i < finalFields.length; i += ITEMS_PER_STEP) {
+      const stepFields = finalFields.slice(i, i + ITEMS_PER_STEP);
+      gradualSteps.push({
+        section: `Informações ${gradualSteps.length + 1}`,
+        fields: stepFields
+      });
+    }
+
+    return gradualSteps.length > 0 ? gradualSteps : templateData.form_schema;
+  })();
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+        }
+        .no-select {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+        }
+      `}</style>
+
       {/* Decorative Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-emerald-50/50 blur-[120px]" />
@@ -428,24 +483,11 @@ function FormContent() {
               <div className="relative rounded-[2.5rem] border border-slate-200 bg-white p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)]">
                 <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-50 rounded-full blur-3xl -z-10 opacity-50" />
                 <DynamicForm 
-                  schema={templateData?.form_schema || []} 
+                  schema={gradualSchema as FormSection[]} 
                   initialData={formData} 
                   onChange={handleFormChange}
                   onNext={handleFormSubmit} 
                 />
-              </div>
-
-              {/* Botão Flutuante Mobile para Ver Prévia */}
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 lg:hidden">
-                <button
-                  onClick={() => setShowMobilePreview(true)}
-                  className="flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-bold text-white shadow-2xl ring-1 ring-white/10 active:scale-95"
-                >
-                  <FileText size={18} className="text-emerald-400" />
-                  Ver Documento
-                  <div className="h-4 w-px bg-white/20 mx-1" />
-                  <span className="text-slate-400">Gratis</span>
-                </button>
               </div>
 
               <div className="flex items-start gap-5 rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
@@ -482,14 +524,10 @@ function FormContent() {
                       
                       {/* Badge Superior */}
                       <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-slate-900 border border-slate-700/50 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">
-                        Live Preview
+                        Visualização em Tempo Real
                       </div>
                       
-                      <div className="relative h-full rounded-[2.5rem] border border-slate-200 bg-[#EBEEF2] p-0 sm:p-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-700 group-hover/preview:scale-[1.01] flex flex-col">
-                        {/* Pontilhado técnico */}
-                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                             style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
-                        
+                      <div className="relative h-full overflow-hidden flex flex-col no-select">
                         <DocumentPreview
                           userData={formData}
                           template={currentTemplate}
@@ -508,11 +546,7 @@ function FormContent() {
                         Revisão Final
                       </div>
                       
-                      <div className="relative h-full rounded-[2.5rem] border-2 border-emerald-100 bg-white p-0 sm:p-2 shadow-2xl overflow-hidden flex flex-col">
-                         {/* Padrão sutil para revisão */}
-                         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
-                                 style={{ backgroundImage: 'radial-gradient(#10b981 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
-
+                      <div className="relative h-full overflow-hidden flex flex-col no-select">
                         <DocumentPreview
                           userData={formData}
                           template={currentTemplate}
@@ -531,55 +565,8 @@ function FormContent() {
         </div>
       </main>
 
-      {/* Modal de Preview Mobile */}
-      <AnimatePresence>
-        {showMobilePreview && (
-          <div className="fixed inset-0 z-[100] lg:hidden">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/80 backdrop-blur-md"
-              onClick={() => setShowMobilePreview(false)}
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute inset-x-0 bottom-0 top-12 rounded-t-[3rem] bg-slate-100 overflow-hidden flex flex-col"
-            >
-              <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Visualização</span>
-                </div>
-                <button 
-                  onClick={() => setShowMobilePreview(false)}
-                  className="rounded-full bg-slate-100 p-2 text-slate-900"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <DocumentPreview
-                  userData={formData}
-                  template={currentTemplate}
-                  price={templateData?.price || "0"}
-                  title={templateData?.title}
-                  onBack={() => setShowMobilePreview(false)}
-                  onConfirm={() => {
-                    setShowMobilePreview(false);
-                    handleFormSubmit(formData as DocumentFormData);
-                  }}
-                  isReadOnly={currentStep === 0}
-                />
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
+      {/* Modal de Preview Mobile - Removido em favor do fluxo linear */}
+      
       <PaymentModal 
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}

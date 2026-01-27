@@ -139,29 +139,44 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
 
   if (normalizedSchema.length === 0) return null;
 
+  const progress = Math.round(((currentSectionIdx + 1) / normalizedSchema.length) * 100);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Progress Indicator for multi-section forms */}
-      {normalizedSchema.length > 1 && (
-        <div className="flex items-center justify-between mb-8 overflow-x-auto pb-4 no-scrollbar">
+      {/* Visual Progress Bar */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Progresso do Preenchimento</span>
+            <span className="text-sm font-bold text-slate-400">Passo {currentSectionIdx + 1} de {normalizedSchema.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-black text-slate-900">{progress}%</span>
+          </div>
+        </div>
+        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-emerald-500 transition-all duration-700 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Legacy Progress Indicator - Hidden if many steps */}
+      {normalizedSchema.length > 2 && normalizedSchema.length < 8 && (
+        <div className="flex items-center justify-between overflow-x-auto pb-2 no-scrollbar">
           {normalizedSchema.map((_, idx) => (
             <React.Fragment key={idx}>
               <div 
-                className={`flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer transition-all ${
-                  idx === currentSectionIdx ? 'opacity-100' : 'opacity-40 hover:opacity-100'
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-all ${
+                  idx === currentSectionIdx ? 'bg-slate-900 text-white shadow-lg' : 
+                  idx < currentSectionIdx ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
                 }`}
-                onClick={() => {
-                  if (idx < currentSectionIdx) setCurrentSectionIdx(idx);
-                }}
               >
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ring-4 ring-white ${
-                  idx <= currentSectionIdx ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
-                }`}>
-                  {idx + 1}
-                </div>
+                {idx + 1}
               </div>
               {idx < normalizedSchema.length - 1 && (
-                <div className={`h-1 flex-1 min-w-[20px] mx-2 rounded-full ${
+                <div className={`h-0.5 flex-1 min-w-[10px] mx-1 rounded-full ${
                   idx < currentSectionIdx ? 'bg-emerald-500' : 'bg-slate-200'
                 }`} />
               )}
@@ -172,12 +187,15 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
 
       <div key={currentSectionIdx} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
         <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-200">
             <span className="text-sm font-bold">{currentSectionIdx + 1}</span>
           </div>
-          <h3 className="font-display text-lg font-bold tracking-tight text-slate-800">
-            {activeSection.section}
-          </h3>
+          <div>
+            <h3 className="font-display text-lg font-bold tracking-tight text-slate-800">
+              {activeSection.section}
+            </h3>
+            <p className="text-xs text-slate-400 font-medium tracking-tight">Preencha os dados necessários para o documento</p>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
@@ -316,12 +334,12 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
         </div>
       </div>
 
-      <div className="pt-8 flex flex-col sm:flex-row gap-4">
+      <div className="pt-10 flex flex-col sm:flex-row gap-4">
         {!isFirstSection && (
           <button
             type="button"
             onClick={handlePrevSection}
-            className="btn-secondary flex-1"
+            className="flex-1 px-8 h-14 rounded-2xl border border-slate-200 font-bold text-slate-500 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-95"
           >
             <ChevronLeft size={18} />
             Anterior
@@ -330,10 +348,14 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
         <button
           type="button"
           onClick={handleNextSection}
-          className="btn-primary flex-[2]"
+          className={`flex-[2] px-8 h-14 rounded-2xl font-black text-white shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95 ${
+            isLastSection ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-200'
+          }`}
         >
-          {isLastSection ? 'Revisar Documento Completo' : 'Próxima Seção'}
-          {!isLastSection && <ChevronRight size={18} />}
+          {isLastSection ? 'Revisar Documento Completo' : 'Continuar Preenchimento'}
+          <div className="bg-white/10 p-1 rounded-lg">
+            <ChevronRight size={18} />
+          </div>
         </button>
       </div>
 

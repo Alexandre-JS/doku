@@ -48,7 +48,7 @@ export default function AdminLayout({
       
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
         {/* Topbar */}
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/80 px-4 md:px-8 backdrop-blur-md">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 md:px-8">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(true)}
