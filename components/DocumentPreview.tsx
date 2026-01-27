@@ -112,46 +112,68 @@ export default function DocumentPreview({
   };
 
   return (
-    <div className={`flex flex-col items-center w-full h-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-transparent pb-10"}`}>
+    <div 
+      className={`flex flex-col items-center w-full h-full ${effectiveHideControls ? "bg-transparent p-0" : "bg-transparent pb-10"} select-none`}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <style>{`
+        .protect-document-content {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+          pointer-events: none !important;
+        }
+        @media print {
+          .no-print { display: none !important; }
+        }
+        .a4-page {
+          width: 210mm;
+          min-height: 297mm;
+          padding: 2.5cm 2cm !important;
+          margin: 0 auto;
+          background: white;
+          box-shadow: 0 0 20px rgba(0,0,0,0.05);
+          font-family: 'Times New Roman', serif;
+          font-size: 14pt;
+          line-height: 1.6;
+          text-align: justify;
+          word-wrap: break-word;
+          box-sizing: border-box;
+          position: relative;
+        }
+        @media (max-width: 210mm) {
+          .a4-page {
+            width: 100%;
+            height: auto;
+            padding: 1cm !important;
+          }
+        }
+      `}</style>
       
-      {/* Container de Escalonamento Inteligente com Scroll Interno */}
-      <div className={`w-full flex-1 flex justify-center p-4 sm:p-8 overflow-y-auto overflow-x-hidden no-scrollbar ${!effectiveHideControls ? "bg-slate-100/40 rounded-[2.5rem]" : ""}`}>
+      {/* Container de Visualização Direta */}
+      <div className={`w-full flex-1 flex flex-col items-center py-4 overflow-y-auto no-scrollbar`}>
         
-        {/* Wrapper do Escalonamento: Resolve o problema de "Folha esticada" */}
-        <div className="flex justify-center w-full min-h-min py-6 sm:py-10">
-          <div 
-            className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative origin-top scale-[0.38] sm:scale-[0.6] md:scale-[0.75] lg:scale-[0.85] xl:scale-[0.95] 2xl:scale-100 transition-all duration-700 font-serif border border-slate-200 shrink-0"
-            style={{
-              width: '210mm',
-              minHeight: '297mm',
-              padding: '25mm 22mm 20mm 25mm', 
-              boxSizing: 'border-box',
-              lineHeight: '1.6',
-              color: '#1e293b', 
-            }}
-          >
-          {/* Marca de Água Profissional */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 opacity-[0.03]">
-            <div className="absolute inset-[-50%] flex flex-wrap items-center justify-center content-center rotate-[-30deg]">
-              {Array(80).fill(null).map((_, i) => (
-                <span key={i} className="m-12 text-3xl font-black tracking-widest whitespace-nowrap text-slate-800 uppercase">
-                  DOKU PREVIEW
-                </span>
-              ))}
+        {/* Folha A4 em Tamanho Real/Normal */}
+        <div className="a4-page border border-slate-100 relative bg-white sm:mb-20">
+          {/* Marca de Água Profissional - Posicionamento Centralizado e Fixo */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 flex items-center justify-center">
+            <div className="rotate-[-45deg] opacity-[0.03] select-none pointer-events-none">
+              <span className="text-[120px] font-black tracking-[0.2em] text-slate-900 whitespace-nowrap">
+                DOKUMOZ
+              </span>
             </div>
           </div>
 
-          {/* Corpo do Texto - Agora ÚNICA fonte de verdade */}
+          {/* Corpo do Texto - Experiência de Folha Limpa */}
           <div 
-            className="text-[12pt] text-justify relative z-10 official-document-content"
+            className="relative z-10 official-document-content protect-document-content"
             style={{ 
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word'
+              color: '#1a1a1a'
             }}
             dangerouslySetInnerHTML={{ __html: renderPreviewHTML(template, userData) }}
           />
 
-          </div>
         </div>
       </div>
 
