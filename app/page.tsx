@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import TemplatesGrid from "../components/TemplatesGrid";
+import PopularTemplates from "../components/PopularTemplates";
 import Footer from "../components/Footer";
 import PartnerTrustBar from "../components/PartnerTrustBar";
 import FloatingSupport from "../components/FloatingSupport";
@@ -23,6 +24,8 @@ export default function Home() {
         }}>
           <PartnerTrustBar />
         </div>
+
+        <PopularTemplates />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Catálogo de Modelos */}

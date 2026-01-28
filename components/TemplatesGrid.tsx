@@ -11,8 +11,7 @@ interface TemplatesGridProps {
 }
 
 // Cached function to fetch templates
-const getCachedTemplates = unstable_cache(
-  async (limit?: number) => {
+const getCachedTemplates = async (limit?: number) => {
     let query = supabase
       .from("templates")
       .select(`
@@ -37,10 +36,7 @@ const getCachedTemplates = unstable_cache(
       category: t.categories,
       companies: t.template_companies?.map((tc: any) => tc.companies).filter(Boolean) || []
     }));
-  },
-  ["templates-grid"],
-  { revalidate: 3600, tags: ["templates"] }
-);
+};
 
 export default async function TemplatesGrid({ limit }: TemplatesGridProps) {
   try {
