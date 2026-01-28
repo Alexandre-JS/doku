@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ArrowLeft, Lock, CheckCircle2 } from "lucide-react";
+import DOMPurify from 'dompurify';
 
 interface DocumentPreviewProps {
   userData: Record<string, any>;
@@ -51,8 +52,14 @@ export default function DocumentPreview({
         return list.map(item => {
           let itemContent = content;
           for (const k in item) {
+            let value = item[k];
+            // Sanitizar o valor antes de incluir no HTML
+            if (typeof value === 'string' && typeof window !== 'undefined') {
+              value = DOMPurify.sanitize(value);
+            }
+            
             const r = new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g');
-            itemContent = itemContent.replace(r, `<span class="text-blue-800 font-bold border-b border-blue-200">${item[k] || "..."}</span>`);
+            itemContent = itemContent.replace(r, `<span class="text-blue-800 font-bold border-b border-blue-200">${value || "..."}</span>`);
           }
           return itemContent;
         }).join("");
@@ -65,7 +72,12 @@ export default function DocumentPreview({
     
     matches.forEach(match => {
       const key = match.replace(/\{\{\s*|\s*\}\}/g, "").trim();
-      const value = userData[key];
+      let value = userData[key];
+
+      // Sanitizar o valor antes de incluir no HTML
+      if (typeof value === 'string' && typeof window !== 'undefined') {
+        value = DOMPurify.sanitize(value);
+      }
 
       if (typeof value === 'string' || typeof value === 'number') {
         const replacement = `

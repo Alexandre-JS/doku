@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, CheckCircle2, X, MessageSquarePlus } from "lucide-react";
+import DOMPurify from 'dompurify';
 
 interface SuggestionBoxProps {
   isOpen: boolean;
@@ -25,11 +26,14 @@ export default function SuggestionBox({ isOpen, onClose }: SuggestionBoxProps) {
     e.preventDefault();
     if (!suggestion) return;
     
+    // Sanitizar a sugestão antes de enviar
+    const sanitizedSuggestion = typeof window !== 'undefined' ? DOMPurify.sanitize(suggestion) : suggestion;
+    
     try {
       const response = await fetch("/api/suggestion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ suggestion, reaction }),
+        body: JSON.stringify({ suggestion: sanitizedSuggestion, reaction }),
       });
 
       if (!response.ok) throw new Error("Falha ao enviar");
