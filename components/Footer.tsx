@@ -1,5 +1,6 @@
 import { MessageCircle, Mail, ShieldCheck, FileText, HelpCircle } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -9,7 +10,13 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="flex flex-col items-center space-y-6 text-center md:items-start md:text-left">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/logo-tra.png" alt="DOKU" className="h-9 w-auto brightness-0 invert sm:h-10" />
+              <Image 
+                src="/logo-tra.png" 
+                alt="DOKU" 
+                width={160} 
+                height={40} 
+                className="h-9 w-auto brightness-0 invert sm:h-10" 
+              />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-white/60">
               A plataforma líder em Moçambique para geração de documentos oficiais de forma rápida, segura e legal.
@@ -71,10 +78,22 @@ export default function Footer() {
             </p>
             <div className="mt-4 flex items-center gap-6">
               <div className="group relative">
-                <img src="/m-pesa.png" alt="M-Pesa" className="h-8 w-auto object-contain grayscale brightness-200 transition-all group-hover:grayscale-0 group-hover:brightness-100" />
+                <Image 
+                  src="/m-pesa.png" 
+                  alt="M-Pesa" 
+                  width={64} 
+                  height={32} 
+                  className="h-8 w-auto object-contain grayscale brightness-200 transition-all group-hover:grayscale-0 group-hover:brightness-100" 
+                />
               </div>
               <div className="group relative">
-                <img src="/e-mola.png" alt="e-Mola" className="h-8 w-auto object-contain grayscale brightness-200 transition-all group-hover:grayscale-0 group-hover:brightness-100" />
+                <Image 
+                  src="/e-mola.png" 
+                  alt="e-Mola" 
+                  width={64} 
+                  height={32} 
+                  className="h-8 w-auto object-contain grayscale brightness-200 transition-all group-hover:grayscale-0 group-hover:brightness-100" 
+                />
               </div>
             </div>
             <div className="mt-6 flex items-center gap-2 text-[10px] text-white/30">

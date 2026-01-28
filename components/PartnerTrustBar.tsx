@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { createBrowserSupabase } from "../src/lib/supabase";
 import { Company } from "../src/types";
 
@@ -90,21 +91,12 @@ export default function PartnerTrustBar() {
                     flexShrink: 0
                   }}
                 >
-                  <img
+                  <Image
                     src={partner.logo_url}
                     alt={partner.name}
-                    className="h-full w-auto max-w-[80px] sm:max-w-[100px] lg:max-w-[120px] object-contain object-center"
-                    loading="lazy"
-                    style={{
-                      filter: 'grayscale(100%)',
-                      transition: 'filter 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(0%)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(100%)';
-                    }}
+                    width={120}
+                    height={48}
+                    className="h-full w-auto max-w-[80px] sm:max-w-[100px] lg:max-w-[120px] object-contain object-center transition-all duration-300 grayscale hover:grayscale-0"
                   />
                 </div>
               ))}

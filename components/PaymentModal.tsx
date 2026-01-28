@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight, CloudUpload, AlertTriangle, User } from "lucide-react";
 import { generatePDF, LayoutType } from "../src/utils/pdfGenerator";
@@ -372,7 +373,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                         onClick={() => setPaymentMethod("mpesa")}
                         className={`btn-mpesa group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "mpesa" ? "ring-2 ring-red-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
                       >
-                        <img src="/m-pesa.png" alt="M-Pesa" className="h-7 w-auto brightness-0 invert" />
+                        <Image 
+                          src="/m-pesa.png" 
+                          alt="M-Pesa" 
+                          width={80} 
+                          height={28} 
+                          className="h-7 w-auto brightness-0 invert" 
+                        />
                         {paymentMethod === "mpesa" && (
                           <div className="absolute right-2 top-2">
                             <CheckCircle2 size={18} className="text-white" />
@@ -384,7 +391,13 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
                         onClick={() => setPaymentMethod("emola")}
                         className={`btn-emola group relative flex items-center justify-center py-5 px-4 rounded-2xl overflow-hidden transition-all ${paymentMethod === "emola" ? "ring-2 ring-orange-600 ring-offset-2 opacity-100" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"}`}
                       >
-                        <img src="/e-mola.png" alt="e-Mola" className="h-7 w-auto brightness-0 invert" />
+                        <Image 
+                          src="/e-mola.png" 
+                          alt="e-Mola" 
+                          width={80} 
+                          height={28} 
+                          className="h-7 w-auto brightness-0 invert" 
+                        />
                         {paymentMethod === "emola" && (
                           <div className="absolute right-2 top-2">
                             <CheckCircle2 size={18} className="text-white" />
