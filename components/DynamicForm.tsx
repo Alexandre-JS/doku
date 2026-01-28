@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FormSection } from '../src/types';
 import { HelpCircle, Info, ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface Props {
   schema: FormSection[];
@@ -43,10 +44,19 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
   const isLastSection = currentSectionIdx === normalizedSchema.length - 1;
   const isFirstSection = currentSectionIdx === 0;
 
+  // Helper to sanitize input to prevent XSS
+  const sanitizeInput = (value: string) => {
+    if (typeof window !== 'undefined') {
+      return DOMPurify.sanitize(value);
+    }
+    return value;
+  };
+
   const handleRepeaterChange = (sectionId: string, index: number, fieldId: string, value: string) => {
+    const sanitizedValue = sanitizeInput(value);
     const sectionData = [...(formData[sectionId] || [])];
     if (!sectionData[index]) sectionData[index] = {};
-    sectionData[index] = { ...sectionData[index], [fieldId]: value };
+    sectionData[index] = { ...sectionData[index], [fieldId]: sanitizedValue };
     
     const newData = { ...formData, [sectionId]: sectionData };
     setFormData(newData);
@@ -104,7 +114,8 @@ export default function DynamicForm({ schema, initialData, onNext, onChange }: P
   };
 
   const handleChange = (id: string, value: string) => {
-    const newData = { ...formData, [id]: value };
+    const sanitizedValue = sanitizeInput(value);
+    const newData = { ...formData, [id]: sanitizedValue };
     setFormData(newData);
     
     if (onChange) {
