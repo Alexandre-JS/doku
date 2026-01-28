@@ -1,9 +1,12 @@
 import Navbar from "../components/Navbar";
 import TemplatesGrid from "../components/TemplatesGrid";
+import PopularTemplates from "../components/PopularTemplates";
 import Footer from "../components/Footer";
 import PartnerTrustBar from "../components/PartnerTrustBar";
 import FloatingSupport from "../components/FloatingSupport";
 import Hero from "../components/Hero";
+import { Suspense } from "react";
+import LogoLoading from "../components/LogoLoading";
 
 export default function Home() {
   return (
@@ -22,6 +25,8 @@ export default function Home() {
           <PartnerTrustBar />
         </div>
 
+        <PopularTemplates />
+
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Catálogo de Modelos */}
           <section className="pb-16 sm:pb-20">
@@ -34,7 +39,13 @@ export default function Home() {
             </div>
 
             <div className="mt-10">
-              <TemplatesGrid limit={4} />
+              <Suspense fallback={
+                <div className="flex flex-col items-center justify-center py-20">
+                  <LogoLoading size="md" />
+                </div>
+              }>
+                <TemplatesGrid limit={4} />
+              </Suspense>
             </div>
           </section>
         </div>

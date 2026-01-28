@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Plus, 
   ChevronDown, 
@@ -108,7 +109,14 @@ export default function Navbar() {
         {/* Left: Logo & Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto transition-transform group-hover:scale-105 sm:h-9" />
+            <Image 
+              src="/logo-tra.png" 
+              alt="DOKU" 
+              width={144} 
+              height={36} 
+              priority
+              className="h-8 w-auto transition-transform group-hover:scale-105 sm:h-9" 
+            />
             <div className="flex items-center gap-1.2 rounded-full bg-slate-100 px-1.5 py-0.5 ring-1 ring-slate-200 sm:gap-1.5 sm:px-2">
               <Cloud size={10} className="text-doku-blue/40" />
               <span className="text-[9px] font-bold uppercase tracking-tighter text-slate-500 sm:text-[10px]">Beta</span>
@@ -184,7 +192,13 @@ export default function Navbar() {
                               href={company.href}
                               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-doku-bg hover:text-doku-blue"
                             >
-                              <img src={company.logo_url} alt={company.name} className="h-5 w-5 rounded-md object-contain grayscale" />
+                              <Image 
+                                src={company.logo_url} 
+                                alt={company.name} 
+                                width={20} 
+                                height={20} 
+                                className="h-5 w-5 rounded-md object-contain grayscale" 
+                              />
                               {company.name}
                             </Link>
                           ))}
@@ -255,7 +269,13 @@ export default function Navbar() {
               className="fixed right-0 top-0 z-[70] h-full w-full max-w-[320px] bg-white p-6 shadow-2xl lg:hidden"
             >
               <div className="flex items-center justify-between mb-8">
-                <img src="/logo-tra.png" alt="DOKU" className="h-8 w-auto" />
+                <Image 
+                  src="/logo-tra.png" 
+                  alt="DOKU" 
+                  width={120} 
+                  height={32} 
+                  className="h-8 w-auto" 
+                />
                 <button 
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600"
@@ -292,7 +312,13 @@ export default function Navbar() {
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3">Empresas</p>
                     {companies.map((company) => (
                       <Link key={company.name} href={company.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500 hover:bg-slate-50">
-                        <img src={company.logo_url} alt={company.name} className="h-5 w-5 rounded-md object-contain grayscale" />
+                        <Image 
+                          src={company.logo_url} 
+                          alt={company.name} 
+                          width={20} 
+                          height={20} 
+                          className="h-5 w-5 rounded-md object-contain grayscale" 
+                        />
                         {company.name}
                       </Link>
                     ))}

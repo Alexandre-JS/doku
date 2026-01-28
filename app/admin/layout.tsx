@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, redirect } from "next/navigation";
+import Image from "next/image";
 import { createBrowserSupabase } from "@/src/lib/supabase";
 import Sidebar from "@/components/admin/Sidebar";
 import { Menu, Bell } from "lucide-react";
@@ -76,7 +77,12 @@ export default function AdminLayout({
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{profile?.role}</span>
               </div>
               <div className="h-10 w-10 shrink-0 rounded-full border-2 border-zinc-100 bg-zinc-200 shadow-sm overflow-hidden ring-2 ring-white">
-                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt="User" />
+                 <Image 
+                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} 
+                   alt="User" 
+                   width={40} 
+                   height={40} 
+                 />
               </div>
             </div>
           </div>

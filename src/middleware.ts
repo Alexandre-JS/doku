@@ -1,7 +1,35 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { ratelimit } from "./lib/ratelimit";
 
 export async function middleware(request: NextRequest) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  // 1. Rate Limiting for API routes
+  if (path.startsWith("/api") && !path.startsWith("/api/payments/webhook")) {
+    try {
+      const ip = request.ip ?? "127.0.0.1";
+      const { success, limit, reset, remaining } = await ratelimit.limit(
+        `ratelimit_${ip}`
+      );
+
+      if (!success) {
+        return new NextResponse("Muitas solicitações. Por favor, tente novamente mais tarde.", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        });
+      }
+    } catch (error) {
+      // Fallback if Redis fails - allow the request to proceed to avoid downtime
+      console.error("Rate limit error:", error);
+    }
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -37,8 +65,6 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Proteção de Rotas
-  const url = new URL(request.url);
-  const path = url.pathname;
 
   // 0. Redirecionar utilizadores logados para longe das páginas de autenticação
   if (user && (path.startsWith("/auth/login") || path.startsWith("/auth/signup"))) {

@@ -2,6 +2,13 @@
 const DEBITO_API_URL = process.env.DEBITO_API_URL || 'https://my.debito.co.mz/api/v1';
 const DEBITO_API_TOKEN = process.env.DEBITO_API_TOKEN;
 
+// Helper to ensure config is present
+const ensureConfig = () => {
+  if (!DEBITO_API_TOKEN) {
+    throw new Error('DEBITO_API_TOKEN is not configured in environment variables');
+  }
+};
+
 export interface DebitoMpesaRequest {
   msisdn: string;
   amount: number;
@@ -20,6 +27,7 @@ export interface DebitoResponse {
 }
 
 export async function initiateMpesaPayment(data: DebitoMpesaRequest): Promise<DebitoResponse> {
+  ensureConfig();
   const walletId = process.env.DEBITO_MPESA_WALLET_ID;
   
   if (!walletId) {
@@ -47,6 +55,7 @@ export async function initiateMpesaPayment(data: DebitoMpesaRequest): Promise<De
 }
 
 export async function checkTransactionStatus(debitoReference: string): Promise<DebitoResponse> {
+  ensureConfig();
   const response = await fetch(`${DEBITO_API_URL}/transactions/${debitoReference}/status`, {
     method: 'GET',
     headers: {

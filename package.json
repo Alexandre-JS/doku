@@ -13,6 +13,8 @@
     "@radix-ui/react-avatar": "^1.1.11",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.1",
