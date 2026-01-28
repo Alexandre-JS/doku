@@ -2,9 +2,7 @@ import { ChevronRight, Zap, Trophy, ShieldCheck, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "../src/lib/supabase";
-import { unstable_cache } from "next/cache";
 import { Template } from "../src/types";
-import AnimatedGridItem from "./AnimatedGridItem";
 
 // Cached function to fetch popular templates
 const getPopularTemplates = async () => {

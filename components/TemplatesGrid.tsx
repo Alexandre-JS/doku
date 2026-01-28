@@ -2,9 +2,8 @@ import { Search, FileText } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "../src/lib/supabase";
-import { Template } from "../src/types";
+import { Template, Company } from "../src/types";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { unstable_cache } from "next/cache";
 
 interface TemplatesGridProps {
   limit?: number;
@@ -165,7 +164,7 @@ export default async function TemplatesGrid({ limit }: TemplatesGridProps) {
                         {/* Company Avatars */}
                         <div className="flex -space-x-2.5 overflow-hidden p-1">
                           {template.companies && template.companies.length > 0 ? (
-                            template.companies.slice(0, 3).map((company) => (
+                            template.companies.slice(0, 3).map((company: Company) => (
                               <Avatar 
                                 key={company.id} 
                                 className="h-6 w-6 border-2 border-white shadow-sm transition-transform hover:z-10 hover:scale-110"

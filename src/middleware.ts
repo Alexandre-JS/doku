@@ -9,7 +9,9 @@ export async function middleware(request: NextRequest) {
   // 1. Rate Limiting for API routes
   if (path.startsWith("/api") && !path.startsWith("/api/payments/webhook")) {
     try {
-      const ip = request.ip ?? "127.0.0.1";
+      const forwarded = request.headers.get("x-forwarded-for");
+      const ip = forwarded ? forwarded.split(',')[0] : (request as any).ip ?? "127.0.0.1";
+      
       const { success, limit, reset, remaining } = await ratelimit.limit(
         `ratelimit_${ip}`
       );
