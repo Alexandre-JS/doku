@@ -13,7 +13,7 @@ import { createBrowserSupabase } from "../../src/lib/supabase";
 import { FormSection } from "../../src/types";
 import LogoLoading from "../../components/LogoLoading";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutType } from "../../src/utils/pdfGenerator";
+import { LayoutType } from "../../src/utils/pdfGeneratorServer";
 import {
   saveCheckoutSession,
   restoreCheckoutSession,

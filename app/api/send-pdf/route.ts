@@ -1,5 +1,7 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
+import { generatePDFServer } from '@/src/utils/pdfGeneratorServer';
+import { createServerSupabase } from '@/src/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
@@ -10,17 +12,26 @@ export async function POST(request: Request) {
     }
 
     const resend = new Resend(apiKey);
-    const { pdfBase64, email, docTitle } = await request.json();
+    const { templateId, userData, email, docTitle, layoutType } = await request.json();
 
-    if (!pdfBase64 || !email) {
+    if (!templateId || !userData || !email) {
       return NextResponse.json({ error: 'Dados insuficientes para o envio' }, { status: 400 });
     }
 
-    // Remover o prefixo data:application/pdf;base64, se existir
-    const base64Content = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
-    
-    // Converter para Buffer para garantir o anexo correto no Resend
-    const buffer = Buffer.from(base64Content, 'base64');
+    const supabase = await createServerSupabase();
+    const { data: template, error: tError } = await supabase
+      .from('templates')
+      .select('content')
+      .eq('id', templateId)
+      .single();
+
+    if (tError || !template) {
+      return NextResponse.json({ error: 'Template não encontrado' }, { status: 404 });
+    }
+
+    // Gerar o PDF no servidor (retorna arraybuffer)
+    const pdfArrayBuffer = await generatePDFServer(userData, template.content, docTitle, layoutType);
+    const buffer = Buffer.from(pdfArrayBuffer);
 
     const { data, error } = await resend.emails.send({
       from: 'DOKU Docs <onboarding@resend.dev>',

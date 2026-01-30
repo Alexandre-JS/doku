@@ -4,6 +4,17 @@ interface UserData {
   [key: string]: any;
 }
 
+// Função para escapar caracteres HTML de modo a evitar injecção de tags em campos de texto
+const escapeHTML = (str: string): string => {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
 // Função para substituir placeholders no texto e limpar HTML
 const parseTemplate = (template: string, userData: UserData): string => {
   let parsed = template;
@@ -17,7 +28,8 @@ const parseTemplate = (template: string, userData: UserData): string => {
         let itemContent = content;
         for (const k in item) {
           const r = new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, 'g');
-          itemContent = itemContent.replace(r, item[k] || "");
+          const value = item[k] ? escapeHTML(String(item[k])) : "";
+          itemContent = itemContent.replace(r, value);
         }
         return itemContent;
       }).join("");
@@ -29,7 +41,8 @@ const parseTemplate = (template: string, userData: UserData): string => {
   for (const key in userData) {
     if (typeof userData[key] === 'string' || typeof userData[key] === 'number') {
       const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-      parsed = parsed.replace(regex, String(userData[key] || ""));
+      const escapedValue = escapeHTML(String(userData[key] || ""));
+      parsed = parsed.replace(regex, escapedValue);
     }
   }
 
