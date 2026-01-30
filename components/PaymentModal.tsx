@@ -125,8 +125,9 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
     if (onSuccess) onSuccess();
   };
 
-  const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
-  const isFree = cleanPrice === "0" || cleanPrice === "";
+  // Limpar o preço para garantir comparação numérica correta
+  const cleanPrice = price ? price.toString().replace(/[^\d.]/g, '') : '0';
+  const isFree = cleanPrice === "0" || cleanPrice === "" || !price;
 
   // Polling para status do pagamento
   const checkStatus = async (reference: string) => {
@@ -256,44 +257,51 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         console.error('[DOKU] DB Free record failed:', dbErr);
       }
 
-      setTimeout(async () => {
-        try {
-          const response = await fetch('/api/generate-pdf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              templateId,
-              userData: formData,
-              title: docTitle
-            }),
-          });
+      // Fluxo para gerar e baixar PDF grátis (Removido setTimeout para compatibilidade mobile)
+      try {
+        const response = await fetch('/api/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            templateId,
+            userData: formData,
+            title: docTitle
+          }),
+        });
 
-          if (!response.ok) throw new Error('Falha ao gerar documento grátis');
+        if (!response.ok) throw new Error('Falha ao gerar documento grátis');
 
-          const pdfBlob = await response.blob();
-          
-          // Download automático
-          const url = window.URL.createObjectURL(pdfBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `DOKU_${docTitle.replace(/\s+/g, '_')}.pdf`;
-          document.body.appendChild(a);
-          a.click();
+        const pdfBlob = await response.blob();
+        
+        // Download automático otimizado para mobile
+        const url = window.URL.createObjectURL(pdfBlob);
+        
+        // Em mobile, a abertura direta funciona melhor que o disparar de clique em <a> invisível em alguns casos,
+        // mas mantemos o <a> por ser o padrão de download.
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `DOKU_${docTitle.replace(/\s+/g, '_')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Pequeno delay apenas para o navegador processar o clique antes de revogar
+        setTimeout(() => {
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
+        }, 100);
 
-          // Se estiver logado, salvar na nuvem mesmo sendo grátis
-          if (userId && currentOrderId) {
-            await handleUploadAndSave(pdfBlob, currentOrderId);
-          }
-        } catch (err) {
-          console.error('[DOKU] Free download/upload failed:', err);
+        // Se estiver logado, salvar na nuvem mesmo sendo grátis
+        if (userId && currentOrderId) {
+          await handleUploadAndSave(pdfBlob, currentOrderId);
         }
-        
-        setStep("success");
-        clearSensitiveData();
-        if (onSuccess) onSuccess();
-      }, 1000);
+      } catch (err) {
+        console.error('[DOKU] Free download/upload failed:', err);
+        alert("Não foi possível gerar o documento. Por favor, tente novamente.");
+      }
+      
+      setStep("success");
+      clearSensitiveData();
+      if (onSuccess) onSuccess();
       return;
     }
 

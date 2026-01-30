@@ -30,7 +30,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const amount = template.price;
+    // Limpar e validar o preço numericamente
+    const amount = template.price 
+      ? Number(template.price.toString().replace(/[^\d.]/g, '')) 
+      : 0;
     
     // Se o documento for grátis, não devia estar a chamar esta rota,
     // mas por segurança validamos aqui também.

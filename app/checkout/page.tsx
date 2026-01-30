@@ -94,7 +94,11 @@ function CheckoutContent() {
 
         if (error) throw error;
         if (data) {
-          setPrice(Number(data.price) || 0);
+          // Limpar o preço de strings como "MT" para garantir validação correta
+          const numericPrice = data.price 
+            ? Number(data.price.toString().replace(/[^\d.]/g, '')) 
+            : 0;
+          setPrice(numericPrice);
         }
       } catch (error) {
         console.error("Erro ao validar preço:", error);

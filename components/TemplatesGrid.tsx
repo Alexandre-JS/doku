@@ -60,8 +60,9 @@ export default async function TemplatesGrid({ limit }: TemplatesGridProps) {
       <div className="space-y-10">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {templates.map((template) => {
-            const cleanPrice = template.price ? template.price.toString().replace(/\s*MT/gi, '').trim() : '0';
-            const isFree = cleanPrice === '0' || cleanPrice === '';
+            // Regex robusta para limpar preço de strings como "MT"
+            const cleanPrice = template.price ? template.price.toString().replace(/[^\d.]/g, '') : '0';
+            const isFree = cleanPrice === '0' || cleanPrice === '' || !template.price;
             
             return (
               <Link key={template.id} href={`/form?template=${template.slug}`} className="flex">
