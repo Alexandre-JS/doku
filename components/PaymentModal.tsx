@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight, CloudUpload, AlertTriangle, User } from "lucide-react";
-import { LayoutType } from "../src/utils/pdfGenerator";
+import { LayoutType } from "../src/utils/pdfGeneratorServer";
 import { clearSensitiveData } from "../src/utils/cookieManager";
 import { createBrowserSupabase } from "../src/lib/supabase";
 
@@ -191,17 +191,15 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
 
     setIsSendingEmail(true);
     try {
-      // Gerar o PDF sem baixar
-      const doc = generatePDF(formData, templateContent, docTitle, layoutType, false);
-      const pdfBase64 = doc.output('datauristring');
-
       const response = await fetch('/api/send-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pdfBase64,
+          templateId,
+          userData: formData,
           email: userEmail,
-          docTitle: docTitle
+          docTitle: docTitle,
+          layoutType
         }),
       });
 
@@ -259,15 +257,39 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
       }
 
       setTimeout(async () => {
-        if (formData && templateContent) {
-          const doc = generatePDF(formData, templateContent, docTitle, layoutType, true);
+        try {
+          const response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              templateId,
+              userData: formData,
+              title: docTitle
+            }),
+          });
+
+          if (!response.ok) throw new Error('Falha ao gerar documento grátis');
+
+          const pdfBlob = await response.blob();
           
+          // Download automático
+          const url = window.URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `DOKU_${docTitle.replace(/\s+/g, '_')}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
           // Se estiver logado, salvar na nuvem mesmo sendo grátis
           if (userId && currentOrderId) {
-            const pdfBlob = doc.output('blob');
             await handleUploadAndSave(pdfBlob, currentOrderId);
           }
+        } catch (err) {
+          console.error('[DOKU] Free download/upload failed:', err);
         }
+        
         setStep("success");
         clearSensitiveData();
         if (onSuccess) onSuccess();
