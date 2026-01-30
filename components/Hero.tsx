@@ -27,7 +27,7 @@ export default function Hero() {
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
           {/* Left Side: Search & Content */}
           <div className="relative z-10 flex flex-col items-start lg:z-20">
-            <motion.div 
+            {/* <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -35,7 +35,7 @@ export default function Hero() {
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Inteligência Artificial para seus documentos
-            </motion.div>
+            </motion.div> */}
 
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}

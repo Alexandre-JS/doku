@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { Search } from "lucide-react";
+import { Search, Zap, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createBrowserSupabase } from "../../src/lib/supabase";
@@ -81,9 +81,9 @@ function TemplatesContent() {
         // Flatten companies and map category
         const formattedTemplates = (templData || []).map((t: any) => ({
           ...t,
-          category: t.categories,
+          category: t.categories as Category,
           companies: t.template_companies?.map((tc: any) => tc.companies).filter(Boolean) || []
-        }));
+        })) as Template[];
         setTemplates(formattedTemplates);
       }
 
@@ -201,7 +201,7 @@ function TemplatesContent() {
   );
 }
 
-function TemplateCard({ title, description, price, popular, category, companies }: Template) {
+function TemplateCard({ title, description, price, popular, category, companies, version, usage_count }: Template) {
   const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
   const isFree = cleanPrice === '0' || cleanPrice === '';
 
@@ -263,7 +263,7 @@ function TemplateCard({ title, description, price, popular, category, companies 
           {/* Price Stamp/Seal */}
           <div className="absolute bottom-6 right-6 flex h-12 w-12 -rotate-12 items-center justify-center rounded-full border-2 border-dashed border-doku-green/30 bg-doku-green/5 p-1 transition-transform group-hover:rotate-0 group-hover:scale-110">
             <div className="flex flex-col items-center justify-center rounded-full border border-doku-green/20 px-1 py-0.5">
-              <span className="text-[6px] font-bold text-doku-green/60 uppercase">Oficial</span>
+              <span className="text-[6px] font-bold text-doku-green/60 uppercase">v{version || '1.0'}</span>
               <span className="text-[10px] font-black text-doku-green">
                 {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
               </span>
@@ -285,6 +285,17 @@ function TemplateCard({ title, description, price, popular, category, companies 
           <span className="text-[10px] font-black text-doku-green whitespace-nowrap bg-doku-green/5 px-2 py-0.5 rounded-md">
             {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
           </span>
+        </div>
+
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <ShieldCheck size={12} className="text-blue-500" />
+            <span>v{version || '1.0'}</span>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-doku-green uppercase tracking-wider">
+            <Zap size={12} fill="currentColor" />
+            <span>{usage_count || 0} pessoas já usaram</span>
+          </div>
         </div>
         
         {description && (

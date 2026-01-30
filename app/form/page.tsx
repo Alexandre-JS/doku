@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
-import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, FileText, Layout, ShieldCheck, X, Zap } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import DocumentPreview from "../../components/DocumentPreview";
@@ -45,7 +45,16 @@ function FormContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
-  const [templateData, setTemplateData] = useState<{ id: string; content: string; price: string; form_schema?: FormSection[]; title?: string } | null>(null);
+  const [templateData, setTemplateData] = useState<{ 
+    id: string; 
+    content: string; 
+    price: string; 
+    form_schema?: FormSection[]; 
+    title?: string;
+    version?: string;
+    usage_count?: number;
+    last_reviewed_at?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [toastList, setToastList] = useState<Array<{
@@ -231,7 +240,7 @@ function FormContent() {
       const supabase = createBrowserSupabase();
       const { data, error } = await supabase
         .from("templates")
-        .select("id, content, price, form_schema, title")
+        .select("id, content, price, form_schema, title, version, usage_count, last_reviewed_at")
         .eq("slug", slug)
         .single();
 
@@ -243,7 +252,10 @@ function FormContent() {
           content: data.content,
           price: data.price?.toString() || "0",
           form_schema: data.form_schema,
-          title: data.title || undefined
+          title: data.title || undefined,
+          version: data.version,
+          usage_count: data.usage_count,
+          last_reviewed_at: data.last_reviewed_at
         });
         
         // Salvar título e conteúdo no localStorage para uso em outras páginas
@@ -445,6 +457,22 @@ function FormContent() {
             
             <div className="flex flex-wrap items-center gap-6 pt-1">
               <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 text-[10px] font-bold">
+                  v{templateData?.version || '1.0'}
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Versão do Modelo</span>
+              </div>
+
+              <div className="h-4 w-px bg-slate-200" />
+              
+              <div className="flex items-center gap-2 text-doku-green">
+                <Zap size={14} fill="currentColor" />
+                <span className="text-[11px] font-black uppercase tracking-widest">{templateData?.usage_count || 0} pessoas já usaram</span>
+              </div>
+
+              <div className="h-4 w-px bg-slate-200" />
+
+              <div className="flex items-center gap-2">
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500">
                   <Check size={12} strokeWidth={3} />
                 </div>
@@ -453,14 +481,19 @@ function FormContent() {
               
               <div className="h-4 w-px bg-slate-200" />
               
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <ShieldCheck size={12} strokeWidth={3} />
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Juridicamente Revisitado</span>
-              </div>
-
-              <div className="h-4 w-px bg-slate-200" />
+              {templateData?.last_reviewed_at && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                      <ShieldCheck size={12} strokeWidth={3} />
+                    </div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600">
+                      Revisitado: {new Date(templateData.last_reviewed_at).toLocaleDateString('pt-MZ')}
+                    </span>
+                  </div>
+                  <div className="h-4 w-px bg-slate-200" />
+                </>
+              )}
 
               <div className="flex items-center gap-2">
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-600">

@@ -15,8 +15,7 @@ const getPopularTemplates = async () => {
           companies(*)
         )
       `)
-      .eq("popular", true)
-      .order("created_at", { ascending: false })
+      .order("usage_count", { ascending: false })
       .limit(10);
 
     if (error) throw error;
@@ -99,7 +98,11 @@ export default async function PopularTemplates() {
                           </div>
                           <div className="flex items-center gap-1">
                             <ShieldCheck size={14} />
-                            <span>Oficial</span>
+                            <span>v{template.version || '1.0'}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-doku-green">
+                            <Zap size={14} />
+                            <span>{template.usage_count || 0} usos</span>
                           </div>
                         </div>
                       </div>
