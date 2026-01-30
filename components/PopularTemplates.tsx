@@ -23,10 +23,10 @@ const getPopularTemplates = async () => {
     
     console.log(`[DEBUG] Encontrados ${templData?.length || 0} templates populares.`);
     
-    return (templData || []).map((t: any) => ({
+    return (templData || []).map((t) => ({
       ...t,
-      category: t.categories,
-      companies: t.template_companies?.map((tc: any) => tc.companies).filter(Boolean) || []
+      category: t.categories as unknown as Template['category'],
+      companies: (t.template_companies as any[])?.map((tc) => tc.companies).filter(Boolean) || []
     })) as Template[];
 };
 
@@ -152,8 +152,12 @@ export default async function PopularTemplates() {
         </div>
       </section>
     );
-  } catch (error: any) {
-    console.error("Erro ao carregar modelos populares:", error.message || error);
-    return null;
+  } catch (error) {
+    console.error("Erro ao carregar modelos populares:", error instanceof Error ? error.message : error);
+    return (
+      <section className="py-10 text-center text-slate-400">
+        <p className="text-sm">Ocorreu um erro ao carregar os modelos populares. Por favor, tente novamente mais tarde.</p>
+      </section>
+    );
   }
 }

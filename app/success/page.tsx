@@ -1,23 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CircleCheckBig, Download, MessageCircle, Mail, FileText, ArrowRight, Printer } from "lucide-react";
+import { CircleCheckBig, Download, MessageCircle, Mail, FileText, ArrowRight, Printer, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { generatePDF } from "../../src/utils/pdfGenerator";
 
 export default function SuccessPage() {
   const [docTitle, setDocTitle] = useState("Documento");
+  const [templateId, setTemplateId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [formData, setFormData] = useState<any>(null);
-  const [templateContent, setTemplateContent] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const savedTitle = localStorage.getItem("doku_current_doc_title");
+    const savedId = localStorage.getItem("doku_current_template_id");
     const savedData = localStorage.getItem("doku_form_data");
-    const savedTemplate = localStorage.getItem("doku_current_template_content");
     
     if (savedTitle) setDocTitle(savedTitle);
-    if (savedTemplate) setTemplateContent(savedTemplate);
+    if (savedId) setTemplateId(savedId);
     
     if (savedData) {
       try {
@@ -32,11 +32,47 @@ export default function SuccessPage() {
     }
   }, []);
 
-  const handleDownload = () => {
-    if (formData && templateContent) {
-      generatePDF(formData, templateContent, docTitle);
-    } else {
+  const handleDownload = async () => {
+    if (!templateId || !formData) {
       alert("Dados do documento não encontrados. Por favor, tente gerar novamente.");
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      // Nota: Na página de sucesso, assumimos que o pagamento já foi validado 
+      // ou que o documento é grátis. No entanto, a API /api/generate-pdf 
+      // ainda vai pedir paymentReference se for pago. 
+      // Por agora, usamos isto para documentos grátis ou fluxos que já tenham a ref.
+      
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId,
+          userData: formData,
+          title: docTitle
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao gerar PDF no servidor');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DOKU_${docTitle.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Erro ao baixar PDF:", error);
+      alert("Erro ao baixar o documento. Por favor, tente novamente.");
+    } finally {
+      setIsDownloading(false);
     }
   };
 

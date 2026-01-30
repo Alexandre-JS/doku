@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { ArrowLeft, ShieldCheck, Smartphone, CheckCircle2, ArrowRight, Loader2, Mail, Printer, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createBrowserSupabase } from "@/src/lib/supabase";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const [step, setStep] = useState<"summary" | "payment" | "processing" | "success">("summary");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "emola">("mpesa");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -18,6 +19,9 @@ export default function CheckoutPage() {
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("template");
 
   const supabase = createBrowserSupabase();
 
@@ -58,16 +62,25 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
+    // Tentar carregar dados específicos do template se o slug estiver presente
+    const savedDataKey = slug ? `doku_form_save_${slug}` : "doku_form_data";
+    
     const savedTitle = localStorage.getItem("doku_current_doc_title");
     const savedId = localStorage.getItem("doku_current_template_id");
-    const savedData = localStorage.getItem("doku_form_data");
+    const savedData = localStorage.getItem(savedDataKey);
     const savedTemplate = localStorage.getItem("doku_current_template_content");
 
     if (savedTitle) setDocTitle(savedTitle);
     if (savedId) setTemplateId(savedId);
-    if (savedData) setFormData(JSON.parse(savedData));
+    if (savedData) {
+      try {
+        setFormData(JSON.parse(savedData));
+      } catch (e) {
+        console.error("Erro ao carregar dados do formulário:", e);
+      }
+    }
     if (savedTemplate) setTemplateContent(savedTemplate);
-  }, []);
+  }, [slug]);
 
   // Validar o preço real do template na base de dados
   useEffect(() => {
@@ -103,11 +116,29 @@ export default function CheckoutPage() {
   // Polling para verificar status do pagamento
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
+    const POLLING_LIMIT = 120000; // 2 minutos de limite
+    const startTime = Date.now();
     
     if (step === "processing" && paymentReference) {
       interval = setInterval(async () => {
+        // Verificar se excedeu o tempo limite
+        if (Date.now() - startTime > POLLING_LIMIT) {
+          clearInterval(interval);
+          setStep("payment");
+          alert("O tempo de espera para confirmação expirou. Se já pagou, por favor contacte o suporte com a sua referência.");
+          return;
+        }
+
         try {
           const res = await fetch(`/api/payments/status/${paymentReference}`);
+          
+          if (!res.ok) {
+            // Se a API falhar (ex: 500), esperamos pela próxima tentativa em vez de cancelar logo
+            console.warn("Falha ao consultar status, tentando novamente...");
+            return;
+          }
+
           const data = await res.json();
           
           if (data.status === "SUCCESS") {
@@ -125,8 +156,9 @@ export default function CheckoutPage() {
           }
         } catch (error) {
           console.error("Erro ao verificar status do pagamento:", error);
+          // Em caso de erro de rede, continuamos a tentar até o timeout
         }
-      }, 3000); // Verifica a cada 3 segundos
+      }, 3000); 
     }
     
     return () => {
@@ -435,5 +467,17 @@ function PaymentCard({ name, active, onClick, color, image }: PaymentCardProps) 
         </div>
       )}
     </button>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600" size={48} />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

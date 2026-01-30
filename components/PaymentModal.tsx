@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, Smartphone, CheckCircle2, Loader2, Mail, Printer, MessageCircle, ArrowRight, CloudUpload, AlertTriangle, User } from "lucide-react";
-import { generatePDF, LayoutType } from "../src/utils/pdfGenerator";
+import { LayoutType } from "../src/utils/pdfGenerator";
 import { clearSensitiveData } from "../src/utils/cookieManager";
 import { createBrowserSupabase } from "../src/lib/supabase";
 
@@ -82,13 +82,42 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
       if (currentOrderId) setOrderId(currentOrderId);
     }
 
-    if (formData && templateContent) {
-      const doc = generatePDF(formData, templateContent, docTitle, layoutType, true);
-      
+    try {
+      // 1. Chamar a API de geração segura no servidor
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId,
+          userData: formData,
+          paymentReference: reference,
+          title: docTitle
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao gerar documento no servidor');
+      }
+
+      const pdfBlob = await response.blob();
+
+      // 2. Download para o utilizador
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DOKU_${docTitle.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      // 3. Salvar na nuvem se houver utilizador
       if (userId && currentOrderId) {
-        const pdfBlob = doc.output('blob');
         await handleUploadAndSave(pdfBlob, currentOrderId);
       }
+    } catch (err) {
+      console.error('[DOKU] Erro no fluxo pós-pagamento:', err);
+      alert('O pagamento foi bem-sucedido, mas houve um erro ao baixar o documento. Por favor, contacte o suporte.');
     }
     
     setStep("success");

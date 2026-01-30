@@ -30,11 +30,11 @@ const getCachedTemplates = async (limit?: number) => {
 
     if (error) throw error;
     
-    return (templData || []).map((t: any) => ({
+    return (templData || []).map((t) => ({
       ...t,
-      category: t.categories,
-      companies: t.template_companies?.map((tc: any) => tc.companies).filter(Boolean) || []
-    }));
+      category: t.categories as unknown as Template['category'],
+      companies: (t.template_companies as any[])?.map((tc) => tc.companies).filter(Boolean) || []
+    })) as Template[];
 };
 
 export default async function TemplatesGrid({ limit }: TemplatesGridProps) {
