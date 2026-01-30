@@ -4,61 +4,188 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, ShieldCheck, Smartphone, CheckCircle2, ArrowRight, Loader2, Mail, Printer, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { generatePDF } from "../../src/utils/pdfGenerator";
+import { createBrowserSupabase } from "@/src/lib/supabase";
 
 export default function CheckoutPage() {
   const [step, setStep] = useState<"summary" | "payment" | "processing" | "success">("summary");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "emola">("mpesa");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [docTitle, setDocTitle] = useState("Documento");
+  const [templateId, setTemplateId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>(null);
   const [templateContent, setTemplateContent] = useState("");
   const [price, setPrice] = useState<number>(0);
+  const [isLoadingPrice, setIsLoadingPrice] = useState(true);
+  const [paymentReference, setPaymentReference] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const supabase = createBrowserSupabase();
+
+  const downloadPDF = async (reference?: string) => {
+    try {
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId,
+          userData: formData,
+          paymentReference: reference,
+          title: docTitle
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao gerar PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DOKU_${docTitle.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao baixar PDF:', error);
+      alert(error.message);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const savedTitle = localStorage.getItem("doku_current_doc_title");
+    const savedId = localStorage.getItem("doku_current_template_id");
     const savedData = localStorage.getItem("doku_form_data");
     const savedTemplate = localStorage.getItem("doku_current_template_content");
-    const savedPrice = localStorage.getItem("doku_current_price");
 
     if (savedTitle) setDocTitle(savedTitle);
+    if (savedId) setTemplateId(savedId);
     if (savedData) setFormData(JSON.parse(savedData));
     if (savedTemplate) setTemplateContent(savedTemplate);
-    if (savedPrice) {
-      const cleanPrice = savedPrice.replace(/\s*MT/gi, '').trim();
-      setPrice(Number(cleanPrice) || 0);
-    }
   }, []);
 
-  const handleConfirmData = () => {
+  // Validar o preço real do template na base de dados
+  useEffect(() => {
+    async function validatePrice() {
+      try {
+        const { data, error } = await supabase
+          .from("templates")
+          .select("price")
+          .eq("id", templateId)
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setPrice(Number(data.price) || 0);
+        }
+      } catch (error) {
+        console.error("Erro ao validar preço:", error);
+      } finally {
+        setIsLoadingPrice(false);
+      }
+    }
+
+    if (templateId) {
+      validatePrice();
+    } else if (localStorage.getItem("doku_current_template_id")) {
+      // Caso o templateId ainda não tenha sido atualizado pelo primeiro useEffect
+      setTemplateId(localStorage.getItem("doku_current_template_id"));
+    } else {
+      setIsLoadingPrice(false);
+    }
+  }, [templateId, supabase]);
+
+  // Polling para verificar status do pagamento
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (step === "processing" && paymentReference) {
+      interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/payments/status/${paymentReference}`);
+          const data = await res.json();
+          
+          if (data.status === "SUCCESS") {
+            clearInterval(interval);
+            const downloaded = await downloadPDF(paymentReference);
+            if (downloaded) {
+              setStep("success");
+            } else {
+              setStep("payment");
+            }
+          } else if (data.status === "FAILED" || data.status === "CANCELLED") {
+            clearInterval(interval);
+            setStep("payment");
+            alert("O pagamento falhou ou foi cancelado. Por favor, tente novamente.");
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status do pagamento:", error);
+        }
+      }, 3000); // Verifica a cada 3 segundos
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, paymentReference, formData, templateContent, docTitle]);
+
+  const handleConfirmData = async () => {
     if (price === 0) {
       setStep("processing");
-      // Simular um carregamento rápido antes de baixar
-      setTimeout(() => {
-        if (formData && templateContent) {
-          generatePDF(formData, templateContent, docTitle);
-        }
+      
+      const downloaded = await downloadPDF();
+      if (downloaded) {
         setStep("success");
-      }, 1000);
+      } else {
+        setStep("summary");
+      }
     } else {
       setStep("payment");
     }
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!phoneNumber || phoneNumber.length < 9) {
       return alert("Por favor, insira um número de telefone válido.");
     }
     
+    setErrorMessage(null);
     setStep("processing");
     
-    // Simular processamento de pagamento (2 segundos)
-    setTimeout(() => {
-      if (formData && templateContent) {
-        generatePDF(formData, templateContent, docTitle);
+    try {
+      // Iniciar pagamento via M-Pesa (ou e-Mola se implementado no futuro)
+      // Por enquanto, usamos a rota mpesa para ambos como fallback ou apenas mpesa
+      const endpoint = paymentMethod === "mpesa" ? "/api/payments/mpesa" : "/api/payments/mpesa"; 
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber,
+          templateId,
+          description: docTitle
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao processar pagamento. Tente novamente.");
       }
-      setStep("success");
-    }, 2000);
+
+      // Guardar a referência para o polling no useEffect
+      setPaymentReference(data.debito_reference);
+    } catch (error: any) {
+      console.error("Payment initiation error:", error);
+      setErrorMessage(error.message);
+      setStep("payment");
+      alert(error.message);
+    }
   };
 
   if (step === "success") {
@@ -163,9 +290,17 @@ export default function CheckoutPage() {
 
                   <button
                     onClick={handleConfirmData}
-                    className="w-full rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.98]"
+                    disabled={isLoadingPrice}
+                    className="w-full rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {price === 0 ? 'Baixar PDF Grátis' : 'Confirmar e Ir para Pagamento'}
+                    {isLoadingPrice ? (
+                      <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Validando...
+                      </>
+                    ) : (
+                      price === 0 ? 'Baixar PDF Grátis' : 'Confirmar e Ir para Pagamento'
+                    )}
                   </button>
                 </div>
               </section>

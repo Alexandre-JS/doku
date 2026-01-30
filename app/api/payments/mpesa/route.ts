@@ -1,14 +1,42 @@
 
 import { NextResponse } from 'next/server';
 import { initiateMpesaPayment } from '@/src/utils/debito';
+import { createServerSupabase } from '@/src/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
-    const { phoneNumber, amount, description } = await request.json();
+    const { phoneNumber, templateId, description } = await request.json();
 
-    if (!phoneNumber || !amount) {
+    if (!phoneNumber || !templateId) {
       return NextResponse.json(
-        { error: 'Telefone e valor são obrigatórios.' },
+        { error: 'Telefone e ID do modelo são obrigatórios.' },
+        { status: 400 }
+      );
+    }
+
+    // Buscar o preço real no banco de dados para evitar manipulação no client-side
+    const supabase = await createServerSupabase();
+    const { data: template, error: dbError } = await supabase
+      .from('templates')
+      .select('price')
+      .eq('id', templateId)
+      .single();
+
+    if (dbError || !template) {
+      console.error('Database error fetching price:', dbError);
+      return NextResponse.json(
+        { error: 'Não foi possível validar o preço do documento.' },
+        { status: 500 }
+      );
+    }
+
+    const amount = template.price;
+    
+    // Se o documento for grátis, não devia estar a chamar esta rota,
+    // mas por segurança validamos aqui também.
+    if (amount <= 0) {
+      return NextResponse.json(
+        { error: 'Este documento é gratuito e não requer pagamento.' },
         { status: 400 }
       );
     }
