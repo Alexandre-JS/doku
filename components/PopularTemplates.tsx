@@ -59,8 +59,9 @@ export default async function PopularTemplates() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((template, index) => {
               const isTop3 = index < 3;
-              const cleanPrice = template.price ? template.price.toString().replace(/\s*MT/gi, '').trim() : '0';
-              const isFree = cleanPrice === '0' || cleanPrice === '';
+              // Regex robusta para limpar preço
+              const cleanPrice = template.price ? template.price.toString().replace(/[^\d.]/g, '') : '0';
+              const isFree = cleanPrice === '0' || cleanPrice === '' || !template.price;
 
               return (
                 <div 

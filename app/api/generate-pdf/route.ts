@@ -25,7 +25,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Template não encontrado' }, { status: 404 });
     }
 
-    const isFree = !template.price || Number(template.price) === 0;
+    // Limpar o preço para garantir uma comparação numérica correta
+    const cleanPrice = template.price 
+      ? Number(template.price.toString().replace(/[^\d.]/g, '')) 
+      : 0;
+
+    const isFree = cleanPrice === 0;
 
     // 2. Se for pago, verificar o status do pagamento
     if (!isFree) {
