@@ -7,6 +7,7 @@ import FloatingSupport from "../components/FloatingSupport";
 import Hero from "../components/Hero";
 import { Suspense } from "react";
 import LogoLoading from "../components/LogoLoading";
+import ApliteFloatingCTA from "../components/ApliteFloatingCTA";
 
 export default function Home() {
   return (
@@ -52,6 +53,8 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      <ApliteFloatingCTA />
 
       {/* Floating Support - Robust Responsive Container */}
       <div 

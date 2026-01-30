@@ -32,9 +32,9 @@ export default function Footer() {
             <h4 className="text-sm font-bold uppercase tracking-wider text-white">Documentos</h4>
             <ul className="mt-4 space-y-3 text-sm text-white/50 sm:mt-6">
               <li><Link href="/templates" className="hover:text-doku-green transition-colors">Todos os Modelos</Link></li>
+              <li><Link href="/emprego-candidaturas" className="hover:text-doku-green transition-colors">Emprego & Candidaturas</Link></li>
               <li><Link href="/templates?category=Estado" className="hover:text-doku-green transition-colors">Concursos Públicos</Link></li>
               <li><Link href="/templates?category=Legal" className="hover:text-doku-green transition-colors">Documentos Legais</Link></li>
-              <li><Link href="/templates?category=Emprego" className="hover:text-doku-green transition-colors">Recursos Humanos</Link></li>
             </ul>
           </div>
 
