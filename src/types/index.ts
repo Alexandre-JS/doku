@@ -41,4 +41,7 @@ export interface Template {
   content_html?: string;
   form_schema?: any;
   is_active?: boolean;
+  version?: string;
+  usage_count?: number;
+  last_reviewed_at?: string;
 }

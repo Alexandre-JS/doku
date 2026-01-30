@@ -50,9 +50,22 @@ export async function POST(request: Request) {
     }
 
     // 3. Gerar o PDF no servidor
-    const pdfBuffer = await generatePDFServer(userData, template.content, title || template.title);
+    const pdfBuffer = await generatePDFServer(
+      { ...userData, title: title || template.title, titulo: title || template.title }, 
+      template.content, 
+      title || template.title
+    );
 
-    // 4. Retornar o PDF como stream/blob
+    // 4. Incrementar contador de uso de forma assíncrona (não bloqueia a resposta)
+    supabase
+      .from('templates')
+      .update({ usage_count: (template.usage_count || 0) + 1 })
+      .eq('id', templateId)
+      .then(({ error }) => {
+        if (error) console.error('Erro ao incrementar contador de uso:', error);
+      });
+
+    // 5. Retornar o PDF como stream/blob
     return new Response(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',

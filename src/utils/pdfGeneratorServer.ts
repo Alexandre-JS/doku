@@ -18,26 +18,28 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
 
   const hasAnyPlaceholders = /\{\{.*\}\}/.test(template);
   
-  const hasFormalHeader = /EXMO|EXCELENTÍSSIMO|ILUSTRÍSSIMO|DIRECTOR|SENHOR/i.test(plainText.substring(0, 500)) ||
-                          /\{\{\s*(target_authority|destinatary_role|institution_name|subject)\s*\}\}/i.test(template) ||
-                          (title && upperPlainText.substring(0, 300).includes(title.toUpperCase()));
-  
-  const hasFormalFooter = /pede\s*deferimento/i.test(plainText) ||
-                          /assinatura/i.test(plainText) ||
-                          /\{\{\s*(current_city|current_date)\s*\}\}/i.test(template) ||
-                          (userData.full_name && upperPlainText.substring(upperPlainText.length - 300).includes(userData.full_name.toUpperCase()));
-
-  const shouldAddAutoHeader = hasAnyPlaceholders && !hasFormalHeader;
-  const shouldAddAutoFooter = hasAnyPlaceholders && !hasFormalFooter;
-  
   const effectiveLayout = layoutType || (
-    title?.toLowerCase().includes('requerimento') ? 'OFFICIAL' :
-    (title?.toLowerCase().includes('declaração') || title?.toLowerCase().includes('compromisso') || title?.toLowerCase().includes('contrato')) ? 'DECLARATION' :
-    (title?.toLowerCase().includes('carta') || title?.toLowerCase().includes('manifestação')) ? 'LETTER' :
+    title?.toLowerCase().match(/requerimento|venerando|excelentissimo|ilustrissimo/) ? 'OFFICIAL' :
+    title?.toLowerCase().match(/declaração|declaracao|compromisso|contrato|atestado|certificado|termo|procuração|procuracao|bi/) ? 'DECLARATION' :
+    title?.toLowerCase().match(/carta|manifestação|manifestacao|ofício|comunicação|comunicacao/) ? 'LETTER' :
     'OFFICIAL'
   );
 
   const isDeclaration = effectiveLayout === 'DECLARATION';
+  
+  const hasFormalHeader = /EXMO|EXCELENTÍSSIMO|ILUSTRÍSSIMO|DIRECTOR|SENHOR/i.test(plainText.substring(0, 500)) ||
+                          /\{\{\s*(target_authority|destinatary_role|institution_name|subject)\s*\}\}/i.test(template) ||
+                          (title && upperPlainText.substring(0, 400).includes(title.toUpperCase())) ||
+                          (isDeclaration && /DECLARAÇÃO|ATESTADO|CERTIFICADO|COMPROMISSO|CONTRATO|DECLARACAO/i.test(plainText.substring(0, 300).toUpperCase()));
+  
+  const hasFormalFooter = /pede\s*deferimento/i.test(plainText) ||
+                          /assinatura/i.test(plainText) ||
+                          /\{\{\s*(current_city|current_date)\s*\}\}/i.test(template) ||
+                          (userData.full_name && upperPlainText.substring(upperPlainText.length - 350).includes(userData.full_name.toUpperCase()));
+
+  const isFallbackTitle = title?.toLowerCase() === 'documento' || title?.toLowerCase() === 'documento doku' || !title;
+  const shouldAddAutoHeader = hasAnyPlaceholders && !hasFormalHeader && !isFallbackTitle;
+  const shouldAddAutoFooter = hasAnyPlaceholders && !hasFormalFooter;
 
   doc.setFont('Times-Roman', 'normal');
   doc.setFontSize(12);

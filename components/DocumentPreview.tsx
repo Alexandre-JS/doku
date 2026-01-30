@@ -32,10 +32,10 @@ export default function DocumentPreview({
   
   // Inferir o layout se não for passado explicitamente
   const layoutType = propLayoutType || (
-    title?.toLowerCase().includes('requerimento') ? 'OFFICIAL' :
-    (title?.toLowerCase().includes('declaração') || title?.toLowerCase().includes('compromisso')) ? 'DECLARATION' :
-    (title?.toLowerCase().includes('carta') || title?.toLowerCase().includes('manifestação')) ? 'LETTER' :
-    'OFFICIAL' // Default
+    title?.toLowerCase().match(/requerimento|venerando|excelentissimo|ilustrissimo/) ? 'OFFICIAL' :
+    title?.toLowerCase().match(/declaração|declaracao|compromisso|contrato|atestado|certificado|termo|procuração|procuracao|bi/) ? 'DECLARATION' :
+    title?.toLowerCase().match(/carta|manifestação|manifestacao|ofício|comunicação|comunicacao/) ? 'LETTER' :
+    'OFFICIAL'
   );
 
   // Função para processar o template e destacar dados do usuário com formatação
@@ -107,13 +107,11 @@ export default function DocumentPreview({
 
   // Verifica se o template já começa com um título (ex: REQUERIMENTO, DECLARAÇÃO)
   const hasTitleInContent = typeof template === 'string' && 
-    /^\s*(REQUERIMENTO|DECLARAÇÃO|COMPROMISSO|CONTRATO|CERTIDÃO|GUIA|EDITAL)/i.test(plainText.trim());
+    /^\s*(REQUERIMENTO|DECLARAÇÃO|DECLARACAO|COMPROMISSO|CONTRATO|CERTIDÃO|CERTIDAO|GUIA|EDITAL|ATESTADO|TERMO|PROCURAÇÃO|PROCURACAO)/i.test(plainText.trim());
 
   // Verifica se é uma declaração ou contrato (que não levam "Exmo Senhor" ou "Assunto" automático)
-  const isDeclarationOrContract = hasTitleInContent && !plainText.trim().toUpperCase().startsWith('REQUERIMENTO') ||
-    title?.toLowerCase().includes('declaração') || 
-    title?.toLowerCase().includes('compromisso') ||
-    title?.toLowerCase().includes('contrato');
+  const isDeclarationOrContract = (hasTitleInContent && !plainText.trim().toUpperCase().startsWith('REQUERIMENTO')) ||
+    layoutType === 'DECLARATION';
   const cleanPrice = price ? price.toString().replace(/\s*MT/gi, '').trim() : '0';
   const isFree = cleanPrice === '0' || cleanPrice === '';
   const getValue = (key: string) => {

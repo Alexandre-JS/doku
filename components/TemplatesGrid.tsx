@@ -1,4 +1,4 @@
-import { Search, FileText } from "lucide-react";
+import { Search, FileText, Zap, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "../src/lib/supabase";
@@ -129,7 +129,7 @@ export default async function TemplatesGrid({ limit }: TemplatesGridProps) {
                       {/* Price Stamp/Seal */}
                       <div className="absolute bottom-6 right-6 flex h-12 w-12 -rotate-12 items-center justify-center rounded-full border-2 border-dashed border-doku-green/30 bg-doku-green/5 p-1 transition-transform group-hover:rotate-0 group-hover:scale-110">
                         <div className="flex flex-col items-center justify-center rounded-full border border-doku-green/20 px-1 py-0.5">
-                          <span className="text-[6px] font-bold text-doku-green/60 uppercase">Oficial</span>
+                          <span className="text-[6px] font-bold text-doku-green/60 uppercase">v{template.version || '1.0'}</span>
                           <span className="text-[10px] font-black text-doku-green">
                             {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
                           </span>
@@ -151,6 +151,17 @@ export default async function TemplatesGrid({ limit }: TemplatesGridProps) {
                       <span className="text-[10px] font-black text-doku-green whitespace-nowrap bg-doku-green/5 px-2 py-0.5 rounded-md">
                         {isFree ? "GRÁTIS" : `${cleanPrice}MT`}
                       </span>
+                    </div>
+
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <ShieldCheck size={12} className="text-blue-500" />
+                        <span>v{template.version || '1.0'}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-doku-green uppercase tracking-wider">
+                        <Zap size={12} fill="currentColor" />
+                        <span>{template.usage_count || 0} pessoas já usaram</span>
+                      </div>
                     </div>
                     
                     {template.description && (
