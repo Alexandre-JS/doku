@@ -41,7 +41,13 @@ export async function POST(request: Request) {
       // Verificar status na API de pagamentos
       const paymentStatus = await checkTransactionStatus(paymentReference);
       
-      if (paymentStatus.status !== 'SUCCESS') {
+      const isActuallyPaid = 
+        paymentStatus.status === 'SUCCESS' || 
+        paymentStatus.status === 'SUCCESSFUL' || 
+        paymentStatus.status === 'SETTLED' || 
+        paymentStatus.status === 'COMPLETED';
+
+      if (!isActuallyPaid) {
         return NextResponse.json({ 
           error: 'Pagamento não confirmado', 
           status: paymentStatus.status 

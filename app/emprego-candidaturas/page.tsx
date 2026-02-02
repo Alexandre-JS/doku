@@ -101,7 +101,7 @@ function EmpregoContent() {
             </div>
             <div className="flex shrink-0 flex-col items-center gap-4">
               <a 
-                href="https://aplite.vercel.app/" 
+                href="https://aplite.vercel.app/"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="group flex items-center gap-3 rounded-[2rem] bg-white px-8 py-5 text-lg font-black text-doku-blue transition-all hover:scale-105 hover:bg-doku-green hover:text-white shadow-xl shadow-white/5"
