@@ -20,7 +20,7 @@ export interface DebitoMpesaRequest {
 export interface DebitoResponse {
   message: string;
   debito_reference: string;
-  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
+  status: 'PENDING' | 'SUCCESS' | 'SUCCESSFUL' | 'SETTLED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   transaction_id: number;
   provider_reference?: string | null;
   provider_response_code?: string | null;

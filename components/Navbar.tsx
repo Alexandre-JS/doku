@@ -212,6 +212,10 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
+            <Link href="/emprego-candidaturas" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-doku-blue">
+              Emprego & Candidaturas
+            </Link>
+
             <Link href="/precos" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-doku-blue">Preços</Link>
             <Link href="/faq" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-doku-blue">Suporte</Link>
           </nav>
@@ -290,6 +294,10 @@ export default function Navbar() {
                   <Link href="/templates" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
                     <FileText size={20} />
                     Modelos
+                  </Link>
+                  <Link href="/emprego-candidaturas" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
+                    <Briefcase size={20} />
+                    Emprego & Candidaturas
                   </Link>
                   <Link href="/precos" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-600 hover:bg-slate-50">
                     <Plus size={20} />

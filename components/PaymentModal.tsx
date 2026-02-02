@@ -96,7 +96,9 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
       });
 
       if (!response.ok) {
-        throw new Error('Falha ao gerar documento no servidor');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[DOKU] PDF Generation failed:', response.status, errorData);
+        throw new Error(errorData.error || 'Falha ao gerar documento no servidor');
       }
 
       const pdfBlob = await response.blob();
@@ -311,6 +313,7 @@ export default function PaymentModal({ isOpen, onClose, formData, templateConten
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber,
+          templateId,
           amount: cleanPrice,
           description: docTitle,
         }),

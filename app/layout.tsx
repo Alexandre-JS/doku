@@ -19,28 +19,35 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://documoz.com"),
   // O título deve ter a palavra-chave e o benefício principal
   title: {
-    default: "Dokumoz | Minutas, Declarações e Documentos Oficiais em Moçambique",
+    default: "Dokumoz | Requeriemntos, Declarações e Documentos em Moçambique",
     template: "%s | Dokumoz"
   },
   
   description: 
-    "Crie o seu currículo, carta de emprego, declarações de residência e requerimentos oficiais em 2 minutos. Simples, seguro e pronto para imprimir.",
+    "Crie o seu currículo, carta de emprego, declaraçao e requerimentos em minutos. Simples, facil, seguro e pronto para imprimir.",
   
   // Palavras-chave que os jovens moçambicanos pesquisam no Google
   keywords: [
-    "minutas Moçambique", 
-    "currículo profissional", 
-    "carta de candidatura emprego", 
-    "declaração de residência", 
+    "Requerimento de emprego", 
+    "Requerimento de PRM",
+     "Requerimento de Saude",
+    "Requerimento de estágio", 
+     "Pedido de estágio", 
+     "Carta de pedido de emprego", 
+    "currículo Vitae", 
+     "currículo Actualizado", 
+    "carta de pedido de emprego", 
+    "declaração", 
     "requerimento DUAT", 
-    "contrato de arrendamento simples",
+     "Conselho municipal da beira", 
+    "contrato de arrendamento de casa",
   
     // Marca e Core
-  "Dokumoz", "DOKU", "minutas Moçambique", "documentos oficiais online", 
+  "Dokumoz", "DOKU", "minutas", "documentos online", "cv", "carta de apresentação", "empregos moçambique", "vagas de emprego", "vagas de trabalho", "vagas moçambique", 
   "gerador de documentos pdf", "formulários moçambicanos",
   
   // Emprego (O "João")
-  "currículo profissional", "carta de candidatura emprego", "carta de pedido de estágio", 
+  "currículo", "carta de candidatura emprego", "carta de pedido de estágio", 
   "modelo de CV simples", "requerimento de emprego",
   
   // Habitação e Terra
@@ -68,7 +75,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png", // Imagem que aparece na partilha (crie uma imagem de 1200x630)
+        url: "/logo-tra.png", // Imagem que aparece na partilha (crie uma imagem de 1200x630)
         width: 1200,
         height: 630,
         alt: "DOKU - Plataforma de Documentos em Moçambique",
