@@ -41,7 +41,7 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
   const shouldAddAutoHeader = hasAnyPlaceholders && !hasFormalHeader && !isFallbackTitle;
   const shouldAddAutoFooter = hasAnyPlaceholders && !hasFormalFooter;
 
-  doc.setFont('Times-Roman', 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
 
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -62,20 +62,20 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
     const location = userData.address || userData.target_location || '';
 
     if (destinatary) {
-      doc.setFont('Times-Roman', 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(destinatary, margin.left, y);
       y += 7;
     }
     
     if (institution) {
-      doc.setFont('Times-Roman', 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(institution, margin.left, y);
       y += 14; 
     }
 
     const subject = `${userData.subject || title || ''}`.toUpperCase();
     if (subject) {
-      doc.setFont('Times-Roman', 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(subject, margin.left, y);
       const subjectWidth = doc.getTextWidth(subject);
       doc.line(margin.left, y + 1, margin.left + subjectWidth, y + 1);
@@ -83,14 +83,14 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
     }
 
     if (location) {
-      doc.setFont('Times-Roman', 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text(location, pageWidth - margin.right, y, { align: 'right' });
       const locWidth = doc.getTextWidth(location);
       doc.line(pageWidth - margin.right - locWidth, y + 1, pageWidth - margin.right, y + 1);
       y += 15;
     }
   } else if (isDeclaration && shouldAddAutoHeader) {
-    doc.setFont('Times-Roman', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     const tit = title.toUpperCase();
     const titWidth = doc.getTextWidth(tit);
@@ -107,7 +107,7 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
   if (!isDeclaration && shouldAddAutoFooter) {
     if (y > pageHeight - margin.bottom - 40) { doc.addPage(); y = margin.top; }
     y += 10;
-    doc.setFont('Times-Roman', 'normal');
+    doc.setFont('helvetica', 'normal');
     const closing = "Pede deferimento.";
     const closingWidth = doc.getTextWidth(closing);
     doc.text(closing, (pageWidth - closingWidth) / 2, y);
@@ -117,7 +117,7 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
   // 5. Local e Data Automáticos
   if (shouldAddAutoFooter) {
     if (y > pageHeight - margin.bottom - 30) { doc.addPage(); y = margin.top; }
-    doc.setFont('Times-Roman', 'normal');
+    doc.setFont('helvetica', 'normal');
     const city = userData.current_city || userData.target_location || '';
     const date = userData.current_date || new Date().toLocaleDateString('pt-PT');
     const dateStr = city ? `${city}, aos ${date}.` : `Aos ${date}.`;
@@ -129,7 +129,7 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
   // 6. Assinatura Automática
   if (shouldAddAutoFooter) {
     if (y > pageHeight - margin.bottom - 20) { doc.addPage(); y = margin.top; }
-    doc.setFont('Times-Roman', 'bold');
+    doc.setFont('helvetica', 'bold');
     const fullName = (userData.full_name || '').toUpperCase();
     const nameWidth = doc.getTextWidth(fullName);
     doc.text(fullName, (pageWidth - nameWidth) / 2, y);
@@ -140,7 +140,7 @@ export const generatePDFServer = async (userData: UserData, template: string, ti
     y += 5;
 
     doc.setFontSize(10);
-    doc.setFont('Times-Roman', 'normal');
+    doc.setFont('helvetica', 'normal');
     const signatureLabel = isDeclaration ? '(Assinatura do Declarante)' : '(Assinatura do Requerente)';
     const labelWidth = doc.getTextWidth(signatureLabel);
     doc.text(signatureLabel, (pageWidth - labelWidth) / 2, y);

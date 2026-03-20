@@ -104,7 +104,7 @@ export const renderLine = (doc: jsPDF, pieces: {text: string, style: string}[], 
   else if (align === 'right') currentX += (width - totalWidth);
 
   pieces.forEach(p => {
-    doc.setFont('Times-Roman', p.style);
+    doc.setFont('helvetica', p.style);
     doc.text(p.text, currentX, y);
     currentX += doc.getTextWidth(p.text);
   });
@@ -133,7 +133,7 @@ export const renderContent = (doc: jsPDF, html: string, x: number, y: number, wi
     if (uniqueStyles.size === 1) {
       const seg = segments[0];
       const style = (seg.bold && seg.italic) ? 'bolditalic' : seg.bold ? 'bold' : seg.italic ? 'italic' : 'normal';
-      doc.setFont('Times-Roman', style);
+      doc.setFont('helvetica', style);
       
       const text = segments.map(s => s.text).join('').trim();
       const lines = doc.splitTextToSize(text, width);
@@ -160,7 +160,7 @@ export const renderContent = (doc: jsPDF, html: string, x: number, y: number, wi
         
         words.forEach(word => {
           if (!word) return;
-          doc.setFont('Times-Roman', style);
+          doc.setFont('helvetica', style);
           const wordWidth = doc.getTextWidth(word);
 
           if (currentLineWidth + wordWidth > width && word.trim()) {

@@ -34,7 +34,13 @@ export async function initiateMpesaPayment(data: DebitoMpesaRequest): Promise<De
     throw new Error('DEBITO_MPESA_WALLET_ID is not configured');
   }
 
-  const response = await fetch(`${DEBITO_API_URL}/wallets/${walletId}/c2b/mpesa`, {
+  const url = `${DEBITO_API_URL}/wallets/${walletId}/c2b/mpesa`;
+  const payload = JSON.stringify(data);
+  
+  console.log("[Debito] Request URL:", url);
+  console.log("[Debito] Request Body:", payload);
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${DEBITO_API_TOKEN}`,
@@ -42,13 +48,16 @@ export async function initiateMpesaPayment(data: DebitoMpesaRequest): Promise<De
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
     },
-    body: JSON.stringify(data),
+    body: payload,
   });
 
   const result = await response.json();
 
+  console.log("[Debito] Response Status:", response.status);
+  console.log("[Debito] Response Body:", JSON.stringify(result));
+
   if (!response.ok) {
-    throw new Error(result.message || 'Error initiating M-Pesa payment');
+    throw new Error(result.message || `Debito API error (HTTP ${response.status})`);
   }
 
   return result;
